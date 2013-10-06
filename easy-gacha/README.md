@@ -61,8 +61,8 @@ Profit!
 Frequently Asked Questions
 ==========================
 
-Why is the script no-mod?
--------------------------
+Why aren't the permissions more open?
+-------------------------------------
 
 Because otherwise I cannot vouch for its safety. If I made the script
 modifiable, someone with ill intent could make it steal money, then give it
@@ -71,6 +71,15 @@ want to make a malicious version, make your own copy of the script :-P
 
 The script you have should have been created by:
 [Zan Lightfoot](secondlife:///app/agent/d393638e-be6e-4f81-a44d-072e344828c4/about)
+
+Also, if I made the objects modifiable and transferable, someone could put
+something malicious inside them and they'd still list me as the creator.
+Because the kit is free and the source code is open, there should be no problem
+with each person that wants one ordering a free copy from the marketplace.
+
+If you want your notecards and your gacha-box to be transferable, simply create
+your own objects and notecards (copy the contents from mine) and set the
+permissions how you please. The script is transferable because it is no-mod.
 
 Where do I go for help?
 -----------------------
