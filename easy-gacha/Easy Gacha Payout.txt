@@ -1,0 +1,24 @@
+##################################################
+
+# Instructions:
+
+# List the people that you want to receive money for these sales.
+
+# Each line should contain exactly two parts: Money User
+
+# The first part should be a POSITIVE WHOLE number that is GREATER THAN ZERO. This is the number of L$ to give with each item purchased. The total price is determined by the sum of all these entries.
+
+# IF YOU WANT TO KEEP ANY MONEY FOR YOURSELF, MAKE SURE YOU'RE IN THE LIST! You can use the shortcut "owner" instead of your key (UUID) if you like.
+
+# You MUST have a SINGLE SPACE between the first part and the second part!
+
+# The second part is the KEY (UUID) of the USER to whom you wish to give money. There are a number of ways to look this up. This can also be the special word "owner" for the current owner of the object, "creator" for the creator of the object, or "scriptor" if you want to tip the creator of the script ;-)
+
+# Empty lines and lines which begin with a "#" will be ignored.
+
+##################################################
+
+# In this example, the total price will be L$25:
+1 scriptor
+1 creator
+23 owner
