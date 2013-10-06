@@ -19,6 +19,9 @@
 ##################################################
 
 # In this example, the total price will be L$25:
+#1 scriptor
+#1 creator
+#23 owner
+
+# This is basically a tip-jar for me:
 1 scriptor
-1 creator
-23 owner
