@@ -1,0 +1,24 @@
+##################################################
+
+# Instructions:
+
+# Each line should contain exactly three parts.
+
+# The first part should be a POSITIVE number that is GREATER THAN ZERO. This is the number of points for this object. This number is used to determine how common or rare the inventory is. The higher the number, the more common it is. The exact percentage is based on dividing this number by the sum of all of the numbers. The script will tell you the percentages once you run it.
+
+# The second part is a space. The character between the quote marks is a space: " "
+
+# The third part is the NAME of the inventory item. It must be an EXACT MATCH. This means if your inventory starts with a space, you should put the extra space at the start. If you inventory ends with a space, you should end this part with a space.
+
+# Empty lines will be ignored. It is safe to put empty lines.
+
+# Lines which begin with a "#" will be ignored. This makes it easy to group entries.
+
+##################################################
+
+1 Something that is very rare
+1.5 Something that is almost as rare
+2 Something a little more common
+
+12 A pretty common object
+23.725 A very common object

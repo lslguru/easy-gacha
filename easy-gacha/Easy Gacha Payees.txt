@@ -1,0 +1,23 @@
+##################################################
+
+# Instructions:
+
+# Each line should contain exactly three parts.
+
+# The first part should be a POSITIVE WHOLE number that is GREATER THAN ZERO. This is the number of L$ to give with each purchase.
+
+# The second part is a space. The character between the quote marks is a space: " "
+
+# The third part is the KEY of the USER to whom you wish to give money. There are a number of ways to look this up. This can also be "owner" for the current owner of the object, "creator" for the creator of the object, or "scriptor" if you want to tip the creator of the script ;-)
+
+# Empty lines will be ignored. It is safe to put empty lines.
+
+# Lines which begin with a "#" will be ignored. This makes it easy to group entries.
+
+##################################################
+
+# Total price of L$25:
+
+1 scriptor
+1 creator
+23 owner
