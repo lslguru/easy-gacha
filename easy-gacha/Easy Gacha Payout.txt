@@ -23,5 +23,11 @@
 #1 creator
 #23 owner
 
+# Here's an example of splitting the cost evenly amongst four people by using their agent keys (UUIDs). The total price would be L$40:
+#10 d7e84aa5-91ca-4992-87dd-ff5cf65379b5
+#10 a031a619-2c9c-4a04-bd29-db14afab31a8
+#10 286404f5-a8ca-4dbd-8a7e-ff88dcfc673c
+#10 e371bafa-85cb-481f-b250-3f2ce82e9fd6
+
 # This is basically a tip-jar for me:
 1 scriptor
