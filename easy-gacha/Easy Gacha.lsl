@@ -45,12 +45,24 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+// Constants
+//
+////////////////////////////////////////////////////////////////////////////////
+
+string SOURCE_CODE_LINK = "https://github.com/zannalov/opensl";
+
+string INVENTORY_CONFIG = "Easy Gacha Inventory";
+string PAYEE_CONFIG = "Easy Gacha Payout";
+
+integer MAX_PER_PURCHASE = 100;
+integer LOW_MEMORY_THRESHOLD = 16000;
+
+////////////////////////////////////////////////////////////////////////////////
+//
 // GLOBAL VARIABLES
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-string InventoryNotecard = "Easy Gacha Inventory";
-string PayeeNotecard = "Easy Gacha Payees";
 integer InitState = 0;
 
 list Inventory = []; // Strided list of [ Inventory Name , Non Zero Positive Probability Number ]
@@ -64,9 +76,6 @@ integer Price = 0;
 key DataServerRequest;
 integer DataServerRequestIndex = 0;
 
-integer MaxPerPurchase = 100;
-integer LowMemoryThreshold = 16000;
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 // GLOBAL METHODS
@@ -74,12 +83,12 @@ integer LowMemoryThreshold = 16000;
 ////////////////////////////////////////////////////////////////////////////////
 
 ShowError( string msg ) {
-    llSetText( llGetScriptName() + ": ERROR: " + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+    llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nERROR: " + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
     llOwnerSay( llGetScriptName() + ": ERROR: " + msg );
 }
 
 integer MemoryError() {
-    if( llGetFreeMemory() < LowMemoryThreshold ) {
+    if( llGetFreeMemory() < LOW_MEMORY_THRESHOLD ) {
         ShowError( "Not enough free memory to handle large orders. Too many items in configuration?" );
         return TRUE;
     }
@@ -132,31 +141,31 @@ default {
     ///////////////////
 
     state_entry() {
-        llSetText( llGetScriptName() + ": Initializing, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+        llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nInitializing, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
         llOwnerSay( llGetScriptName() + ": Initializing, please wait..." );
 
-        if( INVENTORY_NOTECARD != llGetInventoryType( InventoryNotecard ) ) {
-            ShowError( "\"" + InventoryNotecard + "\" is missing from inventory" );
+        if( INVENTORY_NOTECARD != llGetInventoryType( INVENTORY_CONFIG ) ) {
+            ShowError( "\"" + INVENTORY_CONFIG + "\" is missing from inventory" );
             return;
         }
 
-        if( INVENTORY_NOTECARD != llGetInventoryType( PayeeNotecard ) ) {
-            ShowError( "\"" + PayeeNotecard + "\" is missing from inventory" );
+        if( INVENTORY_NOTECARD != llGetInventoryType( PAYEE_CONFIG ) ) {
+            ShowError( "\"" + PAYEE_CONFIG + "\" is missing from inventory" );
             return;
         }
 
-        if( NULL_KEY == llGetInventoryKey( InventoryNotecard ) ) {
-            ShowError( "\"" + InventoryNotecard + "\" is new and has not yet been saved" );
+        if( NULL_KEY == llGetInventoryKey( INVENTORY_CONFIG ) ) {
+            ShowError( "\"" + INVENTORY_CONFIG + "\" is new and has not yet been saved" );
             return;
         }
 
-        if( NULL_KEY == llGetInventoryKey( PayeeNotecard ) ) {
-            ShowError( "\"" + PayeeNotecard + "\" is new and has not yet been saved" );
+        if( NULL_KEY == llGetInventoryKey( PAYEE_CONFIG ) ) {
+            ShowError( "\"" + PAYEE_CONFIG + "\" is new and has not yet been saved" );
             return;
         }
 
         InitState = 1;
-        DataServerRequest = llGetNotecardLine( InventoryNotecard , DataServerRequestIndex = 0 );
+        DataServerRequest = llGetNotecardLine( INVENTORY_CONFIG , DataServerRequestIndex = 0 );
         llSetTimerEvent( 30.0 );
     } // end state_entry()
 
@@ -178,18 +187,18 @@ default {
         // Memory check before proceeding, having just gotten a new string
         if( MemoryError() ) return;
 
-        // If the result is the lookup of a line from the InventoryNotecard
+        // If the result is the lookup of a line from the INVENTORY_CONFIG
         if( 1 == InitState ) {
             // If the line is blank, skip it
             if( "" == data ) {
-                DataServerRequest = llGetNotecardLine( InventoryNotecard , DataServerRequestIndex += 1 );
+                DataServerRequest = llGetNotecardLine( INVENTORY_CONFIG , DataServerRequestIndex += 1 );
                 llSetTimerEvent( 30.0 );
                 return;
             }
 
             // If the line starts with a hash, skip it
             if( "#" == llGetSubString( data , 0 , 0 ) ) {
-                DataServerRequest = llGetNotecardLine( InventoryNotecard , DataServerRequestIndex += 1 );
+                DataServerRequest = llGetNotecardLine( INVENTORY_CONFIG , DataServerRequestIndex += 1 );
                 llSetTimerEvent( 30.0 );
                 return;
             }
@@ -203,7 +212,7 @@ default {
 
                 // Load first line of config
                 InitState = 2;
-                DataServerRequest = llGetNotecardLine( PayeeNotecard , DataServerRequestIndex = 0 );
+                DataServerRequest = llGetNotecardLine( PAYEE_CONFIG , DataServerRequestIndex = 0 );
                 llSetTimerEvent( 30.0 );
                 return;
             }
@@ -213,7 +222,7 @@ default {
 
             // If there's no space on the line, it's invalid
             if( 0 >= i0 ) {
-                ShowError( "Bad configuration in \"" + InventoryNotecard + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
+                ShowError( "Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
                 return;
             }
 
@@ -222,7 +231,7 @@ default {
 
             // If the probability is out of bounds
             if( 0.0 >= f0 ) {
-                ShowError( "Number must be greater than zero. Bad configuration in \"" + InventoryNotecard + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
+                ShowError( "Number must be greater than zero. Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
                 return;
             }
 
@@ -231,25 +240,31 @@ default {
 
             // Name must be provided
             if( "" == s0 ) {
-                ShowError( "Inventory name must be provided. Bad configuration in \"" + InventoryNotecard + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
+                ShowError( "Inventory name must be provided. Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
                 return;
             }
 
             // Inventory must exist
             if( INVENTORY_NONE == llGetInventoryType( s0 ) ) {
-                ShowError( "Cannot find \"" + s0 + "\" in inventory. Bad configuration in \"" + InventoryNotecard + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
+                ShowError( "Cannot find \"" + s0 + "\" in inventory. Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
                 return;
             }
 
             // Inventory must be copyable
             if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. Bad configuration in \"" + InventoryNotecard + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
+                ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
                 return;
             }
 
             // Inventory must be transferable
             if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? Bad configuration in \"" + InventoryNotecard + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
+                ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
+                return;
+            }
+
+            // If they put the same item in twice
+            if( -1 != llListFindList( Inventory , [ s0 ] ) ) {
+                ShowError( "\"" + s0 + "\" was listed twice. Did you mean to list it once with a rarity of " + (string)( llList2Float( Inventory , llListFindList( Inventory , [ s0 ] ) + 1 ) + f0 ) + "? Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
                 return;
             }
 
@@ -262,23 +277,23 @@ default {
             if( MemoryError() ) return;
 
             // Load next line of config
-            DataServerRequest = llGetNotecardLine( InventoryNotecard , DataServerRequestIndex += 1 );
+            DataServerRequest = llGetNotecardLine( INVENTORY_CONFIG , DataServerRequestIndex += 1 );
             llSetTimerEvent( 30.0 );
             return;
         }
 
-        // If the result is the lookup of a line from the PayeeNotecard
+        // If the result is the lookup of a line from the PAYEE_CONFIG
         if( 2 == InitState ) {
             // If the line is blank, skip it
             if( "" == data ) {
-                DataServerRequest = llGetNotecardLine( PayeeNotecard , DataServerRequestIndex += 1 );
+                DataServerRequest = llGetNotecardLine( PAYEE_CONFIG , DataServerRequestIndex += 1 );
                 llSetTimerEvent( 30.0 );
                 return;
             }
 
             // If the line starts with a hash, skip it
             if( "#" == llGetSubString( data , 0 , 0 ) ) {
-                DataServerRequest = llGetNotecardLine( PayeeNotecard , DataServerRequestIndex += 1 );
+                DataServerRequest = llGetNotecardLine( PAYEE_CONFIG , DataServerRequestIndex += 1 );
                 llSetTimerEvent( 30.0 );
                 return;
             }
@@ -296,7 +311,7 @@ default {
 
             // If there's no space on the line, it's invalid
             if( 0 >= i0 ) {
-                ShowError( "Bad configuration in \"" + PayeeNotecard + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
+                ShowError( "Bad configuration in \"" + PAYEE_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
                 return;
             }
 
@@ -305,7 +320,7 @@ default {
 
             // If the payment is out of bounds
             if( 0 >= i1 ) {
-                ShowError( "L$ to give must be greater than zero. Bad configuration in \"" + PayeeNotecard + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
+                ShowError( "L$ to give must be greater than zero. Bad configuration in \"" + PAYEE_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
                 return;
             }
 
@@ -314,7 +329,7 @@ default {
 
             // Name must be provided
             if( "" == s0 ) {
-                ShowError( "User key must be provided. Bad configuration in \"" + PayeeNotecard + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
+                ShowError( "User key must be provided. Bad configuration in \"" + PAYEE_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
                 return;
             }
 
@@ -329,6 +344,12 @@ default {
                 s0 = (string)llGetInventoryCreator( llGetScriptName() );
             }
 
+            // If they put the same item in twice
+            if( -1 != llListFindList( Payees , [ (key)s0 ] ) ) {
+                ShowError( s0 + " was listed twice. Did you mean to list them once with a payout of " + (string)( llList2Integer( Payees , llListFindList( Payees , [ s0 ] ) + 1 ) + i1 ) + "? Bad configuration in \"" + PAYEE_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
+                return;
+            }
+
             // Store the configuration
             Price += i1;
             Payees = ( Payees = [] ) + Payees + [ (key)s0 , i1 ];
@@ -338,7 +359,7 @@ default {
             if( MemoryError() ) return;
 
             // Load next line of config
-            DataServerRequest = llGetNotecardLine( PayeeNotecard , DataServerRequestIndex += 1 );
+            DataServerRequest = llGetNotecardLine( PAYEE_CONFIG , DataServerRequestIndex += 1 );
             llSetTimerEvent( 30.0 );
             return;
         }
@@ -374,9 +395,9 @@ default {
         llSetTimerEvent( 0.0 );
 
         if( 1 == InitState ) {
-            ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + InventoryNotecard );
+            ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + INVENTORY_CONFIG );
         } else if( 2 == InitState ) {
-            ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + PayeeNotecard );
+            ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + PAYEE_CONFIG );
         } else if( 3 == InitState ) {
             ShowError( "Timed out while trying to look up user key. The user \"" + llList2String( Payees , DataServerRequestIndex ) + "\" doesn't seem to exist, or the data server is being too slow." );
         } else if( 4 == InitState ) {
@@ -390,7 +411,7 @@ default {
         if( ! ( PERMISSION_DEBIT & permissionMask ) ) {
             llResetScript();
         } else {
-            llOwnerSay( llGetScriptName() + ": This is free and unencumbered software released into the public domain. The source code can be found at: https://github.com/zannalov/opensl" );
+            llOwnerSay( llGetScriptName() + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
             llOwnerSay( llGetScriptName() + ": Ready! Free memory: " + (string)llGetFreeMemory() );
             state ready;
         }
@@ -445,11 +466,14 @@ state ready {
     money( key buyerId , integer lindensReceived ) {
         float random;
         integer selected;
-        integer countSent = 0;
+        integer countItemsToSend = 0;
         list itemsToSend = [];
+        string change = "";
+        string itemPlural = " items ";
+        string hasHave = "have ";
 
         // Let them know we're thinking
-        llSetText( llGetScriptName() + ": Please wait, getting random items for " + llGetDisplayName( buyerId ) + "...\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+        llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nPlease wait, getting random items for " + llGetDisplayName( buyerId ) + "...\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
 
         // If not enough money
         if( lindensReceived < Price ) {
@@ -460,7 +484,7 @@ state ready {
         }
 
         // While there's still enough money for another item
-        while( lindensReceived >= Price && countSent < MaxPerPurchase ) {
+        while( lindensReceived >= Price && countItemsToSend < MAX_PER_PURCHASE ) {
             random = llFrand( SumProbability ); // Generate a random number which is between [ 0.0 , SumProbability )
             selected = -2; // Start below the first object because the first iteration will definitely run once
 
@@ -474,7 +498,7 @@ state ready {
 
             // Schedule to give inventory, increment counter, decrement money
             itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ llList2String( Inventory , selected ) ];
-            countSent += 1;
+            countItemsToSend += 1;
             lindensReceived -= Price;
         }
 
@@ -482,7 +506,7 @@ state ready {
         integer x;
         for( x = 0 ; x < CountPayees ; x += 2 ) {
             if( llGetOwner() != llList2Key( Payees , x ) ) {
-                llGiveMoney( llList2Key( Payees , x ) , llList2Integer( Payees , x + 1 ) * countSent );
+                llGiveMoney( llList2Key( Payees , x ) , llList2Integer( Payees , x + 1 ) * countItemsToSend );
             }
         }
 
@@ -490,15 +514,22 @@ state ready {
         if( lindensReceived ) {
             // Give back the excess
             llGiveMoney( buyerId , lindensReceived );
-
-            // Thank them for the purchase
-            llWhisper( 0 , "Thank you " + llGetDisplayName( buyerId ) + " for your purchase! Your " + (string)countSent + " items have been sent. Your change is L$" + (string)lindensReceived );
-        } else {
-            llWhisper( 0 , "Thank you " + llGetDisplayName( buyerId ) + " for your purchase! Your " + (string)countSent + " items have been sent." );
+            change = " Your change is L$" + (string)lindensReceived;
         }
 
+        // If only one item was given, fix the wording
+        if( 1 == countItemsToSend ) {
+            itemPlural = " item ";
+            hasHave = "has ";
+        }
+
+        // Thank them for their purchase
+        llWhisper( 0 , "Thank you " + llGetDisplayName( buyerId ) + " for your purchase! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
+
         // Give the inventory
-        llGiveInventoryList( buyerId , "Easy Gacha Rewards (" + (string)countSent + " items on " + llGetTimestamp() + ")" , itemsToSend ); // FORCED_DELAY 3.0 seconds
+        llGiveInventoryList( buyerId , llGetObjectName() + " (" + (string)countItemsToSend + itemPlural + "on " + llGetDate() + ")" , itemsToSend ); // FORCED_DELAY 3.0 seconds
+
+        // Clear the thinkin' text
         llSetText( "" , ZERO_VECTOR , 0.0 );
     }
 }
