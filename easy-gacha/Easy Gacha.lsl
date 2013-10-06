@@ -39,12 +39,13 @@
 // 1: Lookup inventory notecard line
 // 2: Lookup payee notecard line
 // 3: Lookup user name
+// 4: Getting permission
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// CODE
+// GLOBAL VARIABLES
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,8 +64,13 @@ integer Price = 0;
 key DataServerRequest;
 integer DataServerRequestIndex = 0;
 
-integer LowMemoryThreshold = 3000;
+integer MaxPerPurchase = 100;
+integer LowMemoryThreshold = 16000;
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// GLOBAL METHODS
+//
 ////////////////////////////////////////////////////////////////////////////////
 
 ShowError( string msg ) {
@@ -74,13 +80,17 @@ ShowError( string msg ) {
 
 integer MemoryError() {
     if( llGetFreeMemory() < LowMemoryThreshold ) {
-        ShowError( "Not enough free memory. Too many items in configuration?" );
+        ShowError( "Not enough free memory to handle large orders. Too many items in configuration?" );
         return TRUE;
     }
 
     return FALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// STATES
+//
 ////////////////////////////////////////////////////////////////////////////////
 
 default {
@@ -162,7 +172,7 @@ default {
         float f0;
         string s0;
 
-        // Stop timeout timer
+        // Stop/reset timeout timer
         llSetTimerEvent( 0.0 );
 
         // Memory check before proceeding, having just gotten a new string
@@ -245,7 +255,7 @@ default {
 
             // Store the configuration and add probably to the sum
             SumProbability += f0;
-            Inventory = (Inventory=[]) + Inventory + [ s0 , f0 ];
+            Inventory = ( Inventory = [] ) + Inventory + [ s0 , f0 ];
             CountInventory += 2;
 
             // Memory check before proceeding, having just messed with a list
@@ -321,7 +331,7 @@ default {
 
             // Store the configuration
             Price += i1;
-            Payees = (Payees=[]) + Payees + [ (key)s0 , i1 ];
+            Payees = ( Payees = [] ) + Payees + [ (key)s0 , i1 ];
             CountPayees += 2;
 
             // Memory check before proceeding, having just messed with a list
@@ -336,7 +346,7 @@ default {
         // If the result is the lookup of a user from the Payees
         if( 3 == InitState ) {
             // Note that this user was looked up correctly and report the amount to be given
-            llOwnerSay( llGetScriptName() + ": Will give L$" + (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) + " to " + data + " with each purchase." );
+            llOwnerSay( llGetScriptName() + ": Will give L$" + (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) + " to " + data + " for each item purchased." );
 
             // Increment to next value
             DataServerRequestIndex += 2;
@@ -354,24 +364,38 @@ default {
 
             // Get permission to give money (so we can give refunds at least)
             llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
+            llSetTimerEvent( 30.0 );
+            InitState = 4;
         }
     }
 
     timer() {
-        // TODO: Error message
+        // Reset/stop timer
         llSetTimerEvent( 0.0 );
+
+        if( 1 == InitState ) {
+            ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + InventoryNotecard );
+        } else if( 2 == InitState ) {
+            ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + PayeeNotecard );
+        } else if( 3 == InitState ) {
+            ShowError( "Timed out while trying to look up user key. The user \"" + llList2String( Payees , DataServerRequestIndex ) + "\" doesn't seem to exist, or the data server is being too slow." );
+        } else if( 4 == InitState ) {
+            ShowError( "Timed out while trying to get permission. Please touch to reset and make sure to grant the money permission when asked." );
+        } else {
+            ShowError( "Timed out." );
+        }
     }
 
     run_time_permissions( integer permissionMask ) {
         if( ! ( PERMISSION_DEBIT & permissionMask ) ) {
             llResetScript();
         } else {
+            llOwnerSay( llGetScriptName() + ": This is free and unencumbered software released into the public domain. The source code can be found at: https://github.com/zannalov/opensl" );
+            llOwnerSay( llGetScriptName() + ": Ready! Free memory: " + (string)llGetFreeMemory() );
             state ready;
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 state ready {
     ////////////
@@ -410,13 +434,23 @@ state ready {
 
     state_entry() {
         llSetText( "" , ZERO_VECTOR , 0.0 );
-        llSetPayPrice( PAY_HIDE , [ Price , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
+        llSetPayPrice( Price , [ Price , Price * 2 , Price * 5 , Price * 10 ] );
         llSetClickAction( CLICK_ACTION_PAY );
-        llOwnerSay( llGetScriptName() + ": This is free and unencumbered software released into the public domain. The source code can be found at: https://github.com/zannalov/opensl" );
-        llOwnerSay( llGetScriptName() + ": Ready! Free memory: " + (string)llGetFreeMemory() );
     }
 
+    // Switching states here would prevent further orders from being placed
+    // while this one is being processed, but would also flush the event queue,
+    // which would kill any orders placed in parallel. We have to honor the
+    // event queue, so... do things as fast and efficiently as we can
     money( key buyerId , integer lindensReceived ) {
+        float random;
+        integer selected;
+        integer countSent = 0;
+        list itemsToSend = [];
+
+        // Let them know we're thinking
+        llSetText( llGetScriptName() + ": Please wait, getting random items for " + llGetDisplayName( buyerId ) + "...\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+
         // If not enough money
         if( lindensReceived < Price ) {
             // Give money back
@@ -425,36 +459,46 @@ state ready {
             return;
         }
 
-        float random = llFrand( SumProbability ); // Generate a random number which is between [ 0.0 , SumProbability )
-        integer selected = -2; // Start below the first object because the first iteration will definitely run once
+        // While there's still enough money for another item
+        while( lindensReceived >= Price && countSent < MaxPerPurchase ) {
+            random = llFrand( SumProbability ); // Generate a random number which is between [ 0.0 , SumProbability )
+            selected = -2; // Start below the first object because the first iteration will definitely run once
 
-        // While the random number is at or above zero, we haven't hit our
-        // target object. Exiting the while loop will result in a random number
-        // at or below zero, indicating the selected index matches an object.
-        while( 0 <= random ) {
-            selected += 2;
-            random -= llList2Float( Inventory , selected + 1 );
+            // While the random number is at or above zero, we haven't hit our
+            // target object. Exiting the while loop will result in a random number
+            // at or below zero, indicating the selected index matches an object.
+            while( 0 <= random ) {
+                selected += 2;
+                random -= llList2Float( Inventory , selected + 1 );
+            }
+
+            // Schedule to give inventory, increment counter, decrement money
+            itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ llList2String( Inventory , selected ) ];
+            countSent += 1;
+            lindensReceived -= Price;
         }
-
-        // Give inventory
-        llGiveInventory( buyerId , llList2String( Inventory , selected ) );
-
-        // Thank them for the purchase
-        llWhisper( 0 , "Thank you " + llGetDisplayName( buyerId ) + " for your purchase! Your item has been sent." );
 
         // Distribute the money
         integer x;
         for( x = 0 ; x < CountPayees ; x += 2 ) {
             if( llGetOwner() != llList2Key( Payees , x ) ) {
-                llGiveMoney( llList2Key( Payees , x ) , llList2Integer( Payees , x + 1 ) );
+                llGiveMoney( llList2Key( Payees , x ) , llList2Integer( Payees , x + 1 ) * countSent );
             }
         }
 
-        // If too much money was given, give back the excess
-        if( lindensReceived > Price ) {
-            // Give money back
-            llGiveMoney( buyerId , lindensReceived - Price );
-            llWhisper( 0 , "Your change is L$" + (string)( lindensReceived - Price ) );
+        // If too much money was given
+        if( lindensReceived ) {
+            // Give back the excess
+            llGiveMoney( buyerId , lindensReceived );
+
+            // Thank them for the purchase
+            llWhisper( 0 , "Thank you " + llGetDisplayName( buyerId ) + " for your purchase! Your " + (string)countSent + " items have been sent. Your change is L$" + (string)lindensReceived );
+        } else {
+            llWhisper( 0 , "Thank you " + llGetDisplayName( buyerId ) + " for your purchase! Your " + (string)countSent + " items have been sent." );
         }
+
+        // Give the inventory
+        llGiveInventoryList( buyerId , "Easy Gacha Rewards (" + (string)countSent + " items on " + llGetTimestamp() + ")" , itemsToSend ); // FORCED_DELAY 3.0 seconds
+        llSetText( "" , ZERO_VECTOR , 0.0 );
     }
 }
