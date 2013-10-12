@@ -12,7 +12,7 @@ followed by the date.
 For example, if you name the object "My Stuff", then someone might receive a
 folder that says:
 
-    My Stuff (3 items on 2013-10-06)
+    My Stuff (Easy Gacha 3 items 2013-10-06)
 
 Configuration
 =============
