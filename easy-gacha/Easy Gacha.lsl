@@ -194,6 +194,7 @@ default {
 
         InitState = 1;
         DataServerRequest = llGetNumberOfNotecardLines( CONFIG );
+        llSetTimerEvent( 30.0 );
     } // end state_entry()
 
     dataserver( key queryId , string data ) {
@@ -600,7 +601,9 @@ default {
         // Reset/stop timer
         llSetTimerEvent( 0.0 );
 
-        if( 2 == InitState ) {
+        if( 1 == InitState ) {
+            ShowError( "Timed out while trying to get line count for \"" + CONFIG );
+        } else if( 2 == InitState ) {
             ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + CONFIG );
         } else if( 3 == InitState ) {
             ShowError( "Timed out while trying to look up user key. The user \"" + llList2String( Payees , DataServerRequestIndex ) + "\" doesn't seem to exist, or the data server is being too slow." );
