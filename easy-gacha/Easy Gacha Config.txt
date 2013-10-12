@@ -84,3 +84,18 @@ payout 1 scriptor
 # If you use this option, the script will not complain about being the root prim in a linked set. If the script is in the root prim of a linked set, the entire linked set will have a default action of payment. This means that you will have to right-click to access the touch even for the statistics script!
 #
 #allow_root_prim no
+
+# Stats Server
+#
+# Sends statistics to the server about your configuration and the number of people who paid. Each time the object is reset it gets a new ID.
+#
+# You can also choose whether you want to allow the stats to be visible to anyone other than yourself.
+#
+#allow_send_stats yes
+#allow_show_stats yes
+
+# Inventory disbursement
+#
+# If you don't want to bother with a folder when only one item is being given, change this.
+#
+#folder_for_one yes

@@ -49,7 +49,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-string SOURCE_CODE_LINK = "https://github.com/zannalov/opensl";
+string SOURCE_CODE_MESSAGE = "This is free open source software. The source can be found at: https://github.com/zannalov/opensl";
+list SERVER_OPTIONS = [
+    HTTP_METHOD , "POST"
+    , HTTP_MIMETYPE , "text/json;charset=utf-8"
+    , HTTP_BODY_MAXLENGTH , 16384
+    , HTTP_VERIFY_CERT , FALSE
+    , HTTP_VERBOSE_THROTTLE , FALSE
+    // Put any custom headers for auth here as: , HTTP_CUSTOM_HEADER , "..." , "..."
+];
+string SERVER_URL_CONFIG = ""; // Sent when object gets configured
+string SERVER_URL_PURCHASE = ""; // Sent with each purchase
+string SERVER_URL_STATS = ""; // The runtime ID gets appended to the end!
+
 string CONFIG = "Easy Gacha Config";
 integer LOW_MEMORY_THRESHOLD = 16000;
 integer MAX_FOLDER_NAME_LENGTH = 63;
@@ -65,9 +77,14 @@ key Owner;
 integer InitState = 0;
 key DataServerRequest;
 integer DataServerRequestIndex = 0;
+key RuntimeId;
+string RelevantConfig;
 
 integer AllowRootPrim = FALSE;
+integer AllowStatSend = TRUE;
+integer AllowShowStats = TRUE;
 integer CountConfigLines = 0;
+integer FolderForOne = TRUE;
 
 list Inventory = []; // Strided list of [ Inventory Name , Non Zero Positive Probability Number ]
 integer CountInventory = 0; // List length (not strided item length)
@@ -167,6 +184,9 @@ default {
     state_entry() {
         Owner = llGetOwner();
         ScriptName = llGetScriptName();
+        RuntimeId = llGenerateKey();
+        RelevantConfig = "";
+
         SetText( "Initializing, please wait..." );
         llOwnerSay( ScriptName + "\nInitializing, please wait..." );
 
@@ -214,6 +234,7 @@ default {
         integer i1;
         float f0;
         string s0;
+        string s1;
         key k0;
 
         // Stop/reset timeout timer
@@ -355,6 +376,9 @@ default {
                 return;
             }
 
+            // Add line to relevant config
+            RelevantConfig += data + "\n";
+
             // Process new line
             i0 = llSubStringIndex( data , " " );
 
@@ -364,11 +388,18 @@ default {
                 return;
             }
 
-            // Handle an item entry
-            if( "item " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
-                // Strip "item " off the front
-                s0 = llGetSubString( data , 5 , -1 );
+            // If there's nothing after the space, it's invalid
+            if( llStringLength( data ) - 1 == i0 ) {
+                BadConfig( "" , data );
+                return;
+            }
 
+            // Split the verb from the config value
+            s1 = llToLower( llGetSubString( data , 0 , i0 - 1 ) );
+            s0 = llGetSubString( data , i0 + 1 , -1 );
+
+            // Handle an item entry
+            if( "item" == s1 ) {
                 // Find second space
                 i0 = llSubStringIndex( s0 , " " );
 
@@ -387,14 +418,14 @@ default {
                     return;
                 }
 
-                // Grab inventory name off string
-                s0 = llGetSubString( s0 , i0 + 1 , -1 );
-
                 // Name must be provided
-                if( "" == s0 ) {
+                if( llStringLength( s0 ) - 1 == i0 ) {
                     BadConfig( "Inventory name must be provided. " , data );
                     return;
                 }
+
+                // Grab inventory name off string
+                s0 = llGetSubString( s0 , i0 + 1 , -1 );
 
                 // Inventory must exist
                 if( INVENTORY_NONE == llGetInventoryType( s0 ) ) {
@@ -425,10 +456,7 @@ default {
 
             // Handle a payout entry
             // Valid money formats: L$#, $#, #, #L
-            if( "payout " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
-                // Strip "payout " off the front
-                s0 = llGetSubString( data , 7 , -1 );
-
+            if( "payout" == s1 ) {
                 // Strip "L" off the front
                 if( "l" == llToLower( llGetSubString( s0 , 0 , 0 ) ) ) {
                     s0 = llGetSubString( s0 , 1 , -1 );
@@ -457,14 +485,14 @@ default {
                     return;
                 }
 
-                // Grab agent key off the string
-                s0 = llGetSubString( s0 , i0 + 1 , -1 );
-
                 // Name must be provided
-                if( "" == s0 ) {
+                if( llStringLength( s0 ) - 1 == i0 ) {
                     BadConfig( "User key must be provided. " , data );
                     return;
                 }
+
+                // Grab agent key off the string
+                s0 = llGetSubString( s0 , i0 + 1 , -1 );
 
                 // Convert to key
                 k0 = (key)s0;
@@ -510,10 +538,7 @@ default {
             }
 
             // Advanced option
-            if( "buy_button " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
-                // Strip "buy_button " off the front
-                s0 = llGetSubString( data , 11 , -1 );
-
+            if( "buy_button" == s1 ) {
                 // Find second space
                 i0 = llSubStringIndex( s0 , " " );
 
@@ -563,10 +588,7 @@ default {
             }
 
             // Advanced option
-            if( "pay_any_amount " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
-                // Strip "pay_any_amount " off the front
-                s0 = llGetSubString( data , 15 , -1 );
-
+            if( "pay_any_amount" == s1 ) {
                 if( "yes" == llToLower( s0 ) ) {
                     PayAnyAmount = 1;
                 } else if( "no" == llToLower( s0 ) ) {
@@ -587,12 +609,51 @@ default {
             }
 
             // Advanced option
-            if( "buy_max_items " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
-                // Strip "buy_max_items " off the front
-                s0 = llGetSubString( data , 14 , -1 );
+            if( "allow_send_stats" == s1 ) {
+                if( "yes" == llToLower( s0 ) ) {
+                    AllowStatSend = TRUE;
+                } else if( "no" == llToLower( s0 ) ) {
+                    AllowStatSend = FALSE;
+                } else {
+                    BadConfig( "" , data );
+                    return;
+                }
 
+                // Memory check before proceeding, having just completed this line
+                if( MemoryError() ) {
+                    return;
+                }
+
+                // Load next line of config
+                NextConfigLine();
+                return;
+            }
+
+            // Advanced option
+            if( "allow_show_stats" == s1 ) {
+                if( "yes" == llToLower( s0 ) ) {
+                    AllowShowStats = TRUE;
+                } else if( "no" == llToLower( s0 ) ) {
+                    AllowShowStats = FALSE;
+                } else {
+                    BadConfig( "" , data );
+                    return;
+                }
+
+                // Memory check before proceeding, having just completed this line
+                if( MemoryError() ) {
+                    return;
+                }
+
+                // Load next line of config
+                NextConfigLine();
+                return;
+            }
+
+            // Advanced option
+            if( "buy_max_items" == s1 ) {
                 // Get config value
-                i1 = (integer)llGetSubString( s0 , 0 , i0 );
+                i1 = (integer)s0;
 
                 // If the payment is out of bounds
                 if( 0 >= i1 || 100 < i1 ) {
@@ -613,11 +674,8 @@ default {
                 return;
             }
 
-            // Miscellaneous
-            if( "allow_root_prim " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
-                // Strip "allow_root_prim " off the front
-                s0 = llGetSubString( data , 16 , -1 );
-
+            // Advanced option
+            if( "allow_root_prim" == s1 ) {
                 if( "yes" == llToLower( s0 ) ) {
                     AllowRootPrim = TRUE;
                 } else if( "no" == llToLower( s0 ) ) {
@@ -636,6 +694,31 @@ default {
                 NextConfigLine();
                 return;
             }
+
+            // Advanced option
+            if( "folder_for_one" == s1 ) {
+                if( "yes" == llToLower( s0 ) ) {
+                    FolderForOne = TRUE;
+                } else if( "no" == llToLower( s0 ) ) {
+                    FolderForOne = FALSE;
+                } else {
+                    BadConfig( "" , data );
+                    return;
+                }
+
+                // Memory check before proceeding, having just completed this line
+                if( MemoryError() ) {
+                    return;
+                }
+
+                // Load next line of config
+                NextConfigLine();
+                return;
+            }
+
+            // Completely unknown verb
+            BadConfig( "" , data );
+            return;
         } // end if( 2 == InitState )
 
         // If the result is the lookup of a user from the Payees
@@ -693,12 +776,21 @@ default {
         if( ! ( PERMISSION_DEBIT & permissionMask ) ) {
             llResetScript();
         } else {
+            llSetTimerEvent( 0.0 );
             state ready;
         }
     }
 
     state_exit() {
-        llOwnerSay( ScriptName + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
+        if( AllowStatSend && llStringLength( SERVER_URL_CONFIG ) ) {
+            llHTTPRequest( SERVER_URL_CONFIG , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
+                RuntimeId
+                , RelevantConfig
+                ]
+            ) );
+        }
+
+        llOwnerSay( ScriptName + ": " + SOURCE_CODE_MESSAGE );
         llOwnerSay( ScriptName + ": Ready! Free memory: " + (string)llGetFreeMemory() );
     }
 }
@@ -748,13 +840,23 @@ state ready {
         llSetText( "" , ZERO_VECTOR , 0.0 );
         llSetClickAction( CLICK_ACTION_PAY );
         llSetPayPrice( PayAnyAmount , [ Price , PayButton1 , PayButton2 , PayButton3 ] );
+        llSetTouchText( "Info" );
     }
 
     // Rate limited
     touch_end( integer detected ) {
-        if( llGetUnixTime() != LastTouch ) {
-            llWhisper( 0 , ScriptName + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
-            LastTouch = llGetUnixTime();
+        while( 0 <= ( detected -= 1 ) ) {
+            if( llDetectedKey( detected ) == Owner && AllowStatSend && !AllowShowStats && llStringLength( SERVER_URL_STATS ) ) {
+                llOwnerSay( ScriptName + ":\nWant to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE );
+            } else if( llGetUnixTime() != LastTouch ) {
+                if( AllowStatSend && AllowShowStats && llStringLength( SERVER_URL_STATS ) ) {
+                    llWhisper( 0 , ScriptName + ":\nWant to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE );
+                } else {
+                    llWhisper( 0 , ScriptName + ": " + SOURCE_CODE_MESSAGE );
+                }
+
+                LastTouch = llGetUnixTime();
+            }
         }
     }
 
@@ -771,15 +873,25 @@ state ready {
         string itemPlural = " items ";
         string hasHave = "have ";
         string objectName = llGetObjectName();
+        string displayName = llGetDisplayName( buyerId );
 
         // Let them know we're thinking
-        SetText( "Please wait, getting random items for " + llGetDisplayName( buyerId ) );
+        SetText( "Please wait, getting random items for " + displayName );
 
         // If not enough money
         if( lindensReceived < Price ) {
+            // Send statistics to server if server is configured
+            if( AllowStatSend && llStringLength( SERVER_URL_PURCHASE ) ) {
+                llHTTPRequest( SERVER_URL_PURCHASE , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
+                    RuntimeId
+                    , buyerId
+                    , displayName
+                ] ) );
+            }
+
             // Give money back
             llGiveMoney( buyerId , lindensReceived );
-            llWhisper( 0 , "Sorry, the price is L$" + (string)Price );
+            llWhisper( 0 , ScriptName + ": Sorry " + displayName + ", the price is L$" + (string)Price );
             return;
         }
 
@@ -824,7 +936,7 @@ state ready {
         }
 
         // Thank them for their purchase
-        llWhisper( 0 , "Thank you " + llGetDisplayName( buyerId ) + " for your purchase! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
+        llWhisper( 0 , "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
 
         // Build the name of the folder to give
         string folderSuffix = ( " (Easy Gacha " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
@@ -833,7 +945,21 @@ state ready {
         }
 
         // Give the inventory
-        llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend ); // FORCED_DELAY 3.0 seconds
+        if( 1 < countItemsToSend || FolderForOne ) {
+            llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend ); // FORCED_DELAY 3.0 seconds
+        } else {
+            llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) ); // FORCED_DELAY 2.0 seconds
+        }
+
+        // Send statistics to server if server is configured
+        if( AllowStatSend && llStringLength( SERVER_URL_PURCHASE ) ) {
+            llHTTPRequest( SERVER_URL_PURCHASE , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
+                RuntimeId
+                , buyerId
+                , displayName
+                ] + itemsToSend
+            ) );
+        }
 
         // Clear the thinkin' text
         llSetText( "" , ZERO_VECTOR , 0.0 );
