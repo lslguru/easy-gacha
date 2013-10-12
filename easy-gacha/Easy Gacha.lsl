@@ -36,8 +36,8 @@
 //
 // InitState
 // 0: default::state_entry()
-// 1: Lookup inventory notecard line
-// 2: Lookup payee notecard line
+// 1: Getting notecard line count
+// 2: Lookup inventory notecard line
 // 3: Lookup user name
 // 4: Getting permission
 //
@@ -50,12 +50,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 string SOURCE_CODE_LINK = "https://github.com/zannalov/opensl";
-
-string INVENTORY_CONFIG = "Easy Gacha Inventory";
-string PAYEE_CONFIG = "Easy Gacha Payout";
-
-integer MAX_PER_PURCHASE = 100;
+string CONFIG = "Easy Gacha Config";
 integer LOW_MEMORY_THRESHOLD = 16000;
+integer MAX_FOLDER_NAME_LENGTH = 63;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -64,14 +61,22 @@ integer LOW_MEMORY_THRESHOLD = 16000;
 ////////////////////////////////////////////////////////////////////////////////
 
 integer InitState = 0;
+integer AllowRootPrim = FALSE;
+integer CountConfigLines = 0;
+integer LastTouch = 0;
 
 list Inventory = []; // Strided list of [ Inventory Name , Non Zero Positive Probability Number ]
-integer CountInventory = 0;
-float SumProbability = 0.0;
+integer CountInventory = 0; // List length (not strided item length)
+float SumProbability = 0.0; // Sum
 
 list Payees = []; // Strided list of [ Agent Key , Number of Lindens ]
-integer CountPayees = 0;
-integer Price = 0;
+integer CountPayees = 0; // List length (not strided item length)
+integer Price = 0; // Sum
+integer MaxPerPurchase = 100; // Not to exceed 100
+integer PayButton1 = 2; // Item count during config, price after config
+integer PayButton2 = 5; // Item count during config, price after config
+integer PayButton3 = 10; // Item count during config, price after config
+integer PayAnyAmount = 1; // 0/1 during config ends, price after config
 
 key DataServerRequest;
 integer DataServerRequestIndex = 0;
@@ -85,6 +90,16 @@ integer DataServerRequestIndex = 0;
 ShowError( string msg ) {
     llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nERROR: " + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
     llOwnerSay( llGetScriptName() + ": ERROR: " + msg );
+}
+
+BadConfig( string reason , string data ) {
+    ShowError( reason + "Bad configuration on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
+}
+
+NextConfigLine() {
+    DataServerRequest = llGetNotecardLine( CONFIG , DataServerRequestIndex += 1 );
+    llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nChecking config " + (string)( DataServerRequestIndex * 100 / CountConfigLines ) + "%, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+    llSetTimerEvent( 30.0 );
 }
 
 integer MemoryError() {
@@ -131,7 +146,7 @@ default {
     // inventory. If the inventory changes, we have to recertify everything
     // anyway.
     changed( integer changeMask ) {
-        if( changeMask & ( CHANGED_INVENTORY | CHANGED_OWNER ) ) {
+        if( changeMask & ( CHANGED_INVENTORY | CHANGED_OWNER | CHANGED_LINK ) ) {
             llResetScript();
         }
     }
@@ -142,31 +157,38 @@ default {
 
     state_entry() {
         llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nInitializing, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
-        llOwnerSay( llGetScriptName() + ": Initializing, please wait..." );
+        llOwnerSay( llGetScriptName() + "\nInitializing, please wait..." );
+        llMessageLinked( LINK_SET , 3000166 , "" , NULL_KEY );
 
-        if( INVENTORY_NOTECARD != llGetInventoryType( INVENTORY_CONFIG ) ) {
-            ShowError( "\"" + INVENTORY_CONFIG + "\" is missing from inventory" );
+        // Config notecard not found at all
+        if( INVENTORY_NOTECARD != llGetInventoryType( CONFIG ) ) {
+            ShowError( "\"" + CONFIG + "\" is missing from inventory" );
             return;
         }
 
-        if( INVENTORY_NOTECARD != llGetInventoryType( PAYEE_CONFIG ) ) {
-            ShowError( "\"" + PAYEE_CONFIG + "\" is missing from inventory" );
+        // Full perm required to use llGetInventoryKey() successfully
+        if( ! ( PERM_COPY & llGetInventoryPermMask( CONFIG , MASK_OWNER ) ) ) {
+            ShowError( "\"" + CONFIG + "\" is not copyable" );
+            return;
+        }
+        if( ! ( PERM_MODIFY & llGetInventoryPermMask( CONFIG , MASK_OWNER ) ) ) {
+            ShowError( "\"" + CONFIG + "\" is not modifiable" );
+            return;
+        }
+        if( ! ( PERM_TRANSFER & llGetInventoryPermMask( CONFIG , MASK_OWNER ) ) ) {
+            ShowError( "\"" + CONFIG + "\" is not transferable" );
             return;
         }
 
-        if( NULL_KEY == llGetInventoryKey( INVENTORY_CONFIG ) ) {
-            ShowError( "\"" + INVENTORY_CONFIG + "\" is new and has not yet been saved" );
-            return;
-        }
-
-        if( NULL_KEY == llGetInventoryKey( PAYEE_CONFIG ) ) {
-            ShowError( "\"" + PAYEE_CONFIG + "\" is new and has not yet been saved" );
+        // No key returned despite permissions == no contents (which would blow
+        // up llGetNotecardLine)
+        if( NULL_KEY == llGetInventoryKey( CONFIG ) ) {
+            ShowError( "\"" + CONFIG + "\" is new and has not yet been saved" );
             return;
         }
 
         InitState = 1;
-        DataServerRequest = llGetNotecardLine( INVENTORY_CONFIG , DataServerRequestIndex = 0 );
-        llSetTimerEvent( 30.0 );
+        DataServerRequest = llGetNumberOfNotecardLines( CONFIG );
     } // end state_entry()
 
     dataserver( key queryId , string data ) {
@@ -180,6 +202,7 @@ default {
         integer i1;
         float f0;
         string s0;
+        key k0;
 
         // Stop/reset timeout timer
         llSetTimerEvent( 0.0 );
@@ -187,119 +210,88 @@ default {
         // Memory check before proceeding, having just gotten a new string
         if( MemoryError() ) return;
 
-        // If the result is the lookup of a line from the INVENTORY_CONFIG
         if( 1 == InitState ) {
-            // If the line is blank, skip it
-            if( "" == data ) {
-                DataServerRequest = llGetNotecardLine( INVENTORY_CONFIG , DataServerRequestIndex += 1 );
-                llSetTimerEvent( 30.0 );
-                return;
-            }
-
-            // If the line starts with a hash, skip it
-            if( "#" == llGetSubString( data , 0 , 0 ) ) {
-                DataServerRequest = llGetNotecardLine( INVENTORY_CONFIG , DataServerRequestIndex += 1 );
-                llSetTimerEvent( 30.0 );
-                return;
-            }
-
-            // If we're past the last line
-            if( EOF == data ) {
-                // Report percentages now that we know the totals
-                for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
-                    llOwnerSay( llGetScriptName() + ": \"" + llList2String( Inventory , i0 ) + "\" has a probability of " + (string)( llList2Float( Inventory , i0 + 1 ) / SumProbability * 100 ) + "%" );
-                }
-
-                // Load first line of config
-                InitState = 2;
-                DataServerRequest = llGetNotecardLine( PAYEE_CONFIG , DataServerRequestIndex = 0 );
-                llSetTimerEvent( 30.0 );
-                return;
-            }
-
-            // Process new line
-            i0 = llSubStringIndex( data , " " );
-
-            // If there's no space on the line, it's invalid
-            if( 0 >= i0 ) {
-                ShowError( "Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
-                return;
-            }
-
-            // Pull the probability number off the front of the string
-            f0 = (float)llGetSubString( data , 0 , i0 );
-
-            // If the probability is out of bounds
-            if( 0.0 >= f0 ) {
-                ShowError( "Number must be greater than zero. Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
-                return;
-            }
-
-            // Grab inventory name off string
-            s0 = llGetSubString( data , i0 + 1 , -1 );
-
-            // Name must be provided
-            if( "" == s0 ) {
-                ShowError( "Inventory name must be provided. Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
-                return;
-            }
-
-            // Inventory must exist
-            if( INVENTORY_NONE == llGetInventoryType( s0 ) ) {
-                ShowError( "Cannot find \"" + s0 + "\" in inventory. Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
-                return;
-            }
-
-            // Inventory must be copyable
-            if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
-                return;
-            }
-
-            // Inventory must be transferable
-            if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
-                return;
-            }
-
-            // If they put the same item in twice
-            if( -1 != llListFindList( Inventory , [ s0 ] ) ) {
-                ShowError( "\"" + s0 + "\" was listed twice. Did you mean to list it once with a rarity of " + (string)( llList2Float( Inventory , llListFindList( Inventory , [ s0 ] ) + 1 ) + f0 ) + "? Bad configuration in \"" + INVENTORY_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
-                return;
-            }
-
-            // Store the configuration and add probably to the sum
-            SumProbability += f0;
-            Inventory = ( Inventory = [] ) + Inventory + [ s0 , f0 ];
-            CountInventory += 2;
-
-            // Memory check before proceeding, having just messed with a list
-            if( MemoryError() ) return;
-
-            // Load next line of config
-            DataServerRequest = llGetNotecardLine( INVENTORY_CONFIG , DataServerRequestIndex += 1 );
-            llSetTimerEvent( 30.0 );
-            return;
+            CountConfigLines = (integer)data;
+            InitState = 2;
+            DataServerRequestIndex = -1; // Next method increments to zero
+            NextConfigLine(); return;
         }
 
-        // If the result is the lookup of a line from the PAYEE_CONFIG
+        // If the result is the lookup of a line from the CONFIG
         if( 2 == InitState ) {
             // If the line is blank, skip it
             if( "" == data ) {
-                DataServerRequest = llGetNotecardLine( PAYEE_CONFIG , DataServerRequestIndex += 1 );
-                llSetTimerEvent( 30.0 );
-                return;
+                NextConfigLine(); return;
             }
 
             // If the line starts with a hash, skip it
             if( "#" == llGetSubString( data , 0 , 0 ) ) {
-                DataServerRequest = llGetNotecardLine( PAYEE_CONFIG , DataServerRequestIndex += 1 );
-                llSetTimerEvent( 30.0 );
-                return;
+                NextConfigLine(); return;
             }
 
             // If we're past the last line
             if( EOF == data ) {
+                // Check that at least one was configured
+                if( 0 == CountInventory ) {
+                    ShowError( "Bad configuration: No items were listed!" );
+                    return;
+                }
+
+                // Check that at least one was configured
+                if( 0 == CountPayees ) {
+                    ShowError( "Bad configuration: No payouts were listed!" );
+                    return;
+                }
+
+                // Check that pay buttons aren't out of bounds
+                if( PayButton1 && PayButton1 > MaxPerPurchase ) {
+                    ShowError( "Bad configuration: buy_button 1 exceeds maximum of " + (string)MaxPerPurchase );
+                    return;
+                }
+                if( PayButton2 && PayButton2 > MaxPerPurchase ) {
+                    ShowError( "Bad configuration: buy_button 2 exceeds maximum of " + (string)MaxPerPurchase );
+                    return;
+                }
+                if( PayButton3 && PayButton3 > MaxPerPurchase ) {
+                    ShowError( "Bad configuration: buy_button 3 exceeds maximum of " + (string)MaxPerPurchase );
+                    return;
+                }
+
+                // Check that duplicate buttons weren't provided
+                if( PayButton1 && PayButton1 == PayButton2 ) {
+                    ShowError( "Bad configuration: buy_button 1 and buy_button 2 are the same" );
+                    return;
+                }
+                if( PayButton1 && PayButton1 == PayButton3 ) {
+                    ShowError( "Bad configuration: buy_button 1 and buy_button 3 are the same" );
+                    return;
+                }
+                if( PayButton2 && PayButton2 == PayButton3 ) {
+                    ShowError( "Bad configuration: buy_button 2 and buy_button 3 are the same" );
+                    return;
+                }
+
+                // If we shouldn't allow the root prim in a linked set
+                if( !AllowRootPrim && LINK_ROOT == llGetLinkNumber() ) {
+                    ShowError( "This script is in the root prim of a linked set. It will override the default click action for the ENTIRE OBJECT, setting it to click-to-pay. If this is really what you want, change the config to: allow_root_prim yes" );
+                    return;
+                }
+
+                // Report percentages now that we know the totals
+                for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
+                    f0 = ( llList2Float( Inventory , i0 + 1 ) / SumProbability );
+                    llOwnerSay( llGetScriptName() + ": \"" + llList2String( Inventory , i0 ) + "\" has a probability of " + (string)( f0 * 100 ) + "%" );
+                    llMessageLinked( LINK_SET , 3000167 , llList2String( Inventory , i0 ) , (key)((string)f0) );
+                }
+
+                // Set payment option
+                if( 0 == PayAnyAmount ) { PayAnyAmount = PAY_HIDE; } else { PayAnyAmount  = Price; }
+                if( 0 == PayButton1   ) { PayButton1   = PAY_HIDE; } else { PayButton1   *= Price; }
+                if( 0 == PayButton2   ) { PayButton2   = PAY_HIDE; } else { PayButton2   *= Price; }
+                if( 0 == PayButton3   ) { PayButton3   = PAY_HIDE; } else { PayButton3   *= Price; }
+
+                // Load first line of config
+                llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nChecking payouts 0%, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
                 InitState = 3;
                 DataServerRequest = llRequestUsername( llList2Key( Payees , DataServerRequestIndex = 0 ) );
                 llSetTimerEvent( 30.0 );
@@ -311,66 +303,257 @@ default {
 
             // If there's no space on the line, it's invalid
             if( 0 >= i0 ) {
-                ShowError( "Bad configuration in \"" + PAYEE_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
-                return;
+                BadConfig( "" , data ); return;
             }
 
-            // Pull the payment number off the front of the string
-            i1 = (integer)llGetSubString( data , 0 , i0 );
+            // Handle an item entry
+            if( "item " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
+                // Strip "item " off the front
+                s0 = llGetSubString( data , 5 , -1 );
 
-            // If the payment is out of bounds
-            if( 0 >= i1 ) {
-                ShowError( "L$ to give must be greater than zero. Bad configuration in \"" + PAYEE_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
-                return;
+                // Find second space
+                i0 = llSubStringIndex( s0 , " " );
+
+                // If there's not another space on the line, it's invalid
+                if( 0 >= i0 ) {
+                    BadConfig( "" , data ); return;
+                }
+
+                // Pull the probability number off the front of the string
+                f0 = (float)llGetSubString( s0 , 0 , i0 );
+
+                // If the probability is out of bounds
+                if( 0.0 >= f0 ) {
+                    BadConfig( "Number must be greater than zero. " , data ); return;
+                }
+
+                // Grab inventory name off string
+                s0 = llGetSubString( s0 , i0 + 1 , -1 );
+
+                // Name must be provided
+                if( "" == s0 ) {
+                    BadConfig( "Inventory name must be provided. " , data ); return;
+                }
+
+                // Inventory must exist
+                if( INVENTORY_NONE == llGetInventoryType( s0 ) ) {
+                    BadConfig( "Cannot find \"" + s0 + "\" in inventory. " , data ); return;
+                }
+
+                // Inventory must be copyable
+                if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
+                    BadConfig( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " , data ); return;
+                }
+
+                // Inventory must be transferable
+                if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
+                    BadConfig( "\"" + s0 + "\" is not transferable. So how can I give it out? " , data ); return;
+                }
+
+                // If they put the same item in twice
+                if( -1 != llListFindList( Inventory , [ s0 ] ) ) {
+                    BadConfig( "\"" + s0 + "\" was listed twice. Did you mean to list it once with a rarity of " + (string)( llList2Float( Inventory , llListFindList( Inventory , [ s0 ] ) + 1 ) + f0 ) + "? " , data ); return;
+                }
+
+                // Store the configuration and add probably to the sum
+                SumProbability += f0;
+                Inventory = ( Inventory = [] ) + Inventory + [ s0 , f0 ]; // Voodoo for better memory usage
+                CountInventory += 2;
+
+                // Memory check before proceeding, having just messed with a list
+                if( MemoryError() ) return;
+
+                // Load next line of config
+                NextConfigLine(); return;
+            } // end if( "item" ... )
+
+            // Handle a payout entry
+            // Valid money formats: L$#, $#, #, #L
+            if( "payout " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
+                // Strip "payout " off the front
+                s0 = llGetSubString( data , 7 , -1 );
+
+                // Strip "L" off the front
+                if( "l" == llToLower( llGetSubString( s0 , 0 , 0 ) ) ) {
+                    s0 = llGetSubString( s0 , 1 , -1 );
+                }
+
+                // Strip "$" off the front
+                if( "$" == llGetSubString( s0 , 0 , 0 ) ) {
+                    s0 = llGetSubString( s0 , 1 , -1 );
+                }
+
+                // Find second space
+                i0 = llSubStringIndex( s0 , " " );
+
+                // If there's not another space on the line, it's invalid
+                if( 0 >= i0 ) {
+                    BadConfig( "" , data ); return;
+                }
+
+                // Pull the payment number off the front of the string
+                i1 = (integer)llGetSubString( s0 , 0 , i0 );
+
+                // If the payment is out of bounds
+                if( 0 >= i1 ) {
+                    BadConfig( "L$ to give must be greater than zero. " , data ); return;
+                }
+
+                // Grab agent key off the string
+                s0 = llGetSubString( s0 , i0 + 1 , -1 );
+
+                // Name must be provided
+                if( "" == s0 ) {
+                    BadConfig( "User key must be provided. " , data ); return;
+                }
+
+                // Convert to key
+                k0 = (key)s0;
+                if( "owner" == s0 ) {
+                    k0 = llGetOwner();
+                }
+                if( "creator" == s0 ) {
+                    k0 = llGetCreator();
+                }
+                if( "scriptor" == s0 ) {
+                    k0 = llGetInventoryCreator( llGetScriptName() );
+                }
+
+                // If they put the same item in twice
+                if( -1 != llListFindList( Payees , [ k0 ] ) ) {
+                    if( llGetOwner() == k0 ) {
+                        s0 = "owner";
+                    }
+                    if( llGetCreator() == k0 ) {
+                        s0 = "creator";
+                    }
+                    if( llGetInventoryCreator( llGetScriptName() ) == k0 ) {
+                        s0 = "scriptor";
+                    }
+
+                    BadConfig( s0 + " was listed twice. Did you mean to list them once with a payout of " + (string)( llList2Integer( Payees , llListFindList( Payees , [ k0 ] ) + 1 ) + i1 ) + "? " , data ); return;
+                }
+
+                // Store the configuration
+                Price += i1;
+                Payees = ( Payees = [] ) + Payees + [ k0 , i1 ]; // Voodoo for better memory usage
+                CountPayees += 2;
+
+                // Memory check before proceeding, having just messed with a list
+                if( MemoryError() ) return;
+
+                // Load next line of config
+                NextConfigLine(); return;
             }
 
-            // Grab agent key off the string
-            s0 = llGetSubString( data , i0 + 1 , -1 );
+            // Advanced option
+            if( "buy_button " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
+                // Strip "buy_button " off the front
+                s0 = llGetSubString( data , 11 , -1 );
 
-            // Name must be provided
-            if( "" == s0 ) {
-                ShowError( "User key must be provided. Bad configuration in \"" + PAYEE_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + ": " + data );
-                return;
+                // Find second space
+                i0 = llSubStringIndex( s0 , " " );
+
+                // If there's not another space on the line, it's invalid
+                if( 0 >= i0 ) {
+                    BadConfig( "" , data ); return;
+                }
+
+                // Get the number off the end first (number of items)
+                if( "off" == llGetSubString( s0 , i0 + 1 , -1 ) ) {
+                    i1 = 0;
+                } else {
+                    i1 = (integer)llGetSubString( s0 , i0 + 1 , -1 );
+                }
+
+                // Then reuse for button number
+                i0 = (integer)llGetSubString( s0 , 0 , i0 - 1 );
+
+                // If item count isn't greater than 1 and isn't PAY_HIDE, bad
+                // format
+                if( 0 != i1 && 1 >= i1 ) {
+                    BadConfig( "" , data ); return;
+                }
+
+                // Store button value
+                if( 1 == i0 ) {
+                    PayButton1 = i1;
+                } else if( 2 == i0 ) {
+                    PayButton2 = i1;
+                } else if( 3 == i0 ) {
+                    PayButton3 = i1;
+                } else {
+                    BadConfig( "" , data ); return;
+                }
+
+                // Load next line of config
+                NextConfigLine(); return;
             }
 
-            // Convert special values
-            if( "owner" == s0 ) {
-                s0 = (string)llGetOwner();
-            }
-            if( "creator" == s0 ) {
-                s0 = (string)llGetCreator();
-            }
-            if( "scriptor" == s0 ) {
-                s0 = (string)llGetInventoryCreator( llGetScriptName() );
+            // Advanced option
+            if( "pay_any_amount " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
+                // Strip "pay_any_amount " off the front
+                s0 = llGetSubString( data , 15 , -1 );
+
+                if( "yes" == llToLower( s0 ) ) {
+                    PayAnyAmount = 1;
+                } else if( "no" == llToLower( s0 ) ) {
+                    PayAnyAmount = 0;
+                } else {
+                    BadConfig( "" , data ); return;
+                }
+
+                // Load next line of config
+                NextConfigLine(); return;
             }
 
-            // If they put the same item in twice
-            if( -1 != llListFindList( Payees , [ (key)s0 ] ) ) {
-                ShowError( s0 + " was listed twice. Did you mean to list them once with a payout of " + (string)( llList2Integer( Payees , llListFindList( Payees , [ s0 ] ) + 1 ) + i1 ) + "? Bad configuration in \"" + PAYEE_CONFIG + "\" on line " + (string)(DataServerRequestIndex + 1) + "." );
-                return;
+            // Advanced option
+            if( "buy_max_items " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
+                // Strip "buy_max_items " off the front
+                s0 = llGetSubString( data , 14 , -1 );
+
+                // Get config value
+                i1 = (integer)llGetSubString( s0 , 0 , i0 );
+
+                // If the payment is out of bounds
+                if( 0 >= i1 || 100 < i1 ) {
+                    BadConfig( "" , data ); return;
+                }
+
+                // Store the new value
+                MaxPerPurchase = i1;
+
+                // Load next line of config
+                NextConfigLine(); return;
             }
 
-            // Store the configuration
-            Price += i1;
-            Payees = ( Payees = [] ) + Payees + [ (key)s0 , i1 ];
-            CountPayees += 2;
+            // Miscellaneous
+            if( "allow_root_prim " == llToLower( llGetSubString( data , 0 , i0 ) ) ) {
+                // Strip "allow_root_prim " off the front
+                s0 = llGetSubString( data , 16 , -1 );
 
-            // Memory check before proceeding, having just messed with a list
-            if( MemoryError() ) return;
+                if( "yes" == llToLower( s0 ) ) {
+                    AllowRootPrim = TRUE;
+                } else if( "no" == llToLower( s0 ) ) {
+                    AllowRootPrim = FALSE;
+                } else {
+                    BadConfig( "" , data ); return;
+                }
 
-            // Load next line of config
-            DataServerRequest = llGetNotecardLine( PAYEE_CONFIG , DataServerRequestIndex += 1 );
-            llSetTimerEvent( 30.0 );
-            return;
-        }
+                // Load next line of config
+                NextConfigLine(); return;
+            }
+        } // end if( 2 == InitState )
 
         // If the result is the lookup of a user from the Payees
         if( 3 == InitState ) {
             // Note that this user was looked up correctly and report the amount to be given
             llOwnerSay( llGetScriptName() + ": Will give L$" + (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) + " to " + data + " for each item purchased." );
+            llMessageLinked( LINK_SET , 3000168 , (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) , llList2Key( Payees , DataServerRequestIndex ) );
 
             // Increment to next value
             DataServerRequestIndex += 2;
+            llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nChecking payouts " + (string)( DataServerRequestIndex * 100 / CountPayees ) + "%, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
 
             // If there are more to look up
             if( DataServerRequestIndex < CountPayees ) {
@@ -382,8 +565,11 @@ default {
 
             // Report total price
             llOwnerSay( llGetScriptName() + ": The total price is L$" + (string)Price );
+            llMessageLinked( LINK_SET , 3000169 , (string)Price , NULL_KEY );
 
             // Get permission to give money (so we can give refunds at least)
+            llOwnerSay( llGetScriptName() + ": Getting ability to debit, please grant permission..." );
+            llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nGetting permission..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
             llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
             llSetTimerEvent( 30.0 );
             InitState = 4;
@@ -394,10 +580,8 @@ default {
         // Reset/stop timer
         llSetTimerEvent( 0.0 );
 
-        if( 1 == InitState ) {
-            ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + INVENTORY_CONFIG );
-        } else if( 2 == InitState ) {
-            ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + PAYEE_CONFIG );
+        if( 2 == InitState ) {
+            ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + CONFIG );
         } else if( 3 == InitState ) {
             ShowError( "Timed out while trying to look up user key. The user \"" + llList2String( Payees , DataServerRequestIndex ) + "\" doesn't seem to exist, or the data server is being too slow." );
         } else if( 4 == InitState ) {
@@ -413,6 +597,7 @@ default {
         } else {
             llOwnerSay( llGetScriptName() + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
             llOwnerSay( llGetScriptName() + ": Ready! Free memory: " + (string)llGetFreeMemory() );
+            llMessageLinked( LINK_SET , 3000170 , "" , NULL_KEY );
             state ready;
         }
     }
@@ -437,7 +622,7 @@ state ready {
     // inventory. If the inventory changes, we have to recertify everything
     // anyway.
     changed( integer changeMask ) {
-        if( changeMask & ( CHANGED_INVENTORY | CHANGED_OWNER ) ) {
+        if( changeMask & ( CHANGED_INVENTORY | CHANGED_OWNER | CHANGED_LINK ) ) {
             llResetScript();
         }
     }
@@ -455,8 +640,16 @@ state ready {
 
     state_entry() {
         llSetText( "" , ZERO_VECTOR , 0.0 );
-        llSetPayPrice( Price , [ Price , Price * 2 , Price * 5 , Price * 10 ] );
+        llSetPayPrice( PayAnyAmount , [ Price , PayButton1 , PayButton2 , PayButton3 ] );
         llSetClickAction( CLICK_ACTION_PAY );
+    }
+
+    // Rate limited
+    touch_end( integer detected ) {
+        if( llGetUnixTime() != LastTouch ) {
+            llWhisper( 0 , llGetScriptName() + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
+            LastTouch = llGetUnixTime();
+        }
     }
 
     // Switching states here would prevent further orders from being placed
@@ -471,9 +664,10 @@ state ready {
         string change = "";
         string itemPlural = " items ";
         string hasHave = "have ";
+        string objectName = llGetObjectName();
 
         // Let them know we're thinking
-        llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nPlease wait, getting random items for " + llGetDisplayName( buyerId ) + "...\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+        llSetText( objectName + ": " + llGetScriptName() + "\nPlease wait, getting random items for " + llGetDisplayName( buyerId ) + "...\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
 
         // If not enough money
         if( lindensReceived < Price ) {
@@ -484,7 +678,7 @@ state ready {
         }
 
         // While there's still enough money for another item
-        while( lindensReceived >= Price && countItemsToSend < MAX_PER_PURCHASE ) {
+        while( lindensReceived >= Price && countItemsToSend < MaxPerPurchase ) {
             random = llFrand( SumProbability ); // Generate a random number which is between [ 0.0 , SumProbability )
             selected = -2; // Start below the first object because the first iteration will definitely run once
 
@@ -497,9 +691,10 @@ state ready {
             }
 
             // Schedule to give inventory, increment counter, decrement money
-            itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ llList2String( Inventory , selected ) ];
+            itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ llList2String( Inventory , selected ) ]; // Voodoo for better memory usage
             countItemsToSend += 1;
             lindensReceived -= Price;
+            llMessageLinked( LINK_ROOT , 3000171 , llList2String( Inventory , selected ) , NULL_KEY );
         }
 
         // Distribute the money
@@ -526,8 +721,14 @@ state ready {
         // Thank them for their purchase
         llWhisper( 0 , "Thank you " + llGetDisplayName( buyerId ) + " for your purchase! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
 
+        // Build the name of the folder to give
+        string folderSuffix = ( " (Easy Gacha " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
+        if( llStringLength( objectName ) + llStringLength( folderSuffix ) > MAX_FOLDER_NAME_LENGTH ) {
+            objectName = ( llGetSubString( objectName , 0 , MAX_FOLDER_NAME_LENGTH - llStringLength( folderSuffix ) - 4 /* 3 for ellipses, 1 because this is end index, not count */ ) + "..." );
+        }
+
         // Give the inventory
-        llGiveInventoryList( buyerId , llGetObjectName() + " (" + (string)countItemsToSend + itemPlural + "on " + llGetDate() + ")" , itemsToSend ); // FORCED_DELAY 3.0 seconds
+        llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend ); // FORCED_DELAY 3.0 seconds
 
         // Clear the thinkin' text
         llSetText( "" , ZERO_VECTOR , 0.0 );

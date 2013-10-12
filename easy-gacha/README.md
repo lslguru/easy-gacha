@@ -17,10 +17,9 @@ folder that says:
 Configuration
 =============
 
-Three things are required to make it work:
+Two things are required to make it work:
 1. The "Easy Gacha" script
-2. The "Easy Gacha Inventory" notecard
-3. The "Easy Gacha Payout" notecard
+2. The "Easy Gacha Config" notecard
 
 Here are the steps to create your own Easy Gacha
 
@@ -32,28 +31,23 @@ Create an object (or use an existing object for which you have mod rights).
 Step 2
 ------
 
-Copy the "Easy Gacha Inventory" notecard into your object. Open the notecard
-from within the object and follow the instructions there. You should list each
-inventory item you want to sell.
+Copy the "Easy Gacha Config" notecard into your object. Open the notecard from
+within the object and follow the instructions there. You should list each
+inventory item you want to sell, and each person you wish to pay. Make sure you
+define at least one payout (probably to yourself).
 
 Step 3
 ------
 
-Copy the "Easy Gacha Payout" notecard into your object. Open the notecard from
-within the object and follow the instructions there. Make sure you define at
-least one payout (probably to yourself).
+Copy the "Easy Gacha" script into the object. If the script tells you there are
+problems... follow the instructions to fix them!
 
 Step 4
 ------
 
-Copy the "Easy Gacha" script into the object. If the script tells you there are problems... follow the instructions to fix them!
-
-Step 5
-------
-
 ...
 
-Step 6
+Step 5
 ------
 
 Profit!

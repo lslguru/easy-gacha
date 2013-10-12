@@ -1,0 +1,86 @@
+################################################################################
+## EASY GACHA CONFIGURATION
+################################################################################
+
+# List each item on a separate line
+#
+# Each line should have:
+# 1. The word "item"
+# 2. A single space " "
+# 3. A NUMBER that is GREATER THAN zero
+# 4. A single space " "
+# 5. The EXACT NAME of the inventory item
+#
+# The number is the rarity for this object. The higher the number, the more common it is. The exact percentage is based on dividing this number by the sum of all of the numbers. The script will tell you the percentages.
+#
+#item 1 Foo
+#item 0.5 Bar
+#item 23 Baz
+
+item 1 Easy Gacha
+item 1 Easy Gacha Config
+item 1 Easy Gacha README
+item 1 Easy Gacha LICENSE
+
+# List each person you want to pay for these sales on a separate line.
+#
+# Each line should have:
+# 1. The word "payout"
+# 2. A single space " "
+# 3. A WHOLE NUMBER that is GREATER THAN zero
+# 4. A single space " "
+# 5. The KEY (UUID) of the USER you want to pay
+#
+# The number is the amount of L$ to give with each item purchased. The total price per item is determined by the sum of all these entries.
+#
+# IF YOU WANT TO KEEP ANY MONEY FOR YOURSELF, MAKE SURE YOU'RE IN THE LIST! You can use the shortcut "owner" instead of your key (UUID) if you like.
+#
+# There are three special KEYS that you can use:
+# scriptor: The creator of this script (a great way to tip me)
+# creator: The creator of the root prim
+# owner: The owner of the root prim
+#
+#payout 15 scriptor
+#payout 15 creator
+#payout 15 owner
+#payout 10 d7e84aa5-91ca-4992-87dd-ff5cf65379b5
+#payout 10 a031a619-2c9c-4a04-bd29-db14afab31a8
+#payout 10 286404f5-a8ca-4dbd-8a7e-ff88dcfc673c
+#payout 10 e371bafa-85cb-481f-b250-3f2ce82e9fd6
+
+# This is a good way to tip me:
+payout 1 scriptor
+
+################################################################################
+## ADVANCED OPTIONS
+################################################################################
+
+# Note: Any line that is empty or begins with a "#" is ignored.
+
+# Payment Buttons
+#
+# buy_button {button number} {item count}
+#
+# When you choose to pay the object, it will ask you how much you want to pay. We're allowed to show up to four buttons and a number-entry box.
+#
+# For each button, the valid settings are "off" (hide button), or a number greater than one (1), which is the number of ITEMS a person is buying with that button. If the final price is L$10 and the button is for 5 items, that means the button will show L$50
+#
+# The option "pay_any_amount" may either be "yes" or "no". If the value is "no", the number-entry box will be hidden.
+#
+# The option "buy_max_items" may be followed by a number between 1 and 100.  This is the absolute maximum number of items someone can buy at a time.
+#
+# NOTE: If someone pays too MUCH, it will give them a refund for any extra money.
+#
+# NOTE: If someone pays too LITTLE, it will give back their money with no items given.
+#
+#buy_button 1 2
+#buy_button 2 5
+#buy_button 3 10
+#pay_any_amount yes
+#buy_max_items 100
+
+# Root Prim Detection
+#
+# If you use this option, the script will not complain about being the root prim in a linked set. If the script is in the root prim of a linked set, the entire linked set will have a default action of payment. This means that you will have to right-click to access the touch even for the statistics script!
+#
+#allow_root_prim no
