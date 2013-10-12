@@ -635,12 +635,12 @@ state ready {
 
     // If the object is attached or detached, reset
     attach( key avatarId ){
-        llResetScript();
+        llSetTimerEvent( 0.01 );
     }
 
     // Each time the object is rezzed, reset
     on_rez( integer rezParam ) {
-        llResetScript();
+        llSetTimerEvent( 0.01 );
     }
 
     // If the owner changes, copy permissions may no longer apply for
@@ -648,15 +648,21 @@ state ready {
     // anyway.
     changed( integer changeMask ) {
         if( changeMask & ( CHANGED_INVENTORY | CHANGED_OWNER | CHANGED_LINK ) ) {
-            llResetScript();
+            llSetTimerEvent( 0.01 );
         }
     }
 
     // If the money permission gets revoked, start over
     run_time_permissions( integer permissionMask ) {
         if( ! ( PERMISSION_DEBIT & permissionMask ) ) {
-            llResetScript();
+            llSetTimerEvent( 0.01 );
         }
+    }
+
+    // We use the timer event to prevent the queue from being dumped.
+    // See http://wiki.secondlife.com/wiki/State#Notes
+    timer() {
+        llResetScript();
     }
 
     /////////////////
