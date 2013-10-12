@@ -177,18 +177,10 @@ default {
         }
 
         // Full perm required to use llGetInventoryKey() successfully
-        if( ! ( PERM_COPY & llGetInventoryPermMask( CONFIG , MASK_OWNER ) ) ) {
-            ShowError( "\"" + CONFIG + "\" is not copyable" );
-            return;
-        }
-        if( ! ( PERM_MODIFY & llGetInventoryPermMask( CONFIG , MASK_OWNER ) ) ) {
-            ShowError( "\"" + CONFIG + "\" is not modifiable" );
-            return;
-        }
-        if( ! ( PERM_TRANSFER & llGetInventoryPermMask( CONFIG , MASK_OWNER ) ) ) {
-            ShowError( "\"" + CONFIG + "\" is not transferable" );
-            return;
-        }
+        integer mask = llGetInventoryPermMask( CONFIG , MASK_OWNER );
+        if( ! ( PERM_COPY     & mask ) ) { ShowError( "\"" + CONFIG + "\" is not copyable"     ); return; }
+        if( ! ( PERM_MODIFY   & mask ) ) { ShowError( "\"" + CONFIG + "\" is not modifiable"   ); return; }
+        if( ! ( PERM_TRANSFER & mask ) ) { ShowError( "\"" + CONFIG + "\" is not transferable" ); return; }
 
         // No key returned despite permissions == no contents (which would blow
         // up llGetNotecardLine)
