@@ -60,8 +60,7 @@ Why aren't the permissions more open?
 
 Because otherwise I cannot vouch for its safety. If I made the script
 modifiable, someone with ill intent could make it steal money, then give it
-away. It would still list me as the creator, but would be malicious. If you
-want to make a malicious version, make your own copy of the script :-P
+away. It would still list me as the creator, but would be malicious.
 
 The script you have should have been created by:
 [Zan Lightfoot](secondlife:///app/agent/d393638e-be6e-4f81-a44d-072e344828c4/about)
