@@ -618,11 +618,13 @@ default {
         if( ! ( PERMISSION_DEBIT & permissionMask ) ) {
             llResetScript();
         } else {
-            llOwnerSay( ScriptName + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
-            llOwnerSay( ScriptName + ": Ready! Free memory: " + (string)llGetFreeMemory() );
-            llMessageLinked( LINK_SET , 3000170 , "" , NULL_KEY );
             state ready;
         }
+    }
+
+    state_exit() {
+        llOwnerSay( ScriptName + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
+        llOwnerSay( ScriptName + ": Ready! Free memory: " + (string)llGetFreeMemory() );
     }
 }
 
