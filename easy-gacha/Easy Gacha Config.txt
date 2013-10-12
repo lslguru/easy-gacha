@@ -2,6 +2,8 @@
 ## EASY GACHA CONFIGURATION
 ################################################################################
 
+# Note: Any line that is empty or begins with a "#" is ignored.
+
 # List each item on a separate line
 #
 # Each line should have:
@@ -51,8 +53,6 @@ payout 10 e371bafa-85cb-481f-b250-3f2ce82e9fd6
 ################################################################################
 ## ADVANCED OPTIONS
 ################################################################################
-
-# Note: Any line that is empty or begins with a "#" is ignored.
 
 # Payment Buttons
 #
