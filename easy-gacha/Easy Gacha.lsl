@@ -64,6 +64,7 @@ integer InitState = 0;
 integer AllowRootPrim = FALSE;
 integer CountConfigLines = 0;
 integer LastTouch = 0;
+string ScriptName;
 
 list Inventory = []; // Strided list of [ Inventory Name , Non Zero Positive Probability Number ]
 integer CountInventory = 0; // List length (not strided item length)
@@ -87,9 +88,13 @@ integer DataServerRequestIndex = 0;
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+SetText( string msg ) {
+    llSetText( llGetObjectName() + ": " + ScriptName + "\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+}
+
 ShowError( string msg ) {
-    llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nERROR: " + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
-    llOwnerSay( llGetScriptName() + ": ERROR: " + msg );
+    SetText( "ERROR: " + msg );
+    llOwnerSay( ScriptName + ": ERROR: " + msg );
 }
 
 BadConfig( string reason , string data ) {
@@ -98,7 +103,7 @@ BadConfig( string reason , string data ) {
 
 NextConfigLine() {
     DataServerRequest = llGetNotecardLine( CONFIG , DataServerRequestIndex += 1 );
-    llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nChecking config " + (string)( DataServerRequestIndex * 100 / CountConfigLines ) + "%, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+    SetText( "Checking config " + (string)( DataServerRequestIndex * 100 / CountConfigLines ) + "%, please wait..." );
     llSetTimerEvent( 30.0 );
 }
 
@@ -156,8 +161,9 @@ default {
     ///////////////////
 
     state_entry() {
-        llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nInitializing, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
-        llOwnerSay( llGetScriptName() + "\nInitializing, please wait..." );
+        ScriptName = llGetScriptName();
+        SetText( "Initializing, please wait..." );
+        llOwnerSay( ScriptName + "\nInitializing, please wait..." );
         llMessageLinked( LINK_SET , 3000166 , "" , NULL_KEY );
 
         // Config notecard not found at all
@@ -280,7 +286,7 @@ default {
                 // Report percentages now that we know the totals
                 for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
                     f0 = ( llList2Float( Inventory , i0 + 1 ) / SumProbability );
-                    llOwnerSay( llGetScriptName() + ": \"" + llList2String( Inventory , i0 ) + "\" has a probability of " + (string)( f0 * 100 ) + "%" );
+                    llOwnerSay( ScriptName + ": \"" + llList2String( Inventory , i0 ) + "\" has a probability of " + (string)( f0 * 100 ) + "%" );
                     llMessageLinked( LINK_SET , 3000167 , llList2String( Inventory , i0 ) , (key)((string)f0) );
                 }
 
@@ -291,7 +297,7 @@ default {
                 if( 0 == PayButton3   ) { PayButton3   = PAY_HIDE; } else { PayButton3   *= Price; }
 
                 // Load first line of config
-                llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nChecking payouts 0%, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+                SetText( "Checking payouts 0%, please wait..." );
                 InitState = 3;
                 DataServerRequest = llRequestUsername( llList2Key( Payees , DataServerRequestIndex = 0 ) );
                 llSetTimerEvent( 30.0 );
@@ -416,7 +422,7 @@ default {
                     k0 = llGetCreator();
                 }
                 if( "scriptor" == s0 ) {
-                    k0 = llGetInventoryCreator( llGetScriptName() );
+                    k0 = llGetInventoryCreator( ScriptName );
                 }
 
                 // If they put the same item in twice
@@ -427,7 +433,7 @@ default {
                     if( llGetCreator() == k0 ) {
                         s0 = "creator";
                     }
-                    if( llGetInventoryCreator( llGetScriptName() ) == k0 ) {
+                    if( llGetInventoryCreator( ScriptName ) == k0 ) {
                         s0 = "scriptor";
                     }
 
@@ -548,12 +554,12 @@ default {
         // If the result is the lookup of a user from the Payees
         if( 3 == InitState ) {
             // Note that this user was looked up correctly and report the amount to be given
-            llOwnerSay( llGetScriptName() + ": Will give L$" + (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) + " to " + data + " for each item purchased." );
+            llOwnerSay( ScriptName + ": Will give L$" + (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) + " to " + data + " for each item purchased." );
             llMessageLinked( LINK_SET , 3000168 , (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) , llList2Key( Payees , DataServerRequestIndex ) );
 
             // Increment to next value
             DataServerRequestIndex += 2;
-            llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nChecking payouts " + (string)( DataServerRequestIndex * 100 / CountPayees ) + "%, please wait..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+            SetText( "Checking payouts " + (string)( DataServerRequestIndex * 100 / CountPayees ) + "%, please wait..." );
 
             // If there are more to look up
             if( DataServerRequestIndex < CountPayees ) {
@@ -564,12 +570,12 @@ default {
             }
 
             // Report total price
-            llOwnerSay( llGetScriptName() + ": The total price is L$" + (string)Price );
+            llOwnerSay( ScriptName + ": The total price is L$" + (string)Price );
             llMessageLinked( LINK_SET , 3000169 , (string)Price , NULL_KEY );
 
             // Get permission to give money (so we can give refunds at least)
-            llOwnerSay( llGetScriptName() + ": Getting ability to debit, please grant permission..." );
-            llSetText( llGetObjectName() + ": " + llGetScriptName() + "\nGetting permission..." + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+            llOwnerSay( ScriptName + ": Getting ability to debit, please grant permission..." );
+            SetText( "Getting permission..." );
             llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
             llSetTimerEvent( 30.0 );
             InitState = 4;
@@ -595,8 +601,8 @@ default {
         if( ! ( PERMISSION_DEBIT & permissionMask ) ) {
             llResetScript();
         } else {
-            llOwnerSay( llGetScriptName() + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
-            llOwnerSay( llGetScriptName() + ": Ready! Free memory: " + (string)llGetFreeMemory() );
+            llOwnerSay( ScriptName + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
+            llOwnerSay( ScriptName + ": Ready! Free memory: " + (string)llGetFreeMemory() );
             llMessageLinked( LINK_SET , 3000170 , "" , NULL_KEY );
             state ready;
         }
@@ -647,7 +653,7 @@ state ready {
     // Rate limited
     touch_end( integer detected ) {
         if( llGetUnixTime() != LastTouch ) {
-            llWhisper( 0 , llGetScriptName() + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
+            llWhisper( 0 , ScriptName + ": This is free and unencumbered software released into the public domain. The source code can be found at: " + SOURCE_CODE_LINK );
             LastTouch = llGetUnixTime();
         }
     }
@@ -667,7 +673,7 @@ state ready {
         string objectName = llGetObjectName();
 
         // Let them know we're thinking
-        llSetText( objectName + ": " + llGetScriptName() + "\nPlease wait, getting random items for " + llGetDisplayName( buyerId ) + "...\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+        SetText( "Please wait, getting random items for " + llGetDisplayName( buyerId ) );
 
         // If not enough money
         if( lindensReceived < Price ) {
