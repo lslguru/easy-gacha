@@ -128,6 +128,20 @@ NextConfigLine() {
     llSetTimerEvent( 30.0 );
 }
 
+integer BooleanConfigOption( string s0 ) {
+    s0 = llToLower( s0 );
+
+    if( -1 != llListFindList( [ "yes" , "on" , "true" , "1" , "hai" , "yea" , "yep" , "+" ] , [ s0 ] ) ) {
+        return TRUE;
+    }
+
+    if( -1 != llListFindList( [ "no" , "off" , "false" , "0" , "iie" , "nay" , "nope" , "-" ] , [ s0 ] ) ) {
+        return FALSE;
+    }
+
+    return -1;
+}
+
 integer MemoryError() {
     if( llGetFreeMemory() < LOW_MEMORY_THRESHOLD ) {
         ShowError( "Not enough free memory to handle large orders. Too many items in configuration?" );
@@ -592,11 +606,7 @@ default {
 
             // Advanced option
             if( "pay_any_amount" == s1 ) {
-                if( "yes" == llToLower( s0 ) ) {
-                    PayAnyAmount = 1;
-                } else if( "no" == llToLower( s0 ) ) {
-                    PayAnyAmount = 0;
-                } else {
+                if( -1 == ( PayAnyAmount = BooleanConfigOption( s0 ) ) ) {
                     BadConfig( "" , data );
                     return;
                 }
@@ -613,11 +623,7 @@ default {
 
             // Advanced option
             if( "allow_send_stats" == s1 ) {
-                if( "yes" == llToLower( s0 ) ) {
-                    AllowStatSend = TRUE;
-                } else if( "no" == llToLower( s0 ) ) {
-                    AllowStatSend = FALSE;
-                } else {
+                if( -1 == ( AllowStatSend = BooleanConfigOption( s0 ) ) ) {
                     BadConfig( "" , data );
                     return;
                 }
@@ -634,11 +640,7 @@ default {
 
             // Advanced option
             if( "allow_show_stats" == s1 ) {
-                if( "yes" == llToLower( s0 ) ) {
-                    AllowShowStats = TRUE;
-                } else if( "no" == llToLower( s0 ) ) {
-                    AllowShowStats = FALSE;
-                } else {
+                if( -1 == ( AllowShowStats = BooleanConfigOption( s0 ) ) ) {
                     BadConfig( "" , data );
                     return;
                 }
@@ -679,11 +681,7 @@ default {
 
             // Advanced option
             if( "allow_root_prim" == s1 ) {
-                if( "yes" == llToLower( s0 ) ) {
-                    AllowRootPrim = TRUE;
-                } else if( "no" == llToLower( s0 ) ) {
-                    AllowRootPrim = FALSE;
-                } else {
+                if( -1 == ( AllowRootPrim = BooleanConfigOption( s0 ) ) ) {
                     BadConfig( "" , data );
                     return;
                 }
@@ -700,11 +698,7 @@ default {
 
             // Advanced option
             if( "folder_for_one" == s1 ) {
-                if( "yes" == llToLower( s0 ) ) {
-                    FolderForOne = TRUE;
-                } else if( "no" == llToLower( s0 ) ) {
-                    FolderForOne = FALSE;
-                } else {
+                if( -1 == ( FolderForOne = BooleanConfigOption( s0 ) ) ) {
                     BadConfig( "" , data );
                     return;
                 }
