@@ -11,16 +11,12 @@
 # 4. A single space " "
 # 5. The EXACT NAME of the inventory item
 #
-# The number is the rarity for this object. The higher the number, the more common it is. The exact percentage is based on dividing this number by the sum of all of the numbers. The script will tell you the percentages.
-#
-#item 1 Foo
-#item 0.5 Bar
-#item 23 Baz
+# The number is the rarity for this object. The higher the number, the more common it is. The exact percentage is based on dividing this number by the sum of all of the numbers. The script will tell you the percentages at startup.
 
-item 1 Easy Gacha
-item 1 Easy Gacha Config
-item 1 Easy Gacha README
-item 1 Easy Gacha LICENSE
+# Examples:
+item 1 My first green object
+item 0.5 The blue one
+item 23 A very common kinda thing
 
 # List each person you want to pay for these sales on a separate line.
 #
@@ -40,16 +36,17 @@ item 1 Easy Gacha LICENSE
 # creator: The creator of the root prim
 # owner: The owner of the root prim
 #
-#payout 15 scriptor
-#payout 15 creator
-#payout 15 owner
-#payout 10 d7e84aa5-91ca-4992-87dd-ff5cf65379b5
-#payout 10 a031a619-2c9c-4a04-bd29-db14afab31a8
-#payout 10 286404f5-a8ca-4dbd-8a7e-ff88dcfc673c
-#payout 10 e371bafa-85cb-481f-b250-3f2ce82e9fd6
 
 # This is a good way to tip me:
 payout 1 scriptor
+
+# Other examples:
+payout 15 creator
+payout 15 owner
+payout 10 d7e84aa5-91ca-4992-87dd-ff5cf65379b5
+payout 10 a031a619-2c9c-4a04-bd29-db14afab31a8
+payout 10 286404f5-a8ca-4dbd-8a7e-ff88dcfc673c
+payout 10 e371bafa-85cb-481f-b250-3f2ce82e9fd6
 
 ################################################################################
 ## ADVANCED OPTIONS
