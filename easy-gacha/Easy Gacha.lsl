@@ -178,9 +178,18 @@ default {
 
         // Full perm required to use llGetInventoryKey() successfully
         integer mask = llGetInventoryPermMask( CONFIG , MASK_OWNER );
-        if( ! ( PERM_COPY     & mask ) ) { ShowError( "\"" + CONFIG + "\" is not copyable"     ); return; }
-        if( ! ( PERM_MODIFY   & mask ) ) { ShowError( "\"" + CONFIG + "\" is not modifiable"   ); return; }
-        if( ! ( PERM_TRANSFER & mask ) ) { ShowError( "\"" + CONFIG + "\" is not transferable" ); return; }
+        if( ! ( PERM_COPY     & mask ) ) {
+            ShowError( "\"" + CONFIG + "\" is not copyable"     );
+            return;
+        }
+        if( ! ( PERM_MODIFY   & mask ) ) {
+            ShowError( "\"" + CONFIG + "\" is not modifiable"   );
+            return;
+        }
+        if( ! ( PERM_TRANSFER & mask ) ) {
+            ShowError( "\"" + CONFIG + "\" is not transferable" );
+            return;
+        }
 
         // No key returned despite permissions == no contents (which would blow
         // up llGetNotecardLine)
@@ -211,25 +220,30 @@ default {
         llSetTimerEvent( 0.0 );
 
         // Memory check before proceeding, having just gotten a new string
-        if( MemoryError() ) return;
+        if( MemoryError() ) {
+            return;
+        }
 
         if( 1 == InitState ) {
             CountConfigLines = (integer)data;
             InitState = 2;
             DataServerRequestIndex = -1; // Next method increments to zero
-            NextConfigLine(); return;
+            NextConfigLine();
+            return;
         }
 
         // If the result is the lookup of a line from the CONFIG
         if( 2 == InitState ) {
             // If the line is blank, skip it
             if( "" == data ) {
-                NextConfigLine(); return;
+                NextConfigLine();
+                return;
             }
 
             // If the line starts with a hash, skip it
             if( "#" == llGetSubString( data , 0 , 0 ) ) {
-                NextConfigLine(); return;
+                NextConfigLine();
+                return;
             }
 
             // Now that we're done processing the config notecard
@@ -263,12 +277,14 @@ default {
 
                     // Inventory must be copyable
                     if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                        ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " ); return;
+                        ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " );
+                        return;
                     }
 
                     // Inventory must be transferable
                     if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                        ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? " ); return;
+                        ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? " );
+                        return;
                     }
                 }
 
@@ -327,7 +343,9 @@ default {
                 if( 0 == PayButton3   ) { PayButton3   = PAY_HIDE; } else { PayButton3   *= Price; }
 
                 // Memory check before proceeding, having just tested a bunch of things and potentially changed things
-                if( MemoryError() ) return;
+                if( MemoryError() ) {
+                    return;
+                }
 
                 // Load first line of config
                 SetText( "Checking payouts 0%, please wait..." );
@@ -342,7 +360,8 @@ default {
 
             // If there's no space on the line, it's invalid
             if( 0 >= i0 ) {
-                BadConfig( "" , data ); return;
+                BadConfig( "" , data );
+                return;
             }
 
             // Handle an item entry
@@ -355,7 +374,8 @@ default {
 
                 // If there's not another space on the line, it's invalid
                 if( 0 >= i0 ) {
-                    BadConfig( "" , data ); return;
+                    BadConfig( "" , data );
+                    return;
                 }
 
                 // Pull the probability number off the front of the string
@@ -363,7 +383,8 @@ default {
 
                 // If the probability is out of bounds
                 if( 0.0 >= f0 ) {
-                    BadConfig( "Number must be greater than zero. " , data ); return;
+                    BadConfig( "Number must be greater than zero. " , data );
+                    return;
                 }
 
                 // Grab inventory name off string
@@ -371,17 +392,20 @@ default {
 
                 // Name must be provided
                 if( "" == s0 ) {
-                    BadConfig( "Inventory name must be provided. " , data ); return;
+                    BadConfig( "Inventory name must be provided. " , data );
+                    return;
                 }
 
                 // Inventory must exist
                 if( INVENTORY_NONE == llGetInventoryType( s0 ) ) {
-                    BadConfig( "Cannot find \"" + s0 + "\" in inventory. " , data ); return;
+                    BadConfig( "Cannot find \"" + s0 + "\" in inventory. " , data );
+                    return;
                 }
 
                 // If they put the same item in twice
                 if( -1 != llListFindList( Inventory , [ s0 ] ) ) {
-                    BadConfig( "\"" + s0 + "\" was listed twice. Did you mean to list it once with a rarity of " + (string)( llList2Float( Inventory , llListFindList( Inventory , [ s0 ] ) + 1 ) + f0 ) + "? " , data ); return;
+                    BadConfig( "\"" + s0 + "\" was listed twice. Did you mean to list it once with a rarity of " + (string)( llList2Float( Inventory , llListFindList( Inventory , [ s0 ] ) + 1 ) + f0 ) + "? " , data );
+                    return;
                 }
 
                 // Store the configuration and add probably to the sum
@@ -390,10 +414,13 @@ default {
                 CountInventory += 2;
 
                 // Memory check before proceeding, having just messed with a list
-                if( MemoryError() ) return;
+                if( MemoryError() ) {
+                    return;
+                }
 
                 // Load next line of config
-                NextConfigLine(); return;
+                NextConfigLine();
+                return;
             } // end if( "item" ... )
 
             // Handle a payout entry
@@ -417,7 +444,8 @@ default {
 
                 // If there's not another space on the line, it's invalid
                 if( 0 >= i0 ) {
-                    BadConfig( "" , data ); return;
+                    BadConfig( "" , data );
+                    return;
                 }
 
                 // Pull the payment number off the front of the string
@@ -425,7 +453,8 @@ default {
 
                 // If the payment is out of bounds
                 if( 0 >= i1 ) {
-                    BadConfig( "L$ to give must be greater than zero. " , data ); return;
+                    BadConfig( "L$ to give must be greater than zero. " , data );
+                    return;
                 }
 
                 // Grab agent key off the string
@@ -433,7 +462,8 @@ default {
 
                 // Name must be provided
                 if( "" == s0 ) {
-                    BadConfig( "User key must be provided. " , data ); return;
+                    BadConfig( "User key must be provided. " , data );
+                    return;
                 }
 
                 // Convert to key
@@ -460,7 +490,8 @@ default {
                         s0 = "scriptor";
                     }
 
-                    BadConfig( s0 + " was listed twice. Did you mean to list them once with a payout of " + (string)( llList2Integer( Payees , llListFindList( Payees , [ k0 ] ) + 1 ) + i1 ) + "? " , data ); return;
+                    BadConfig( s0 + " was listed twice. Did you mean to list them once with a payout of " + (string)( llList2Integer( Payees , llListFindList( Payees , [ k0 ] ) + 1 ) + i1 ) + "? " , data );
+                    return;
                 }
 
                 // Store the configuration
@@ -469,10 +500,13 @@ default {
                 CountPayees += 2;
 
                 // Memory check before proceeding, having just messed with a list
-                if( MemoryError() ) return;
+                if( MemoryError() ) {
+                    return;
+                }
 
                 // Load next line of config
-                NextConfigLine(); return;
+                NextConfigLine();
+                return;
             }
 
             // Advanced option
@@ -485,7 +519,8 @@ default {
 
                 // If there's not another space on the line, it's invalid
                 if( 0 >= i0 ) {
-                    BadConfig( "" , data ); return;
+                    BadConfig( "" , data );
+                    return;
                 }
 
                 // Get the number off the end first (number of items)
@@ -501,7 +536,8 @@ default {
                 // If item count isn't greater than 1 and isn't PAY_HIDE, bad
                 // format
                 if( 0 != i1 && 1 >= i1 ) {
-                    BadConfig( "" , data ); return;
+                    BadConfig( "" , data );
+                    return;
                 }
 
                 // Store button value
@@ -512,14 +548,18 @@ default {
                 } else if( 3 == i0 ) {
                     PayButton3 = i1;
                 } else {
-                    BadConfig( "" , data ); return;
+                    BadConfig( "" , data );
+                    return;
                 }
 
                 // Memory check before proceeding, having just completed this line
-                if( MemoryError() ) return;
+                if( MemoryError() ) {
+                    return;
+                }
 
                 // Load next line of config
-                NextConfigLine(); return;
+                NextConfigLine();
+                return;
             }
 
             // Advanced option
@@ -532,14 +572,18 @@ default {
                 } else if( "no" == llToLower( s0 ) ) {
                     PayAnyAmount = 0;
                 } else {
-                    BadConfig( "" , data ); return;
+                    BadConfig( "" , data );
+                    return;
                 }
 
                 // Memory check before proceeding, having just completed this line
-                if( MemoryError() ) return;
+                if( MemoryError() ) {
+                    return;
+                }
 
                 // Load next line of config
-                NextConfigLine(); return;
+                NextConfigLine();
+                return;
             }
 
             // Advanced option
@@ -552,17 +596,21 @@ default {
 
                 // If the payment is out of bounds
                 if( 0 >= i1 || 100 < i1 ) {
-                    BadConfig( "" , data ); return;
+                    BadConfig( "" , data );
+                    return;
                 }
 
                 // Store the new value
                 MaxPerPurchase = i1;
 
                 // Memory check before proceeding, having just completed this line
-                if( MemoryError() ) return;
+                if( MemoryError() ) {
+                    return;
+                }
 
                 // Load next line of config
-                NextConfigLine(); return;
+                NextConfigLine();
+                return;
             }
 
             // Miscellaneous
@@ -575,14 +623,18 @@ default {
                 } else if( "no" == llToLower( s0 ) ) {
                     AllowRootPrim = FALSE;
                 } else {
-                    BadConfig( "" , data ); return;
+                    BadConfig( "" , data );
+                    return;
                 }
 
                 // Memory check before proceeding, having just completed this line
-                if( MemoryError() ) return;
+                if( MemoryError() ) {
+                    return;
+                }
 
                 // Load next line of config
-                NextConfigLine(); return;
+                NextConfigLine();
+                return;
             }
         } // end if( 2 == InitState )
 
@@ -596,7 +648,9 @@ default {
             SetText( "Checking payouts " + (string)( DataServerRequestIndex * 100 / CountPayees ) + "%, please wait..." );
 
             // Memory check before proceeding, having just completed this check
-            if( MemoryError() ) return;
+            if( MemoryError() ) {
+                return;
+            }
 
             // If there are more to look up
             if( DataServerRequestIndex < CountPayees ) {
