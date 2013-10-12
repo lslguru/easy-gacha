@@ -34,10 +34,9 @@ item 23 A very common kinda thing
 # IF YOU WANT TO KEEP ANY MONEY FOR YOURSELF, MAKE SURE YOU'RE IN THE LIST! You can use the shortcut "owner" instead of your key (UUID) if you like.
 #
 # There are three special KEYS that you can use:
-# scriptor: The creator of this script (a great way to tip me)
+# scriptor: The creator of this script
 # creator: The creator of the root prim
 # owner: The owner of the root prim
-#
 
 # This is a good way to tip me:
 payout 1 scriptor
