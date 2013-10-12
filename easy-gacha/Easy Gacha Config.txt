@@ -61,7 +61,7 @@ payout 10 e371bafa-85cb-481f-b250-3f2ce82e9fd6
 #
 # When you choose to pay the object, it will ask you how much you want to pay. We're allowed to show up to four buttons and a number-entry box.
 #
-# For each button, the valid settings are "off" (hide button), or a number greater than one (1), which is the number of ITEMS a person is buying with that button. If the final price is L$10 and the button is for 5 items, that means the button will show L$50
+# The option "buy_button" may be "off" (hide button), or a number greater than one (1), which is the number of ITEMS a person is buying with that button. If the final price is L$10 and the button is for 5 items, that means the button will show L$50. Each buy_button must be less than the value for "buy_max_items".
 #
 # The option "pay_any_amount" may either be "yes" or "no". If the value is "no", the number-entry box will be hidden.
 #
