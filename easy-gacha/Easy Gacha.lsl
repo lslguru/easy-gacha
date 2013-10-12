@@ -60,12 +60,14 @@ integer MAX_FOLDER_NAME_LENGTH = 63;
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-integer InitState = 0;
-integer AllowRootPrim = FALSE;
-integer CountConfigLines = 0;
-integer LastTouch = 0;
 string ScriptName;
 key Owner;
+integer InitState = 0;
+key DataServerRequest;
+integer DataServerRequestIndex = 0;
+
+integer AllowRootPrim = FALSE;
+integer CountConfigLines = 0;
 
 list Inventory = []; // Strided list of [ Inventory Name , Non Zero Positive Probability Number ]
 integer CountInventory = 0; // List length (not strided item length)
@@ -74,14 +76,15 @@ float SumProbability = 0.0; // Sum
 list Payees = []; // Strided list of [ Agent Key , Number of Lindens ]
 integer CountPayees = 0; // List length (not strided item length)
 integer Price = 0; // Sum
-integer MaxPerPurchase = 100; // Not to exceed 100
+
 integer PayButton1 = 2; // Item count during config, price after config
 integer PayButton2 = 5; // Item count during config, price after config
 integer PayButton3 = 10; // Item count during config, price after config
 integer PayAnyAmount = 1; // 0/1 during config ends, price after config
 
-key DataServerRequest;
-integer DataServerRequestIndex = 0;
+integer MaxPerPurchase = 100; // Not to exceed 100
+
+integer LastTouch = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
