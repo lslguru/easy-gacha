@@ -164,7 +164,6 @@ default {
         ScriptName = llGetScriptName();
         SetText( "Initializing, please wait..." );
         llOwnerSay( ScriptName + "\nInitializing, please wait..." );
-        llMessageLinked( LINK_SET , 3000166 , "" , NULL_KEY );
 
         // Config notecard not found at all
         if( INVENTORY_NOTECARD != llGetInventoryType( CONFIG ) ) {
@@ -287,7 +286,6 @@ default {
                 for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
                     f0 = ( llList2Float( Inventory , i0 + 1 ) / SumProbability );
                     llOwnerSay( ScriptName + ": \"" + llList2String( Inventory , i0 ) + "\" has a probability of " + (string)( f0 * 100 ) + "%" );
-                    llMessageLinked( LINK_SET , 3000167 , llList2String( Inventory , i0 ) , (key)((string)f0) );
                 }
 
                 // Set payment option
@@ -555,7 +553,6 @@ default {
         if( 3 == InitState ) {
             // Note that this user was looked up correctly and report the amount to be given
             llOwnerSay( ScriptName + ": Will give L$" + (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) + " to " + data + " for each item purchased." );
-            llMessageLinked( LINK_SET , 3000168 , (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) , llList2Key( Payees , DataServerRequestIndex ) );
 
             // Increment to next value
             DataServerRequestIndex += 2;
@@ -571,7 +568,6 @@ default {
 
             // Report total price
             llOwnerSay( ScriptName + ": The total price is L$" + (string)Price );
-            llMessageLinked( LINK_SET , 3000169 , (string)Price , NULL_KEY );
 
             // Get permission to give money (so we can give refunds at least)
             llOwnerSay( ScriptName + ": Getting ability to debit, please grant permission..." );
@@ -700,7 +696,6 @@ state ready {
             itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ llList2String( Inventory , selected ) ]; // Voodoo for better memory usage
             countItemsToSend += 1;
             lindensReceived -= Price;
-            llMessageLinked( LINK_ROOT , 3000171 , llList2String( Inventory , selected ) , NULL_KEY );
         }
 
         // Distribute the money
