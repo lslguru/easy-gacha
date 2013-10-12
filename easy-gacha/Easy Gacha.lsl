@@ -289,6 +289,9 @@ default {
                         ShowError( "Bad configuration: No items were listed!" );
                         return;
                     }
+
+                    // Give a hint as to why no items configured works
+                    llOwnerSay( ScriptName + ": WARNING: No items configured, using entire inventory of object with even probabilities" );
                 }
 
                 // Check details of inventory
