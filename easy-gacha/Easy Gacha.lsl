@@ -294,6 +294,9 @@ default {
                 if( 0 == PayButton2   ) { PayButton2   = PAY_HIDE; } else { PayButton2   *= Price; }
                 if( 0 == PayButton3   ) { PayButton3   = PAY_HIDE; } else { PayButton3   *= Price; }
 
+                // Memory check before proceeding, having just tested a bunch of things and potentially changed things
+                if( MemoryError() ) return;
+
                 // Load first line of config
                 SetText( "Checking payouts 0%, please wait..." );
                 InitState = 3;
@@ -490,6 +493,9 @@ default {
                     BadConfig( "" , data ); return;
                 }
 
+                // Memory check before proceeding, having just completed this line
+                if( MemoryError() ) return;
+
                 // Load next line of config
                 NextConfigLine(); return;
             }
@@ -506,6 +512,9 @@ default {
                 } else {
                     BadConfig( "" , data ); return;
                 }
+
+                // Memory check before proceeding, having just completed this line
+                if( MemoryError() ) return;
 
                 // Load next line of config
                 NextConfigLine(); return;
@@ -527,6 +536,9 @@ default {
                 // Store the new value
                 MaxPerPurchase = i1;
 
+                // Memory check before proceeding, having just completed this line
+                if( MemoryError() ) return;
+
                 // Load next line of config
                 NextConfigLine(); return;
             }
@@ -544,6 +556,9 @@ default {
                     BadConfig( "" , data ); return;
                 }
 
+                // Memory check before proceeding, having just completed this line
+                if( MemoryError() ) return;
+
                 // Load next line of config
                 NextConfigLine(); return;
             }
@@ -557,6 +572,9 @@ default {
             // Increment to next value
             DataServerRequestIndex += 2;
             SetText( "Checking payouts " + (string)( DataServerRequestIndex * 100 / CountPayees ) + "%, please wait..." );
+
+            // Memory check before proceeding, having just completed this check
+            if( MemoryError() ) return;
 
             // If there are more to look up
             if( DataServerRequestIndex < CountPayees ) {
