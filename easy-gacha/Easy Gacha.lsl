@@ -232,15 +232,49 @@ default {
                 NextConfigLine(); return;
             }
 
-            // If we're past the last line
+            // Now that we're done processing the config notecard
             if( EOF == data ) {
                 // Check that at least one was configured
                 if( 0 == CountInventory ) {
-                    ShowError( "Bad configuration: No items were listed!" );
-                    return;
+                    // Attempt to populate inventory evenly - last ditch effort
+                    // here, probably not what someone really wants, but just
+                    // in case we'll try it
+                    i1 = llGetInventoryNumber( INVENTORY_ALL );
+                    for( i0 = 0 ; i0 < i1 ; i0 += 1 ) {
+                        s0 = llGetInventoryName( INVENTORY_ALL , i0 );
+                        if( ScriptName != s0 && CONFIG != s0 ) {
+                            SumProbability += 1.0;
+                            Inventory = ( Inventory = [] ) + Inventory + [ s0 , 1.0 ]; // Voodoo for better memory usage
+                            CountInventory += 2;
+                        }
+                    }
+
+                    // If we still don't have anything
+                    if( 0 == CountInventory ) {
+                        ShowError( "Bad configuration: No items were listed!" );
+                        return;
+                    }
                 }
 
-                // Check that at least one was configured
+                // Check details of inventory
+                for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
+                    // Get name
+                    s0 = llList2String( Inventory , i0 );
+
+                    // Inventory must be copyable
+                    if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
+                        ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " ); return;
+                    }
+
+                    // Inventory must be transferable
+                    if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
+                        ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? " ); return;
+                    }
+                }
+
+                // Check that at least one was configured. If none were
+                // configured, we can't even attempt a last-ditch auto-config
+                // here because we wouldn't know the right L$ to charge.
                 if( 0 == CountPayees ) {
                     ShowError( "Bad configuration: No payouts were listed!" );
                     return;
@@ -343,16 +377,6 @@ default {
                 // Inventory must exist
                 if( INVENTORY_NONE == llGetInventoryType( s0 ) ) {
                     BadConfig( "Cannot find \"" + s0 + "\" in inventory. " , data ); return;
-                }
-
-                // Inventory must be copyable
-                if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                    BadConfig( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " , data ); return;
-                }
-
-                // Inventory must be transferable
-                if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                    BadConfig( "\"" + s0 + "\" is not transferable. So how can I give it out? " , data ); return;
                 }
 
                 // If they put the same item in twice
