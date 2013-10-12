@@ -564,7 +564,7 @@ default {
                 // If item count isn't greater than 1 and isn't PAY_HIDE, bad
                 // format
                 if( 0 != i1 && 1 >= i1 ) {
-                    BadConfig( "" , data );
+                    BadConfig( "buy_button must have an item count greater than one. " , data );
                     return;
                 }
 
@@ -576,7 +576,7 @@ default {
                 } else if( 3 == i0 ) {
                     PayButton3 = i1;
                 } else {
-                    BadConfig( "" , data );
+                    BadConfig( "Which button number did you mean to put here? " , data );
                     return;
                 }
 
