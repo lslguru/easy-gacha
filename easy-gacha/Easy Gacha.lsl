@@ -671,8 +671,8 @@ state ready {
 
     state_entry() {
         llSetText( "" , ZERO_VECTOR , 0.0 );
-        llSetPayPrice( PayAnyAmount , [ Price , PayButton1 , PayButton2 , PayButton3 ] );
         llSetClickAction( CLICK_ACTION_PAY );
+        llSetPayPrice( PayAnyAmount , [ Price , PayButton1 , PayButton2 , PayButton3 ] );
     }
 
     // Rate limited
