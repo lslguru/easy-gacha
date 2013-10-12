@@ -65,6 +65,7 @@ integer AllowRootPrim = FALSE;
 integer CountConfigLines = 0;
 integer LastTouch = 0;
 string ScriptName;
+key Owner;
 
 list Inventory = []; // Strided list of [ Inventory Name , Non Zero Positive Probability Number ]
 integer CountInventory = 0; // List length (not strided item length)
@@ -141,7 +142,7 @@ default {
     // initialization
     touch_end( integer detected ) {
         while( 0 <= ( detected -= 1 ) ) {
-            if( llGetOwner() == llDetectedKey( detected ) ) {
+            if( Owner == llDetectedKey( detected ) ) {
                 llResetScript();
             }
         }
@@ -161,6 +162,7 @@ default {
     ///////////////////
 
     state_entry() {
+        Owner = llGetOwner();
         ScriptName = llGetScriptName();
         SetText( "Initializing, please wait..." );
         llOwnerSay( ScriptName + "\nInitializing, please wait..." );
@@ -418,7 +420,7 @@ default {
                 // Convert to key
                 k0 = (key)s0;
                 if( "owner" == s0 ) {
-                    k0 = llGetOwner();
+                    k0 = Owner;
                 }
                 if( "creator" == s0 ) {
                     k0 = llGetCreator();
@@ -429,7 +431,7 @@ default {
 
                 // If they put the same item in twice
                 if( -1 != llListFindList( Payees , [ k0 ] ) ) {
-                    if( llGetOwner() == k0 ) {
+                    if( Owner == k0 ) {
                         s0 = "owner";
                     }
                     if( llGetCreator() == k0 ) {
@@ -591,7 +593,7 @@ default {
             // Get permission to give money (so we can give refunds at least)
             llOwnerSay( ScriptName + ": Getting ability to debit, please grant permission..." );
             SetText( "Getting permission..." );
-            llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
+            llRequestPermissions( Owner , PERMISSION_DEBIT );
             llSetTimerEvent( 30.0 );
             InitState = 4;
         }
@@ -730,7 +732,7 @@ state ready {
         // Distribute the money
         integer x;
         for( x = 0 ; x < CountPayees ; x += 2 ) {
-            if( llGetOwner() != llList2Key( Payees , x ) ) {
+            if( Owner != llList2Key( Payees , x ) ) {
                 llGiveMoney( llList2Key( Payees , x ) , llList2Integer( Payees , x + 1 ) * countItemsToSend );
             }
         }
