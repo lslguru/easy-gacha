@@ -53,6 +53,8 @@ payout 10 e371bafa-85cb-481f-b250-3f2ce82e9fd6
 ## ADVANCED OPTIONS
 ################################################################################
 
+# NOTE: The examples shown here are the default values.
+
 # Payment Buttons
 #
 # buy_button {button number} {item count}
