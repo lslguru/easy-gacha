@@ -110,13 +110,23 @@ integer LastTouch = 0;
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-SetText( string msg ) {
-    llSetText( llGetObjectName() + ": " + ScriptName + "\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+Message( string msg , integer hoverText , integer ownerSay , integer whisper , integer ownerDialog ) {
+    if( hoverText ) {
+        llSetText( ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+    }
+    if( ownerSay ) {
+        llOwnerSay( ScriptName + ": " + msg );
+    }
+    if( whisper ) {
+        llWhisper( 0 , ScriptName + ": " + msg );
+    }
+    if( ownerDialog ) {
+        llDialog( Owner , ScriptName + ":\n" + msg , [] , -1 ); // FORCED_DELAY 1.0 seconds
+    }
 }
 
 ShowError( string msg ) {
-    SetText( "ERROR: " + msg );
-    llOwnerSay( ScriptName + ": ERROR: " + msg );
+    Message( "ERROR: " + msg , TRUE , TRUE , FALSE , TRUE );
 }
 
 BadConfig( string reason , string data ) {
@@ -125,7 +135,7 @@ BadConfig( string reason , string data ) {
 
 NextConfigLine() {
     DataServerRequest = llGetNotecardLine( CONFIG , DataServerRequestIndex += 1 );
-    SetText( "Checking config " + (string)( DataServerRequestIndex * 100 / CountConfigLines ) + "%, please wait..." );
+    Message( "Checking config " + (string)( DataServerRequestIndex * 100 / CountConfigLines ) + "%, please wait..." , TRUE , FALSE , FALSE , FALSE );
     llSetTimerEvent( 30.0 );
 }
 
@@ -202,8 +212,7 @@ default {
         RuntimeId = llGenerateKey();
         RelevantConfig = "";
 
-        SetText( "Initializing, please wait..." );
-        llOwnerSay( ScriptName + "\nInitializing, please wait..." );
+        Message( "Initializing, please wait..." , TRUE , TRUE , FALSE , FALSE );
 
         // Config notecard not found at all
         if( INVENTORY_NOTECARD != llGetInventoryType( CONFIG ) ) {
@@ -315,7 +324,7 @@ default {
                     }
 
                     // Give a hint as to why no items configured works
-                    llDialog( Owner , ScriptName + ": WARNING: No items configured, using entire inventory of object with equal probabilities" , [] , -1 ); // FORCED_DELAY 1.0 seconds
+                    Message( ScriptName + ": WARNING: No items configured, using entire inventory of object with equal probabilities" , FALSE , TRUE , FALSE , TRUE );
                 }
 
                 // Check details of inventory
@@ -348,14 +357,14 @@ default {
                     // any number) in the description
                     if( 0 > i0 ) {
                         // Give a hint as to why no-payout is allowed
-                        llDialog( Owner , ScriptName + ": WARNING: No payouts configured, defaulting to L$" + (string)DEFAULT_PRICE + " to you." , [] , -1 ); // FORCED_DELAY 1.0 seconds
+                        Message( "WARNING: No payouts configured, defaulting to L$" + (string)DEFAULT_PRICE + " to you." , FALSE , TRUE , FALSE , TRUE );
 
                         // Default to paying the owner
                         Payees = [ Owner , DEFAULT_PRICE ];
                         CountPayees = 2;
                     } else {
                         // Give a hint that we used the fallback
-                        llOwnerSay( ScriptName + ": Will give L$" + (string)i0 + " to you for each item purchased. (Price taken from object description)" );
+                        Message( "Will give L$" + (string)i0 + " to you for each item purchased. (Price taken from object description)" , FALSE , TRUE , FALSE , FALSE );
                     }
                 }
 
@@ -396,7 +405,7 @@ default {
                 // Report percentages now that we know the totals
                 for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
                     f0 = ( llList2Float( Inventory , i0 + 1 ) / SumProbability );
-                    llOwnerSay( ScriptName + ": \"" + llList2String( Inventory , i0 ) + "\" has a probability of " + (string)( f0 * 100 ) + "%" );
+                    Message( "\"" + llList2String( Inventory , i0 ) + "\" has a probability of " + (string)( f0 * 100 ) + "%" , FALSE , TRUE , FALSE , FALSE );
                 }
 
                 // Set payment option
@@ -411,7 +420,7 @@ default {
                 }
 
                 // Load first line of config
-                SetText( "Checking payouts 0%, please wait..." );
+                Message( "Checking payouts 0%, please wait..." , TRUE , FALSE , FALSE , FALSE );
                 InitState = 3;
                 DataServerRequest = llRequestUsername( llList2Key( Payees , DataServerRequestIndex = 0 ) );
                 llSetTimerEvent( 30.0 );
@@ -750,11 +759,11 @@ default {
         // If the result is the lookup of a user from the Payees
         if( 3 == InitState ) {
             // Note that this user was looked up correctly and report the amount to be given
-            llOwnerSay( ScriptName + ": Will give L$" + (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) + " to " + data + " for each item purchased." );
+            Message( "Will give L$" + (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) + " to " + data + " for each item purchased." , FALSE , TRUE , FALSE , FALSE );
 
             // Increment to next value
             DataServerRequestIndex += 2;
-            SetText( "Checking payouts " + (string)( DataServerRequestIndex * 100 / CountPayees ) + "%, please wait..." );
+            Message( "Checking payouts " + (string)( DataServerRequestIndex * 100 / CountPayees ) + "%, please wait..." , TRUE , FALSE , FALSE , FALSE );
 
             // Memory check before proceeding, having just completed this check
             if( MemoryError() ) {
@@ -770,11 +779,10 @@ default {
             }
 
             // Report total price
-            llOwnerSay( ScriptName + ": The total price is L$" + (string)Price );
+            Message( "The total price is L$" + (string)Price , FALSE , TRUE , FALSE , FALSE );
 
             // Get permission to give money (so we can give refunds at least)
-            llOwnerSay( ScriptName + ": Getting ability to debit, please grant permission..." );
-            SetText( "Getting permission..." );
+            Message( "Getting permission..." , TRUE , TRUE , FALSE , FALSE );
             llRequestPermissions( Owner , PERMISSION_DEBIT );
             llSetTimerEvent( 30.0 );
             InitState = 4;
@@ -816,8 +824,8 @@ default {
             ) );
         }
 
-        llOwnerSay( ScriptName + ": " + SOURCE_CODE_MESSAGE );
-        llOwnerSay( ScriptName + ": Ready! Free memory: " + (string)llGetFreeMemory() );
+        Message( ScriptName + ": " + SOURCE_CODE_MESSAGE , FALSE , TRUE , FALSE , FALSE );
+        Message( ScriptName + ": Ready! Free memory: " + (string)llGetFreeMemory() , FALSE , TRUE , TRUE , FALSE );
     }
 }
 
@@ -873,12 +881,12 @@ state ready {
     touch_end( integer detected ) {
         while( 0 <= ( detected -= 1 ) ) {
             if( llDetectedKey( detected ) == Owner && AllowStatSend && !AllowShowStats && llStringLength( SERVER_URL_STATS ) ) {
-                llOwnerSay( ScriptName + ":\nWant to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE );
+                Message( "Want to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE , FALSE , TRUE , FALSE , FALSE );
             } else if( llGetUnixTime() != LastTouch ) {
                 if( AllowStatSend && AllowShowStats && llStringLength( SERVER_URL_STATS ) ) {
-                    llWhisper( 0 , ScriptName + ":\nWant to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE );
+                    Message( "Want to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE , FALSE , FALSE , TRUE , FALSE );
                 } else {
-                    llWhisper( 0 , ScriptName + ": " + SOURCE_CODE_MESSAGE );
+                    Message( SOURCE_CODE_MESSAGE , FALSE , FALSE , TRUE , FALSE );
                 }
 
                 LastTouch = llGetUnixTime();
@@ -902,7 +910,7 @@ state ready {
         string displayName = llGetDisplayName( buyerId );
 
         // Let them know we're thinking
-        SetText( "Please wait, getting random items for " + displayName );
+        Message( "Please wait, getting random items for " + displayName , TRUE , FALSE , FALSE , FALSE );
 
         // If not enough money
         if( lindensReceived < Price ) {
@@ -917,7 +925,7 @@ state ready {
 
             // Give money back
             llGiveMoney( buyerId , lindensReceived );
-            llWhisper( 0 , ScriptName + ": Sorry " + displayName + ", the price is L$" + (string)Price );
+            Message( "Sorry " + displayName + ", the price is L$" + (string)Price , FALSE , FALSE , TRUE , FALSE );
             return;
         }
 
@@ -962,7 +970,7 @@ state ready {
         }
 
         // Thank them for their purchase
-        llWhisper( 0 , "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
+        Message( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change , FALSE , FALSE , TRUE , FALSE );
 
         // Build the name of the folder to give
         string folderSuffix = ( " (Easy Gacha " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
