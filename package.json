@@ -1,0 +1,26 @@
+{
+  "name": "opensl",
+  "version": "0.0.0",
+  "description": "Open source scripts for SecondLife in the Linden Scripting Language (LSL)",
+  "main": "index.js",
+  "dependencies": { },
+  "devDependencies": {
+    "marked": "~0.2.9"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/zannalov/opensl.git"
+  },
+  "keywords": [
+    "SecondLife",
+    "LSL"
+  ],
+  "author": "Zan Lightfoot",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/zannalov/opensl/issues"
+  }
+}
