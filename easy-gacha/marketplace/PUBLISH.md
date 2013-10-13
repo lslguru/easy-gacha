@@ -51,7 +51,7 @@
     4. Free web page based statistics
     5. Free Open Source Software (FOSS)
 * Extended Description: Copy from below
-* Keywords: easy, gacha, gasha, gashapon, OSS, FOSS
+* Keywords: easy, gacha, gasha, gashapon, OSS, FOSS, full perm, low lag, no lag
 * Category: Business > Vendor Machines
 * Item price: L$0
 * Prim count: 0
@@ -68,13 +68,13 @@
 
 Easy Gacha configuration is simple and comes with examples and explanations. What's more, the script has been written to try to give you good feedback when something is wrong with the configuration.
 
-Easy Gacha allows people to buy more than one random prize at a time. Really want that 1% rare item? Buy 100 items at the same time, all delivered in a handy folder! Don't want people to be able to do this? It's configurable, so you can turn it off.
+Easy Gacha allows people to buy more than one random prize at a time. Really want that 1% rare item? Buy 100 items at the same time, all delivered in a handy folder! That doesn't guarantee you'll get the rare item, but why wear out your finger clicking 100 times? Don't want people to be able to do this? It's configurable, so you can turn it off.
 
 This is free, full perm, open source software. That means it will never cost anything, and you can change it (or hire someone else to change it) any time you like! The source code can be found at:
 
 https://github.com/zannalov/opensl/tree/master/easy-gacha
 
-The script has been thoroughly tested to be absolutely reliable and speedy.
+The script has been thoroughly tested to be absolutely reliable and speedy, and has been designed to have no lag (less than 0.001 average script time per instance).
 
 Easy Gacha sends usage data to our server to provide you with a simple, easy to use list of statistics for your vendor. Just right-click on your vendor and select "Info" to get a link. Don't want to share information? You can turn statistics off in the configuration (or set them to be private, for your eyes only).
 
