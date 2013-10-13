@@ -290,11 +290,20 @@ default {
                     // in case we'll try it
                     i1 = llGetInventoryNumber( INVENTORY_ALL );
                     for( i0 = 0 ; i0 < i1 ; i0 += 1 ) {
+                        // Get inventory name
                         s0 = llGetInventoryName( INVENTORY_ALL , i0 );
+
+                        // If the inventory is ourself or our config, skip it
                         if( ScriptName != s0 && CONFIG != s0 ) {
+                            // Add inventory to list
                             SumProbability += 1.0;
                             Inventory = ( Inventory = [] ) + Inventory + [ s0 , 1.0 ]; // Voodoo for better memory usage
                             CountInventory += 2;
+
+                            // Memory check before proceeding, having just changed a list
+                            if( MemoryError() ) {
+                                return;
+                            }
                         }
                     }
 
