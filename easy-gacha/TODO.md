@@ -1,6 +1,5 @@
 # New Features #
 
-* When touched by owner, also report current free memory via llOwnerSay()
 * Ask for debit permission up-front and not again (soft-reset script on changes)
 * Option to restrict to group-only (in which case object group must match agent group)
 * Option to play sound effect on purchase

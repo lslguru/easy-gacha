@@ -879,14 +879,20 @@ state ready {
 
     // Rate limited
     touch_end( integer detected ) {
+        string mem = "Script free memory is: " + (string)llGetFreeMemory();
+        // For each person that touched
         while( 0 <= ( detected -= 1 ) ) {
+            // If they're the owner and we can show them stats but the stats are private
             if( llDetectedKey( detected ) == Owner && AllowStatSend && !AllowShowStats && llStringLength( SERVER_URL_STATS ) ) {
-                Message( "Want to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE , FALSE , TRUE , FALSE , FALSE );
+                // Then this message is just for them
+                Message( "Want to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE + "\n" + mem , FALSE , TRUE , FALSE , FALSE );
+            // Otherwise if we're not rate limited
             } else if( llGetUnixTime() != LastTouch ) {
+                // Then if we can show stats
                 if( AllowStatSend && AllowShowStats && llStringLength( SERVER_URL_STATS ) ) {
-                    Message( "Want to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE , FALSE , FALSE , TRUE , FALSE );
+                    Message( "Want to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE + "\n" + mem , FALSE , FALSE , TRUE , FALSE );
                 } else {
-                    Message( SOURCE_CODE_MESSAGE , FALSE , FALSE , TRUE , FALSE );
+                    Message( SOURCE_CODE_MESSAGE + " (" + mem + ")" , FALSE , FALSE , TRUE , FALSE );
                 }
 
                 LastTouch = llGetUnixTime();
