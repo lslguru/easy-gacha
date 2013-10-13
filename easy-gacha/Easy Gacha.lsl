@@ -503,11 +503,15 @@ default {
                 }
 
                 // Pull the payment number off the front of the string
-                i1 = (integer)llGetSubString( s0 , 0 , i0 );
+                i1 = (integer)llGetSubString( s0 , 0 , i0 - 1 );
 
                 // If the payment is out of bounds
-                if( 0 >= i1 ) {
-                    BadConfig( "L$ to give must be greater than zero. " , data );
+                if( 0 > i1 ) {
+                    BadConfig( "L$ to give must be greater than or equal to zero. " , data );
+                    return;
+                }
+                if( 0 == i1 && "0" != llGetSubString( s0 , 0 , i0 - 1 ) ) {
+                    BadConfig( "L$ to give must be greater than or equal to zero. " , data );
                     return;
                 }
 

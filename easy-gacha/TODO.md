@@ -1,6 +1,5 @@
 # New Features #
 
-* Support explicit $L0 (no payees specified should still be an error as that means unconfigured)
 * When touched by owner, also report current free memory via llOwnerSay()
 * Ask for debit permission up-front and not again (soft-reset script on changes)
 * Option to restrict to group-only (in which case object group must match agent group)
