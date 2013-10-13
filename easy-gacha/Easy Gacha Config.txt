@@ -50,7 +50,7 @@ payout 10 286404f5-a8ca-4dbd-8a7e-ff88dcfc673c
 payout 10 e371bafa-85cb-481f-b250-3f2ce82e9fd6
 
 ################################################################################
-## ADVANCED OPTIONS
+## ADVANCED OPTIONS (you may delete this whole section if you're not using it)
 ################################################################################
 
 # NOTE: The examples shown here are the default values.
