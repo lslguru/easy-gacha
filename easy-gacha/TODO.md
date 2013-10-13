@@ -11,4 +11,4 @@
 * Option to enable summary or detailed API events
 * Option to play sound effect on specific item
 * Stress test for max inventory capacity before script runs out of memory - for documentation
-* If config notecard isn't present at all, default to L$25 to owner with auto-index inventory
+* Allow config notecard to be missing

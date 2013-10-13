@@ -65,6 +65,7 @@ string SERVER_URL_STATS = ""; // The runtime ID gets appended to the end!
 string CONFIG = "Easy Gacha Config";
 integer LOW_MEMORY_THRESHOLD = 16000;
 integer MAX_FOLDER_NAME_LENGTH = 63;
+integer DEFAULT_PRICE = 25;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -314,7 +315,7 @@ default {
                     }
 
                     // Give a hint as to why no items configured works
-                    llOwnerSay( ScriptName + ": WARNING: No items configured, using entire inventory of object with even probabilities" );
+                    llDialog( Owner , ScriptName + ": WARNING: No items configured, using entire inventory of object with equal probabilities" , [] , -1 ); // FORCED_DELAY 1.0 seconds
                 }
 
                 // Check details of inventory
@@ -335,12 +336,27 @@ default {
                     }
                 }
 
-                // Check that at least one was configured. If none were
-                // configured, we can't even attempt a last-ditch auto-config
-                // here because we wouldn't know the right L$ to charge.
+                // If no payees were configured
                 if( 0 == CountPayees ) {
-                    ShowError( "Bad configuration: No payouts were listed!" );
-                    return;
+                    // First attempt to get a number from the object description
+                    i0 = (integer)llGetObjectDesc();
+                    if( 0 == i0 && "0" != llGetObjectDesc() ) {
+                        i0 = -1;
+                    }
+
+                    // If they entered a number less than zero (or didn't enter
+                    // any number) in the description
+                    if( 0 > i0 ) {
+                        // Give a hint as to why no-payout is allowed
+                        llDialog( Owner , ScriptName + ": WARNING: No payouts configured, defaulting to L$" + (string)DEFAULT_PRICE + " to you." , [] , -1 ); // FORCED_DELAY 1.0 seconds
+
+                        // Default to paying the owner
+                        Payees = [ Owner , DEFAULT_PRICE ];
+                        CountPayees = 2;
+                    } else {
+                        // Give a hint that we used the fallback
+                        llOwnerSay( ScriptName + ": Will give L$" + (string)i0 + " to you for each item purchased. (Price taken from object description)" );
+                    }
                 }
 
                 // Check that pay buttons aren't out of bounds
