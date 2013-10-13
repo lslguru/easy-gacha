@@ -6,7 +6,7 @@ Steps to publish a new version
     * Description: Git Commit ID
     * Click to: Open
     * For Sale: Copy L$0
-    * Next owner can: -Mod +Copy -Trans
+    * Next owner can: -Mod +Copy +Trans
     * Contents
         * Script
             * Name: Easy Gacha
