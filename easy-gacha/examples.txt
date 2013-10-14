@@ -1,0 +1,52 @@
+# TODO: Rework these
+
+################################################################################
+## EASY GACHA CONFIGURATION
+################################################################################
+
+# Note: Any line that is empty or begins with a "#" is ignored.
+
+# List each item on a separate line
+#
+# Each line should have:
+# 1. The word "item"
+# 2. A single space " "
+# 3. A NUMBER that is GREATER THAN zero
+# 4. A single space " "
+# 5. The EXACT NAME of the inventory item
+#
+# The number is the rarity for this object. The higher the number, the more common it is. The exact percentage is based on dividing this number by the sum of all of the numbers. The script will tell you the percentages at startup.
+
+# Examples:
+item 1 My first green object
+item 0.5 The blue one
+item 23 A very common kinda thing
+
+# List each person you want to pay for these sales on a separate line.
+#
+# Each line should have:
+# 1. The word "payout"
+# 2. A single space " "
+# 3. A WHOLE NUMBER that is GREATER THAN zero
+# 4. A single space " "
+# 5. The KEY (UUID) of the USER you want to pay
+#
+# The number is the amount of L$ to give with each item purchased. The total price per item is determined by the sum of all these entries.
+#
+# IF YOU WANT TO KEEP ANY MONEY FOR YOURSELF, MAKE SURE YOU'RE IN THE LIST! You can use the shortcut "owner" instead of your key (UUID) if you like.
+#
+# There are three special KEYS that you can use:
+# scriptor: The creator of this script
+# creator: The creator of the root prim
+# owner: The owner of the root prim
+
+# This is a good way to tip me:
+payout 1 scriptor
+
+# Other examples:
+payout 15 creator
+payout 15 owner
+payout 10 d7e84aa5-91ca-4992-87dd-ff5cf65379b5
+payout 10 a031a619-2c9c-4a04-bd29-db14afab31a8
+payout 10 286404f5-a8ca-4dbd-8a7e-ff88dcfc673c
+payout 10 e371bafa-85cb-481f-b250-3f2ce82e9fd6
