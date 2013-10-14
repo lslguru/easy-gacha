@@ -401,6 +401,9 @@ default {
             if( EOF == data ) {
                 // Check that at least one was configured
                 if( 0 == CountInventory ) {
+                    // Mark in the config that we're automatic
+                    RelevantConfig += "# auto item\n";
+
                     // Attempt to populate inventory evenly - last ditch effort
                     // here, probably not what someone really wants, but just
                     // in case we'll try it
@@ -415,6 +418,7 @@ default {
                             SumProbability += 1.0;
                             Inventory = ( Inventory = [] ) + Inventory + [ s0 , 1.0 ]; // Voodoo for better memory usage
                             CountInventory += 2;
+                            RelevantConfig += "item 1 " + s0 + "\n";
 
                             // Memory check before proceeding, having just changed a list
                             if( MemoryError() ) {
@@ -425,7 +429,7 @@ default {
 
                     // If we still don't have anything
                     if( 0 == CountInventory ) {
-                        ShowError( "Bad configuration: No items were listed!" );
+                        ShowError( "Bad configuration: No items were listed and nothing available in the object!" );
                         return;
                     }
 
@@ -468,6 +472,8 @@ default {
                         // Default to paying the owner
                         Payees = [ Owner , DEFAULT_PRICE ];
                         CountPayees = 2;
+
+                        RelevantConfig += "# auto payout\npayout " + (string)DEFUALT_PRICE + " owner\n";
                     } else {
                         // Give a hint that we used the fallback
                         Message( "Will give L$" + (string)i0 + " to you for each item purchased. (Price taken from object description)" , FALSE , TRUE , FALSE , FALSE );
