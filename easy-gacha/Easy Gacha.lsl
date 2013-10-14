@@ -139,6 +139,111 @@ NextConfigLine() {
     llSetTimerEvent( 30.0 );
 }
 
+Give( key buyerId , integer lindensReceived ) {
+    float random;
+    integer selected;
+    integer countItemsToSend = 0;
+    list itemsToSend = [];
+    string change = "";
+    string itemPlural = " items ";
+    string hasHave = "have ";
+    string objectName = llGetObjectName();
+    string displayName = llGetDisplayName( buyerId );
+
+    // Let them know we're thinking
+    Message( "Please wait, getting random items for " + displayName , TRUE , FALSE , FALSE , FALSE );
+
+    // If not enough money
+    if( lindensReceived < Price ) {
+        // Send statistics to server if server is configured
+        if( AllowStatSend && llStringLength( SERVER_URL_PURCHASE ) ) {
+            llHTTPRequest( SERVER_URL_PURCHASE , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
+                RuntimeId
+                , buyerId
+                , displayName
+            ] ) );
+        }
+
+        // Give money back
+        if( lindensReceived ) {
+            llGiveMoney( buyerId , lindensReceived );
+        }
+        Message( "Sorry " + displayName + ", the price is L$" + (string)Price , FALSE , FALSE , TRUE , FALSE );
+        return;
+    }
+
+    // While there's still enough money for another item
+    while( lindensReceived >= Price && countItemsToSend < MaxPerPurchase ) {
+        random = llFrand( SumProbability ); // Generate a random number which is between [ 0.0 , SumProbability )
+        selected = -2; // Start below the first object because the first iteration will definitely run once
+
+        // While the random number is at or above zero, we haven't hit our
+        // target object. Exiting the while loop will result in a random number
+        // at or below zero, indicating the selected index matches an object.
+        while( 0 <= random ) {
+            selected += 2;
+            random -= llList2Float( Inventory , selected + 1 );
+        }
+
+        // Schedule to give inventory, increment counter, decrement money
+        itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ llList2String( Inventory , selected ) ]; // Voodoo for better memory usage
+        countItemsToSend += 1;
+        lindensReceived -= Price;
+    }
+
+    // Distribute the money
+    if( lindensReceived ) {
+        integer x;
+        for( x = 0 ; x < CountPayees ; x += 2 ) {
+            if( Owner != llList2Key( Payees , x ) ) {
+                llGiveMoney( llList2Key( Payees , x ) , llList2Integer( Payees , x + 1 ) * countItemsToSend );
+            }
+        }
+    }
+
+    // If too much money was given
+    if( lindensReceived ) {
+        // Give back the excess
+        llGiveMoney( buyerId , lindensReceived );
+        change = " Your change is L$" + (string)lindensReceived;
+    }
+
+    // If only one item was given, fix the wording
+    if( 1 == countItemsToSend ) {
+        itemPlural = " item ";
+        hasHave = "has ";
+    }
+
+    // Thank them for their purchase
+    Message( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change , FALSE , FALSE , TRUE , FALSE );
+
+    // Build the name of the folder to give
+    string folderSuffix = ( " (Easy Gacha " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
+    if( llStringLength( objectName ) + llStringLength( folderSuffix ) > MAX_FOLDER_NAME_LENGTH ) {
+        objectName = ( llGetSubString( objectName , 0 , MAX_FOLDER_NAME_LENGTH - llStringLength( folderSuffix ) - 4 /* 3 for ellipses, 1 because this is end index, not count */ ) + "..." );
+    }
+
+    // Give the inventory
+    if( 1 < countItemsToSend || FolderForOne ) {
+        llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend ); // FORCED_DELAY 3.0 seconds
+    } else {
+        llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) ); // FORCED_DELAY 2.0 seconds
+    }
+
+    // Send statistics to server if server is configured
+    if( AllowStatSend && llStringLength( SERVER_URL_PURCHASE ) ) {
+        llHTTPRequest( SERVER_URL_PURCHASE , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
+            RuntimeId
+            , buyerId
+            , displayName
+            ] + itemsToSend
+        ) );
+    }
+
+    // Clear the thinkin' text
+    llSetText( "" , ZERO_VECTOR , 0.0 );
+}
+
 integer BooleanConfigOption( string s0 ) {
     s0 = llToLower( s0 );
 
@@ -413,6 +518,12 @@ default {
                 if( 0 == PayButton1   ) { PayButton1   = PAY_HIDE; } else { PayButton1   *= Price; }
                 if( 0 == PayButton2   ) { PayButton2   = PAY_HIDE; } else { PayButton2   *= Price; }
                 if( 0 == PayButton3   ) { PayButton3   = PAY_HIDE; } else { PayButton3   *= Price; }
+
+                // If price is zero, then there's no way to know how many items
+                // someone wants at a time without this
+                if( !Price ) {
+                    MaxPerPurchase = 1;
+                }
 
                 // Memory check before proceeding, having just tested a bunch of things and potentially changed things
                 if( MemoryError() ) {
@@ -872,32 +983,52 @@ state ready {
 
     state_entry() {
         llSetText( "" , ZERO_VECTOR , 0.0 );
-        llSetClickAction( CLICK_ACTION_PAY );
-        llSetPayPrice( PayAnyAmount , [ Price , PayButton1 , PayButton2 , PayButton3 ] );
-        llSetTouchText( "Info" );
+
+        if( Price ) {
+            llSetClickAction( CLICK_ACTION_PAY );
+            llSetPayPrice( PayAnyAmount , [ Price , PayButton1 , PayButton2 , PayButton3 ] );
+            llSetTouchText( "Info" );
+        } else {
+            llSetClickAction( CLICK_ACTION_TOUCH );
+            llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
+            llSetTouchText( "Play" );
+        }
     }
 
     // Rate limited
     touch_end( integer detected ) {
-        string mem = "Script free memory is: " + (string)llGetFreeMemory();
+        integer statsPossible = ( AllowStatSend && llStringLength( SERVER_URL_STATS ) );
+        integer whisperStats = ( statsPossible && AllowShowStats && LastTouch != llGetUnixTime() );
+        integer ownerSayStats = FALSE;
+
         // For each person that touched
         while( 0 <= ( detected -= 1 ) ) {
-            // If they're the owner and we can show them stats but the stats are private
-            if( llDetectedKey( detected ) == Owner && AllowStatSend && !AllowShowStats && llStringLength( SERVER_URL_STATS ) ) {
-                // Then this message is just for them
-                Message( "Want to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE + "\n" + mem , FALSE , TRUE , FALSE , FALSE );
-            // Otherwise if we're not rate limited
-            } else if( llGetUnixTime() != LastTouch ) {
-                // Then if we can show stats
-                if( AllowStatSend && AllowShowStats && llStringLength( SERVER_URL_STATS ) ) {
-                    Message( "Want to see some statistics for this object? Click here: " + SERVER_URL_STATS + (string)RuntimeId + "\n" + SOURCE_CODE_MESSAGE + "\n" + mem , FALSE , FALSE , TRUE , FALSE );
-                } else {
-                    Message( SOURCE_CODE_MESSAGE + " (" + mem + ")" , FALSE , FALSE , TRUE , FALSE );
+            // This is the exception which will be direct to owner
+            if( llDetectedKey( detected ) == Owner ) {
+                // Only if we're not going to whisper it
+                if( statsPossible && !AllowShowStats ) {
+                    ownerSayStats = TRUE;
                 }
 
-                LastTouch = llGetUnixTime();
+                // Memory will only be shown to owner now
+                Message( "Script free memory is: " + (string)llGetFreeMemory() , FALSE , TRUE , FALSE , FALSE );
+            }
+
+            // If price is zero, has to be touch based
+            if( !Price ) {
+                Give( llDetectedKey( detected ) , 0 );
             }
         }
+
+        // Whisper source code message
+        Message( SOURCE_CODE_MESSAGE , FALSE , FALSE , TRUE , FALSE );
+
+        // Otherwise stats get whispered
+        if( whisperStats || ownerSayStats ) {
+            Message( ( "Want to see some statistics for this object? Click this link: " + SERVER_URL_STATS + (string)RuntimeId ) , FALSE , ownerSayStats , whisperStats , FALSE );
+        }
+
+        LastTouch = llGetUnixTime();
     }
 
     // Switching states here would prevent further orders from being placed
@@ -905,103 +1036,6 @@ state ready {
     // which would kill any orders placed in parallel. We have to honor the
     // event queue, so... do things as fast and efficiently as we can
     money( key buyerId , integer lindensReceived ) {
-        float random;
-        integer selected;
-        integer countItemsToSend = 0;
-        list itemsToSend = [];
-        string change = "";
-        string itemPlural = " items ";
-        string hasHave = "have ";
-        string objectName = llGetObjectName();
-        string displayName = llGetDisplayName( buyerId );
-
-        // Let them know we're thinking
-        Message( "Please wait, getting random items for " + displayName , TRUE , FALSE , FALSE , FALSE );
-
-        // If not enough money
-        if( lindensReceived < Price ) {
-            // Send statistics to server if server is configured
-            if( AllowStatSend && llStringLength( SERVER_URL_PURCHASE ) ) {
-                llHTTPRequest( SERVER_URL_PURCHASE , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
-                    RuntimeId
-                    , buyerId
-                    , displayName
-                ] ) );
-            }
-
-            // Give money back
-            llGiveMoney( buyerId , lindensReceived );
-            Message( "Sorry " + displayName + ", the price is L$" + (string)Price , FALSE , FALSE , TRUE , FALSE );
-            return;
-        }
-
-        // While there's still enough money for another item
-        while( lindensReceived >= Price && countItemsToSend < MaxPerPurchase ) {
-            random = llFrand( SumProbability ); // Generate a random number which is between [ 0.0 , SumProbability )
-            selected = -2; // Start below the first object because the first iteration will definitely run once
-
-            // While the random number is at or above zero, we haven't hit our
-            // target object. Exiting the while loop will result in a random number
-            // at or below zero, indicating the selected index matches an object.
-            while( 0 <= random ) {
-                selected += 2;
-                random -= llList2Float( Inventory , selected + 1 );
-            }
-
-            // Schedule to give inventory, increment counter, decrement money
-            itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ llList2String( Inventory , selected ) ]; // Voodoo for better memory usage
-            countItemsToSend += 1;
-            lindensReceived -= Price;
-        }
-
-        // Distribute the money
-        integer x;
-        for( x = 0 ; x < CountPayees ; x += 2 ) {
-            if( Owner != llList2Key( Payees , x ) ) {
-                llGiveMoney( llList2Key( Payees , x ) , llList2Integer( Payees , x + 1 ) * countItemsToSend );
-            }
-        }
-
-        // If too much money was given
-        if( lindensReceived ) {
-            // Give back the excess
-            llGiveMoney( buyerId , lindensReceived );
-            change = " Your change is L$" + (string)lindensReceived;
-        }
-
-        // If only one item was given, fix the wording
-        if( 1 == countItemsToSend ) {
-            itemPlural = " item ";
-            hasHave = "has ";
-        }
-
-        // Thank them for their purchase
-        Message( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change , FALSE , FALSE , TRUE , FALSE );
-
-        // Build the name of the folder to give
-        string folderSuffix = ( " (Easy Gacha " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
-        if( llStringLength( objectName ) + llStringLength( folderSuffix ) > MAX_FOLDER_NAME_LENGTH ) {
-            objectName = ( llGetSubString( objectName , 0 , MAX_FOLDER_NAME_LENGTH - llStringLength( folderSuffix ) - 4 /* 3 for ellipses, 1 because this is end index, not count */ ) + "..." );
-        }
-
-        // Give the inventory
-        if( 1 < countItemsToSend || FolderForOne ) {
-            llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend ); // FORCED_DELAY 3.0 seconds
-        } else {
-            llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) ); // FORCED_DELAY 2.0 seconds
-        }
-
-        // Send statistics to server if server is configured
-        if( AllowStatSend && llStringLength( SERVER_URL_PURCHASE ) ) {
-            llHTTPRequest( SERVER_URL_PURCHASE , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
-                RuntimeId
-                , buyerId
-                , displayName
-                ] + itemsToSend
-            ) );
-        }
-
-        // Clear the thinkin' text
-        llSetText( "" , ZERO_VECTOR , 0.0 );
+        Give( buyerId , lindensReceived );
     }
 }
