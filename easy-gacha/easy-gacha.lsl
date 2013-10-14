@@ -35,11 +35,18 @@
 // initialized.
 //
 // StateStatus
+//     default
+//         0: state_entry
 //     setup
-//         0: default::state_entry()
 //         1: Getting notecard line count
 //         2: Lookup inventory notecard line
 //         3: Lookup user name
+//     ready
+//         4: Everything A-OK
+//         5: Assumptions check needed
+//         6: Need to switch to handout state
+//     handout:
+//         N/A
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -102,8 +109,9 @@ integer PayAnyAmount = 1; // 0/1 during config ends, price after config
 
 integer MaxPerPurchase = 100; // Not to exceed 100
 
-integer CheckAssumptionsNeeded = FALSE;
 integer LastTouch = 0;
+list HandoutQueue;
+integer HandoutQueueCount;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -259,7 +267,9 @@ CheckBaseAssumptions() {
         llResetScript();
     }
 
-    CheckAssumptionsNeeded = FALSE;
+    if( 5 == StateStatus ) {
+        StateStatus = 4;
+    }
 }
 
 integer BooleanConfigOption( string s0 ) {
@@ -954,42 +964,44 @@ state setup {
 
 state ready {
     attach( key avatarId ){
-        CheckAssumptionsNeeded = TRUE;
-        llSetTimerEvent( 0.00 ); // Take timer event off stack
+        StateStatus = 5;
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
         llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     on_rez( integer rezParam ) {
-        CheckAssumptionsNeeded = TRUE;
-        llSetTimerEvent( 0.00 ); // Take timer event off stack
+        StateStatus = 5;
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
         llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     changed( integer changeMask ) {
-        CheckAssumptionsNeeded = TRUE;
-        llSetTimerEvent( 0.00 ); // Take timer event off stack
+        StateStatus = 5;
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
         llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     run_time_permissions( integer permissionMask ) {
-        CheckAssumptionsNeeded = TRUE;
-        llSetTimerEvent( 0.00 ); // Take timer event off stack
+        StateStatus = 5;
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
         llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     timer() {
         llSetTimerEvent( 0.0 );
 
-        if( CheckAssumptionsNeeded ) {
+        if( 5 == StateStatus ) {
             CheckBaseAssumptions();
+        }
+
+        if( 6 == StateStatus ) {
+            state handout;
         }
     }
 
-    /////////////////
-    // state ready //
-    /////////////////
-
     state_entry() {
+        CheckBaseAssumptions();
+
         llSetText( "" , ZERO_VECTOR , 0.0 );
 
         if( Price ) {
@@ -1001,9 +1013,11 @@ state ready {
             llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
             llSetTouchText( "Play" );
         }
+
+        HandoutQueue = [];
+        HandoutQueueCount = 0;
     }
 
-    // Rate limited
     touch_end( integer detected ) {
         integer statsPossible = ( AllowStatSend && llStringLength( SERVER_URL_STATS ) );
         integer whisperStats = ( statsPossible && AllowShowStats && LastTouch != llGetUnixTime() );
@@ -1024,7 +1038,11 @@ state ready {
 
             // If price is zero, has to be touch based
             if( !Price ) {
-                Give( llDetectedKey( detected ) , 0 );
+                HandoutQueue = ( HandoutQueue = [] ) + HandoutQueue + [ llDetectedKey( detected ) , 0 ]; // Voodoo for better memory usage
+                HandoutQueueCount += 2;
+                StateStatus = 6;
+                llSetTimerEvent( 0.0 ); // Take timer event off stack
+                llSetTimerEvent( 0.01 ); // Add it to end of stack
             }
         }
 
@@ -1044,6 +1062,24 @@ state ready {
     // which would kill any orders placed in parallel. We have to honor the
     // event queue, so... do things as fast and efficiently as we can
     money( key buyerId , integer lindensReceived ) {
-        Give( buyerId , lindensReceived );
+        HandoutQueue = ( HandoutQueue = [] ) + HandoutQueue + [ buyerId , lindensReceived ]; // Voodoo for better memory usage
+        HandoutQueueCount += 2;
+        StateStatus = 6;
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
+    }
+}
+
+// Note: State has neither touch events nor pay events, preventing further
+// additions to the queue
+state handout {
+    state_entry() {
+        integer x;
+
+        for( x = 0 ; x < HandoutQueueCount ; x += 2 ) {
+            Give( llList2Key( HandoutQueue , x ) , llList2Integer( HandoutQueue , x + 1 ) );
+        }
+
+        state ready;
     }
 }
