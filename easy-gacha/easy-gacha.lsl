@@ -454,7 +454,7 @@ state setup {
                     }
 
                     // Give a hint as to why no items configured works
-                    Message( ScriptName + ": WARNING: No items configured, using entire inventory of object with equal probabilities" , FALSE , TRUE , FALSE , TRUE );
+                    Message( "WARNING: No items configured, using entire inventory of object with equal probabilities" , FALSE , TRUE , FALSE , TRUE );
                 }
 
                 // Check details of inventory
@@ -947,8 +947,8 @@ state setup {
             ) );
         }
 
-        Message( ScriptName + ": " + SOURCE_CODE_MESSAGE , FALSE , TRUE , FALSE , FALSE );
-        Message( ScriptName + ": Ready! Free memory: " + (string)llGetFreeMemory() , FALSE , TRUE , TRUE , FALSE );
+        Message( SOURCE_CODE_MESSAGE , FALSE , TRUE , FALSE , FALSE );
+        Message( "Ready! Free memory: " + (string)llGetFreeMemory() , FALSE , TRUE , TRUE , FALSE );
     }
 }
 
