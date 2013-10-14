@@ -34,12 +34,13 @@
 // created the script. This information will be output each time it is
 // initialized.
 //
-// InitState
-// 0: default::state_entry()
-// 1: Getting notecard line count
-// 2: Lookup inventory notecard line
-// 3: Lookup user name
-// 4: Getting permission
+// StateStatus
+//     default
+//         0: default::state_entry()
+//         1: Getting notecard line count
+//         2: Lookup inventory notecard line
+//         3: Lookup user name
+//         4: Getting permission
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,7 +76,7 @@ integer DEFAULT_PRICE = 25;
 
 string ScriptName;
 key Owner;
-integer InitState = 0;
+integer StateStatus = 0;
 key DataServerRequest;
 integer DataServerRequestIndex = 0;
 key RuntimeId;
@@ -347,7 +348,7 @@ default {
             return;
         }
 
-        InitState = 1;
+        StateStatus = 1;
         DataServerRequest = llGetNumberOfNotecardLines( CONFIG );
         llSetTimerEvent( 30.0 );
     } // end state_entry()
@@ -374,16 +375,16 @@ default {
             return;
         }
 
-        if( 1 == InitState ) {
+        if( 1 == StateStatus ) {
             CountConfigLines = (integer)data;
-            InitState = 2;
+            StateStatus = 2;
             DataServerRequestIndex = -1; // Next method increments to zero
             NextConfigLine();
             return;
         }
 
         // If the result is the lookup of a line from the CONFIG
-        if( 2 == InitState ) {
+        if( 2 == StateStatus ) {
             // If the line is blank, skip it
             if( "" == data ) {
                 NextConfigLine();
@@ -532,7 +533,7 @@ default {
 
                 // Load first line of config
                 Message( "Checking payouts 0%, please wait..." , TRUE , FALSE , FALSE , FALSE );
-                InitState = 3;
+                StateStatus = 3;
                 DataServerRequest = llRequestUsername( llList2Key( Payees , DataServerRequestIndex = 0 ) );
                 llSetTimerEvent( 30.0 );
                 return;
@@ -865,10 +866,10 @@ default {
             // Completely unknown verb
             BadConfig( "" , data );
             return;
-        } // end if( 2 == InitState )
+        } // end if( 2 == StateStatus )
 
         // If the result is the lookup of a user from the Payees
-        if( 3 == InitState ) {
+        if( 3 == StateStatus ) {
             // Note that this user was looked up correctly and report the amount to be given
             Message( "Will give L$" + (string)llList2Integer( Payees , DataServerRequestIndex + 1 ) + " to " + data + " for each item purchased." , FALSE , TRUE , FALSE , FALSE );
 
@@ -896,7 +897,7 @@ default {
             Message( "Getting permission..." , TRUE , TRUE , FALSE , FALSE );
             llRequestPermissions( Owner , PERMISSION_DEBIT );
             llSetTimerEvent( 30.0 );
-            InitState = 4;
+            StateStatus = 4;
         }
     }
 
@@ -904,13 +905,13 @@ default {
         // Reset/stop timer
         llSetTimerEvent( 0.0 );
 
-        if( 1 == InitState ) {
+        if( 1 == StateStatus ) {
             ShowError( "Timed out while trying to get line count for \"" + CONFIG );
-        } else if( 2 == InitState ) {
+        } else if( 2 == StateStatus ) {
             ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + CONFIG );
-        } else if( 3 == InitState ) {
+        } else if( 3 == StateStatus ) {
             ShowError( "Timed out while trying to look up user key. The user \"" + llList2String( Payees , DataServerRequestIndex ) + "\" doesn't seem to exist, or the data server is being too slow." );
-        } else if( 4 == InitState ) {
+        } else if( 4 == StateStatus ) {
             ShowError( "Timed out while trying to get permission. Please touch to reset and make sure to grant the money permission when asked." );
         } else {
             ShowError( "Timed out." );
