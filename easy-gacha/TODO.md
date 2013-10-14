@@ -1,6 +1,6 @@
 # New Features #
 
-* Ask for debit permission up-front and not again (soft-reset script on changes)
+* Ask for debit permission up-front and not again (soft-reset script on changes) - partially complete
 * Option to restrict to group-only (in which case object group must match agent group)
 * Option to play sound effect on purchase
 * Option to allow no-copy items (remove from list when given)

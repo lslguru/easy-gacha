@@ -35,12 +35,11 @@
 // initialized.
 //
 // StateStatus
-//     default
+//     setup
 //         0: default::state_entry()
 //         1: Getting notecard line count
 //         2: Lookup inventory notecard line
 //         3: Lookup user name
-//         4: Getting permission
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -80,7 +79,7 @@ integer StateStatus = 0;
 key DataServerRequest;
 integer DataServerRequestIndex = 0;
 key RuntimeId;
-string RelevantConfig;
+string RelevantConfig = "";
 
 integer AllowRootPrim = FALSE;
 integer AllowStatSend = TRUE;
@@ -103,6 +102,7 @@ integer PayAnyAmount = 1; // 0/1 during config ends, price after config
 
 integer MaxPerPurchase = 100; // Not to exceed 100
 
+integer CheckAssumptionsNeeded = FALSE;
 integer LastTouch = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,6 +245,23 @@ Give( key buyerId , integer lindensReceived ) {
     llSetText( "" , ZERO_VECTOR , 0.0 );
 }
 
+// attach: Could be rezzed from inventory of different user
+// on_rez: Could be rezzed by new owner
+// changed: Change in owner, change in inventory (script name)
+// run_time_permissions: Permissions revoked or denied
+CheckBaseAssumptions() {
+    if(
+        llGetOwner() != Owner
+        || llGetScriptName() != ScriptName
+        || llGetPermissionsKey() != Owner
+        || ! ( llGetPermissions() & PERMISSION_DEBIT )
+    ) {
+        llResetScript();
+    }
+
+    CheckAssumptionsNeeded = FALSE;
+}
+
 integer BooleanConfigOption( string s0 ) {
     s0 = llToLower( s0 );
 
@@ -275,49 +292,52 @@ integer MemoryError() {
 ////////////////////////////////////////////////////////////////////////////////
 
 default {
-    ////////////
-    // Resets //
-    ////////////
+    state_entry() {
+        Owner = llGetOwner();
+        ScriptName = llGetScriptName();
+        RuntimeId = llGenerateKey();
 
-    // If the object is attached or detached, reset
-    attach( key avatarId ){
-        llResetScript();
+        // If we already have permission, don't ask for it
+        if( llGetPermissionsKey() == Owner && ( llGetPermissions() & PERMISSION_DEBIT ) ) {
+            state setup;
+        }
+
+        // Give an extra prompt so it's obvious what's being waited on
+        Message( "Please grant debit permission..." , TRUE , TRUE , FALSE , FALSE );
+
+        // Ask for permission
+        llRequestPermissions( Owner , PERMISSION_DEBIT );
     }
 
-    // Each time the object is rezzed, reset
-    on_rez( integer rezParam ) {
-        llResetScript();
+    attach( key avatarId ){ CheckBaseAssumptions(); }
+    on_rez( integer rezParam ) { CheckBaseAssumptions(); }
+    changed( integer changeMask ) { CheckBaseAssumptions(); }
+
+    run_time_permissions( integer permissionMask ) {
+        CheckBaseAssumptions(); // This will reset the script if permission hasn't been given
+        state setup;
     }
 
-    // If the owner touches the object before it's initialized, restart
-    // initialization
     touch_end( integer detected ) {
         while( 0 <= ( detected -= 1 ) ) {
             if( Owner == llDetectedKey( detected ) ) {
-                llResetScript();
+                CheckBaseAssumptions();
             }
         }
     }
+}
 
-    // If the owner changes, copy permissions may no longer apply for
-    // inventory. If the inventory changes, we have to recertify everything
-    // anyway.
-    changed( integer changeMask ) {
-        if( changeMask & ( CHANGED_INVENTORY | CHANGED_OWNER | CHANGED_LINK ) ) {
-            llResetScript();
-        }
-    }
+state setup {
+    attach( key avatarId ){ CheckBaseAssumptions(); }
+    on_rez( integer rezParam ) { CheckBaseAssumptions(); }
+    changed( integer changeMask ) { CheckBaseAssumptions(); }
+    run_time_permissions( integer permissionMask ) { CheckBaseAssumptions(); }
 
     ///////////////////
     // state default //
     ///////////////////
 
     state_entry() {
-        Owner = llGetOwner();
-        ScriptName = llGetScriptName();
-        RuntimeId = llGenerateKey();
-        RelevantConfig = "";
-
         Message( "Initializing, please wait..." , TRUE , TRUE , FALSE , FALSE );
 
         // Config notecard not found at all
@@ -473,7 +493,7 @@ default {
                         Payees = [ Owner , DEFAULT_PRICE ];
                         CountPayees = 2;
 
-                        RelevantConfig += "# auto payout\npayout " + (string)DEFUALT_PRICE + " owner\n";
+                        RelevantConfig += "# auto payout\npayout " + (string)DEFAULT_PRICE + " owner\n";
                     } else {
                         // Give a hint that we used the fallback
                         Message( "Will give L$" + (string)i0 + " to you for each item purchased. (Price taken from object description)" , FALSE , TRUE , FALSE , FALSE );
@@ -899,16 +919,12 @@ default {
             // Report total price
             Message( "The total price is L$" + (string)Price , FALSE , TRUE , FALSE , FALSE );
 
-            // Get permission to give money (so we can give refunds at least)
-            Message( "Getting permission..." , TRUE , TRUE , FALSE , FALSE );
-            llRequestPermissions( Owner , PERMISSION_DEBIT );
-            llSetTimerEvent( 30.0 );
-            StateStatus = 4;
+            // Move along sir
+            state ready;
         }
     }
 
     timer() {
-        // Reset/stop timer
         llSetTimerEvent( 0.0 );
 
         if( 1 == StateStatus ) {
@@ -917,19 +933,8 @@ default {
             ShowError( "Timed out while trying to fetch line " + (string)(DataServerRequestIndex + 1) + " from \"" + CONFIG );
         } else if( 3 == StateStatus ) {
             ShowError( "Timed out while trying to look up user key. The user \"" + llList2String( Payees , DataServerRequestIndex ) + "\" doesn't seem to exist, or the data server is being too slow." );
-        } else if( 4 == StateStatus ) {
-            ShowError( "Timed out while trying to get permission. Please touch to reset and make sure to grant the money permission when asked." );
         } else {
             ShowError( "Timed out." );
-        }
-    }
-
-    run_time_permissions( integer permissionMask ) {
-        if( ! ( PERMISSION_DEBIT & permissionMask ) ) {
-            llResetScript();
-        } else {
-            llSetTimerEvent( 0.0 );
-            state ready;
         }
     }
 
@@ -948,40 +953,36 @@ default {
 }
 
 state ready {
-    ////////////
-    // Resets //
-    ////////////
-
-    // If the object is attached or detached, reset
     attach( key avatarId ){
-        llSetTimerEvent( 0.01 );
+        CheckAssumptionsNeeded = TRUE;
+        llSetTimerEvent( 0.00 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
-    // Each time the object is rezzed, reset
     on_rez( integer rezParam ) {
-        llSetTimerEvent( 0.01 );
+        CheckAssumptionsNeeded = TRUE;
+        llSetTimerEvent( 0.00 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
-    // If the owner changes, copy permissions may no longer apply for
-    // inventory. If the inventory changes, we have to recertify everything
-    // anyway.
     changed( integer changeMask ) {
-        if( changeMask & ( CHANGED_INVENTORY | CHANGED_OWNER | CHANGED_LINK ) ) {
-            llSetTimerEvent( 0.01 );
-        }
+        CheckAssumptionsNeeded = TRUE;
+        llSetTimerEvent( 0.00 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
-    // If the money permission gets revoked, start over
     run_time_permissions( integer permissionMask ) {
-        if( ! ( PERMISSION_DEBIT & permissionMask ) ) {
-            llSetTimerEvent( 0.01 );
-        }
+        CheckAssumptionsNeeded = TRUE;
+        llSetTimerEvent( 0.00 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
-    // We use the timer event to prevent the queue from being dumped.
-    // See http://wiki.secondlife.com/wiki/State#Notes
     timer() {
-        llResetScript();
+        llSetTimerEvent( 0.0 );
+
+        if( CheckAssumptionsNeeded ) {
+            CheckBaseAssumptions();
+        }
     }
 
     /////////////////
