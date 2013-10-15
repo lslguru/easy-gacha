@@ -26,9 +26,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-// TODO: changed( CHANGED_INVENTORY ) -> rescan
-// TODO: changed( CHANGED_LINK ) -> rescan?
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 // NOTES
@@ -38,18 +35,17 @@
 // initialized.
 //
 // StateStatus
-//     default
-//         0: state_entry
-//     setup
+//
+//     setup: exact number
 //         1: Getting notecard line count
 //         2: Lookup inventory notecard line
 //         3: Lookup user name
-//     ready
-//         4: Everything A-OK
-//         5: Assumptions check needed
-//         6: Need to switch to handout state
-//     handout:
-//         N/A
+//
+//     ready: bitmask
+//         0: Everything A-OK
+//         1: Assumptions check needed
+//         2: Handout needed
+//         4: Init needed
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -81,40 +77,51 @@ integer DEFAULT_PRICE = 25;
 //
 // GLOBAL VARIABLES
 //
+// See state init for defaults
+//
 ////////////////////////////////////////////////////////////////////////////////
 
+// Basic object properties
 string ScriptName;
 key Owner;
-integer StateStatus = 0;
+
+// Config process
+integer StateStatus;
 key DataServerRequest;
-integer DataServerRequestIndex = 0;
+integer DataServerRequestIndex;
+integer CountConfigLines;
 key RuntimeId;
-string RelevantConfig = "";
+string RelevantConfig;
 
-integer AllowRootPrim = FALSE;
-integer AllowStatSend = TRUE;
-integer AllowShowStats = TRUE;
-integer CountConfigLines = 0;
-integer FolderForOne = TRUE;
+// Miscellaneous
+integer AllowRootPrim; // Boolean
 
-list Inventory = []; // Strided list of [ Inventory Name , Non Zero Positive Probability Number ]
-integer CountInventory = 0; // List length (not strided item length)
-float SumProbability = 0.0; // Sum
+// Stats
+integer AllowStatSend; // Boolean
+integer AllowShowStats; // Boolean
 
-list Payees = []; // Strided list of [ Agent Key , Number of Lindens ]
-integer CountPayees = 0; // List length (not strided item length)
-integer Price = 0; // Sum
+// Inventory
+list Inventory; // Strided list of [ Inventory Name , Non Zero Positive Probability Number ]
+integer CountInventory; // List length (not strided item length)
+float SumProbability; // Sum
 
-integer PayButton1 = 2; // Item count during config, price after config
-integer PayButton2 = 5; // Item count during config, price after config
-integer PayButton3 = 10; // Item count during config, price after config
-integer PayAnyAmount = 1; // 0/1 during config ends, price after config
+// Payees
+list Payees; // Strided list of [ Agent Key , Number of Lindens ]
+integer CountPayees; // List length (not strided item length)
+integer Price; // Sum
 
-integer MaxPerPurchase = 100; // Not to exceed 100
+// Payment
+integer PayButton1; // Item count during config, price after config
+integer PayButton2; // Item count during config, price after config
+integer PayButton3; // Item count during config, price after config
+integer PayAnyAmount; // 0/1 during config ends, price after config
 
-integer LastTouch = 0;
-list HandoutQueue;
-integer HandoutQueueCount;
+// Delivery
+integer MaxPerPurchase; // Not to exceed 100
+integer FolderForOne; // Boolean
+integer LastTouch; // unixtime
+list HandoutQueue; // Strided list of [ Agent Key , Lindens Given ]
+integer HandoutQueueCount; // List length (not stride item length)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -275,6 +282,158 @@ CheckBaseAssumptions() {
     }
 }
 
+NotecardParseComplete() {
+    // Temporary storage
+    integer i0;
+    integer i1;
+    float f0;
+    string s0;
+
+    // Check that at least one was configured
+    if( 0 == CountInventory ) {
+        // Mark in the config that we're automatic
+        RelevantConfig += "# auto item\n";
+
+        // Attempt to populate inventory evenly - last ditch effort
+        // here, probably not what someone really wants, but just
+        // in case we'll try it
+        i1 = llGetInventoryNumber( INVENTORY_ALL );
+        for( i0 = 0 ; i0 < i1 ; i0 += 1 ) {
+            // Get inventory name
+            s0 = llGetInventoryName( INVENTORY_ALL , i0 );
+
+            // If the inventory is ourself or our config, skip it
+            if( ScriptName != s0 && CONFIG != s0 ) {
+                // Add inventory to list
+                SumProbability += 1.0;
+                Inventory = ( Inventory = [] ) + Inventory + [ s0 , 1.0 ]; // Voodoo for better memory usage
+                CountInventory += 2;
+                RelevantConfig += "item 1 " + s0 + "\n";
+
+                // Memory check before proceeding, having just changed a list
+                if( MemoryError() ) {
+                    return;
+                }
+            }
+        }
+
+        // If we still don't have anything
+        if( 0 == CountInventory ) {
+            ShowError( "Bad configuration: No items were listed and nothing available in the object!" );
+            return;
+        }
+
+        // Give a hint as to why no items configured works
+        Message( "WARNING: No items configured, using entire inventory of object with equal probabilities" , FALSE , TRUE , FALSE , TRUE );
+    }
+
+    // Check details of inventory
+    for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
+        // Get name
+        s0 = llList2String( Inventory , i0 );
+
+        // Inventory must be copyable
+        if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
+            ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " );
+            return;
+        }
+
+        // Inventory must be transferable
+        if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
+            ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? " );
+            return;
+        }
+    }
+
+    // If no payees were configured
+    if( 0 == CountPayees ) {
+        // First attempt to get a number from the object description
+        i0 = (integer)llGetObjectDesc();
+        if( 0 == i0 && "0" != llGetObjectDesc() ) {
+            i0 = -1;
+        }
+
+        // If they entered a number less than zero (or didn't enter
+        // any number) in the description
+        if( 0 > i0 ) {
+            // Give a hint as to why no-payout is allowed
+            Message( "WARNING: No payouts configured, defaulting to L$" + (string)DEFAULT_PRICE + " to you." , FALSE , TRUE , FALSE , TRUE );
+
+            // Default to paying the owner
+            Payees = [ Owner , DEFAULT_PRICE ];
+            CountPayees = 2;
+
+            RelevantConfig += "# auto payout\npayout " + (string)DEFAULT_PRICE + " owner\n";
+        } else {
+            // Give a hint that we used the fallback
+            Message( "Will give L$" + (string)i0 + " to you for each item purchased. (Price taken from object description)" , FALSE , TRUE , FALSE , FALSE );
+        }
+    }
+
+    // Check that pay buttons aren't out of bounds
+    if( PayButton1 && PayButton1 > MaxPerPurchase ) {
+        ShowError( "Bad configuration: buy_button 1 exceeds maximum of " + (string)MaxPerPurchase );
+        return;
+    }
+    if( PayButton2 && PayButton2 > MaxPerPurchase ) {
+        ShowError( "Bad configuration: buy_button 2 exceeds maximum of " + (string)MaxPerPurchase );
+        return;
+    }
+    if( PayButton3 && PayButton3 > MaxPerPurchase ) {
+        ShowError( "Bad configuration: buy_button 3 exceeds maximum of " + (string)MaxPerPurchase );
+        return;
+    }
+
+    // Check that duplicate buttons weren't provided
+    if( PayButton1 && PayButton1 == PayButton2 ) {
+        ShowError( "Bad configuration: buy_button 1 and buy_button 2 are the same" );
+        return;
+    }
+    if( PayButton1 && PayButton1 == PayButton3 ) {
+        ShowError( "Bad configuration: buy_button 1 and buy_button 3 are the same" );
+        return;
+    }
+    if( PayButton2 && PayButton2 == PayButton3 ) {
+        ShowError( "Bad configuration: buy_button 2 and buy_button 3 are the same" );
+        return;
+    }
+
+    // If we shouldn't allow the root prim in a linked set
+    if( !AllowRootPrim && LINK_ROOT == llGetLinkNumber() ) {
+        ShowError( "This script is in the root prim of a linked set. It will override the default click action for the ENTIRE OBJECT, setting it to click-to-pay. If this is really what you want, change the config to: allow_root_prim yes" );
+        return;
+    }
+
+    // Report percentages now that we know the totals
+    for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
+        f0 = ( llList2Float( Inventory , i0 + 1 ) / SumProbability );
+        Message( "\"" + llList2String( Inventory , i0 ) + "\" has a probability of " + (string)( f0 * 100 ) + "%" , FALSE , TRUE , FALSE , FALSE );
+    }
+
+    // Set payment option
+    if( 0 == PayAnyAmount ) { PayAnyAmount = PAY_HIDE; } else { PayAnyAmount  = Price; }
+    if( 0 == PayButton1   ) { PayButton1   = PAY_HIDE; } else { PayButton1   *= Price; }
+    if( 0 == PayButton2   ) { PayButton2   = PAY_HIDE; } else { PayButton2   *= Price; }
+    if( 0 == PayButton3   ) { PayButton3   = PAY_HIDE; } else { PayButton3   *= Price; }
+
+    // If price is zero, then there's no way to know how many items
+    // someone wants at a time without this
+    if( !Price ) {
+        MaxPerPurchase = 1;
+    }
+
+    // Memory check before proceeding, having just tested a bunch of things and potentially changed things
+    if( MemoryError() ) {
+        return;
+    }
+
+    // Load first line of config
+    Message( "Checking payouts 0%, please wait..." , TRUE , FALSE , FALSE , FALSE );
+    StateStatus = 3;
+    DataServerRequest = llRequestUsername( llList2Key( Payees , DataServerRequestIndex = 0 ) );
+    llSetTimerEvent( 30.0 );
+}
+
 integer BooleanConfigOption( string s0 ) {
     s0 = llToLower( s0 );
 
@@ -308,11 +467,10 @@ default {
     state_entry() {
         Owner = llGetOwner();
         ScriptName = llGetScriptName();
-        RuntimeId = llGenerateKey();
 
         // If we already have permission, don't ask for it
         if( llGetPermissionsKey() == Owner && ( llGetPermissions() & PERMISSION_DEBIT ) ) {
-            state setup;
+            state init;
         }
 
         // Give an extra prompt so it's obvious what's being waited on
@@ -328,7 +486,7 @@ default {
 
     run_time_permissions( integer permissionMask ) {
         CheckBaseAssumptions(); // This will reset the script if permission hasn't been given
-        state setup;
+        state init;
     }
 
     touch_end( integer detected ) {
@@ -340,22 +498,66 @@ default {
     }
 }
 
+state init {
+    state_entry() {
+        CheckBaseAssumptions();
+
+        RelevantConfig = "";
+        AllowRootPrim = FALSE;
+        AllowStatSend = TRUE;
+        AllowShowStats = TRUE;
+        CountConfigLines = 0;
+        FolderForOne = TRUE;
+        Inventory = [];
+        CountInventory = 0;
+        SumProbability = 0.0;
+        Payees = [];
+        CountPayees = 0;
+        Price = 0;
+        PayButton1 = 2;
+        PayButton2 = 5;
+        PayButton3 = 10;
+        PayAnyAmount = 1;
+        MaxPerPurchase = 100;
+        LastTouch = 0;
+
+        RuntimeId = llGenerateKey();
+        DataServerRequest = NULL_KEY;
+        llSetTimerEvent( 0.0 );
+
+        llSetClickAction( CLICK_ACTION_NONE );
+        llSetPayPrice( PAY_DEFAULT , [ PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT ] );
+        llSetTouchText( "" );
+
+        state setup;
+    }
+}
+
 state setup {
     attach( key avatarId ){ CheckBaseAssumptions(); }
     on_rez( integer rezParam ) { CheckBaseAssumptions(); }
-    changed( integer changeMask ) { CheckBaseAssumptions(); }
     run_time_permissions( integer permissionMask ) { CheckBaseAssumptions(); }
 
-    ///////////////////
-    // state default //
-    ///////////////////
+    changed( integer changeMask ) {
+        CheckBaseAssumptions();
+
+        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
+            state init;
+        }
+    }
 
     state_entry() {
         Message( "Initializing, please wait..." , TRUE , TRUE , FALSE , FALSE );
 
+        // Ultra-simple mode
+        if( INVENTORY_NONE == llGetInventoryType( CONFIG ) ) {
+            NotecardParseComplete();
+            return;
+        }
+
         // Config notecard not found at all
         if( INVENTORY_NOTECARD != llGetInventoryType( CONFIG ) ) {
-            ShowError( "\"" + CONFIG + "\" is missing from inventory" );
+            ShowError( "\"" + CONFIG + "\" is not a notecard" );
             return;
         }
 
@@ -432,149 +634,7 @@ state setup {
 
             // Now that we're done processing the config notecard
             if( EOF == data ) {
-                // Check that at least one was configured
-                if( 0 == CountInventory ) {
-                    // Mark in the config that we're automatic
-                    RelevantConfig += "# auto item\n";
-
-                    // Attempt to populate inventory evenly - last ditch effort
-                    // here, probably not what someone really wants, but just
-                    // in case we'll try it
-                    i1 = llGetInventoryNumber( INVENTORY_ALL );
-                    for( i0 = 0 ; i0 < i1 ; i0 += 1 ) {
-                        // Get inventory name
-                        s0 = llGetInventoryName( INVENTORY_ALL , i0 );
-
-                        // If the inventory is ourself or our config, skip it
-                        if( ScriptName != s0 && CONFIG != s0 ) {
-                            // Add inventory to list
-                            SumProbability += 1.0;
-                            Inventory = ( Inventory = [] ) + Inventory + [ s0 , 1.0 ]; // Voodoo for better memory usage
-                            CountInventory += 2;
-                            RelevantConfig += "item 1 " + s0 + "\n";
-
-                            // Memory check before proceeding, having just changed a list
-                            if( MemoryError() ) {
-                                return;
-                            }
-                        }
-                    }
-
-                    // If we still don't have anything
-                    if( 0 == CountInventory ) {
-                        ShowError( "Bad configuration: No items were listed and nothing available in the object!" );
-                        return;
-                    }
-
-                    // Give a hint as to why no items configured works
-                    Message( "WARNING: No items configured, using entire inventory of object with equal probabilities" , FALSE , TRUE , FALSE , TRUE );
-                }
-
-                // Check details of inventory
-                for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
-                    // Get name
-                    s0 = llList2String( Inventory , i0 );
-
-                    // Inventory must be copyable
-                    if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                        ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " );
-                        return;
-                    }
-
-                    // Inventory must be transferable
-                    if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-                        ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? " );
-                        return;
-                    }
-                }
-
-                // If no payees were configured
-                if( 0 == CountPayees ) {
-                    // First attempt to get a number from the object description
-                    i0 = (integer)llGetObjectDesc();
-                    if( 0 == i0 && "0" != llGetObjectDesc() ) {
-                        i0 = -1;
-                    }
-
-                    // If they entered a number less than zero (or didn't enter
-                    // any number) in the description
-                    if( 0 > i0 ) {
-                        // Give a hint as to why no-payout is allowed
-                        Message( "WARNING: No payouts configured, defaulting to L$" + (string)DEFAULT_PRICE + " to you." , FALSE , TRUE , FALSE , TRUE );
-
-                        // Default to paying the owner
-                        Payees = [ Owner , DEFAULT_PRICE ];
-                        CountPayees = 2;
-
-                        RelevantConfig += "# auto payout\npayout " + (string)DEFAULT_PRICE + " owner\n";
-                    } else {
-                        // Give a hint that we used the fallback
-                        Message( "Will give L$" + (string)i0 + " to you for each item purchased. (Price taken from object description)" , FALSE , TRUE , FALSE , FALSE );
-                    }
-                }
-
-                // Check that pay buttons aren't out of bounds
-                if( PayButton1 && PayButton1 > MaxPerPurchase ) {
-                    ShowError( "Bad configuration: buy_button 1 exceeds maximum of " + (string)MaxPerPurchase );
-                    return;
-                }
-                if( PayButton2 && PayButton2 > MaxPerPurchase ) {
-                    ShowError( "Bad configuration: buy_button 2 exceeds maximum of " + (string)MaxPerPurchase );
-                    return;
-                }
-                if( PayButton3 && PayButton3 > MaxPerPurchase ) {
-                    ShowError( "Bad configuration: buy_button 3 exceeds maximum of " + (string)MaxPerPurchase );
-                    return;
-                }
-
-                // Check that duplicate buttons weren't provided
-                if( PayButton1 && PayButton1 == PayButton2 ) {
-                    ShowError( "Bad configuration: buy_button 1 and buy_button 2 are the same" );
-                    return;
-                }
-                if( PayButton1 && PayButton1 == PayButton3 ) {
-                    ShowError( "Bad configuration: buy_button 1 and buy_button 3 are the same" );
-                    return;
-                }
-                if( PayButton2 && PayButton2 == PayButton3 ) {
-                    ShowError( "Bad configuration: buy_button 2 and buy_button 3 are the same" );
-                    return;
-                }
-
-                // If we shouldn't allow the root prim in a linked set
-                if( !AllowRootPrim && LINK_ROOT == llGetLinkNumber() ) {
-                    ShowError( "This script is in the root prim of a linked set. It will override the default click action for the ENTIRE OBJECT, setting it to click-to-pay. If this is really what you want, change the config to: allow_root_prim yes" );
-                    return;
-                }
-
-                // Report percentages now that we know the totals
-                for( i0 = 0 ; i0 < CountInventory ; i0 += 2 ) {
-                    f0 = ( llList2Float( Inventory , i0 + 1 ) / SumProbability );
-                    Message( "\"" + llList2String( Inventory , i0 ) + "\" has a probability of " + (string)( f0 * 100 ) + "%" , FALSE , TRUE , FALSE , FALSE );
-                }
-
-                // Set payment option
-                if( 0 == PayAnyAmount ) { PayAnyAmount = PAY_HIDE; } else { PayAnyAmount  = Price; }
-                if( 0 == PayButton1   ) { PayButton1   = PAY_HIDE; } else { PayButton1   *= Price; }
-                if( 0 == PayButton2   ) { PayButton2   = PAY_HIDE; } else { PayButton2   *= Price; }
-                if( 0 == PayButton3   ) { PayButton3   = PAY_HIDE; } else { PayButton3   *= Price; }
-
-                // If price is zero, then there's no way to know how many items
-                // someone wants at a time without this
-                if( !Price ) {
-                    MaxPerPurchase = 1;
-                }
-
-                // Memory check before proceeding, having just tested a bunch of things and potentially changed things
-                if( MemoryError() ) {
-                    return;
-                }
-
-                // Load first line of config
-                Message( "Checking payouts 0%, please wait..." , TRUE , FALSE , FALSE , FALSE );
-                StateStatus = 3;
-                DataServerRequest = llRequestUsername( llList2Key( Payees , DataServerRequestIndex = 0 ) );
-                llSetTimerEvent( 30.0 );
+                NotecardParseComplete();
                 return;
             }
 
@@ -933,6 +993,7 @@ state setup {
             Message( "The total price is L$" + (string)Price , FALSE , TRUE , FALSE , FALSE );
 
             // Move along sir
+            StateStatus = 0;
             state ready;
         }
     }
@@ -967,25 +1028,29 @@ state setup {
 
 state ready {
     attach( key avatarId ){
-        StateStatus = 5;
+        StateStatus = StateStatus | 1;
         llSetTimerEvent( 0.0 ); // Take timer event off stack
         llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     on_rez( integer rezParam ) {
-        StateStatus = 5;
+        StateStatus = StateStatus | 1;
         llSetTimerEvent( 0.0 ); // Take timer event off stack
         llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     changed( integer changeMask ) {
-        StateStatus = 5;
+        StateStatus = StateStatus | 1;
         llSetTimerEvent( 0.0 ); // Take timer event off stack
         llSetTimerEvent( 0.01 ); // Add it to end of stack
+
+        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
+            StateStatus = StateStatus | 4;
+        }
     }
 
     run_time_permissions( integer permissionMask ) {
-        StateStatus = 5;
+        StateStatus = StateStatus | 1;
         llSetTimerEvent( 0.0 ); // Take timer event off stack
         llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
@@ -993,16 +1058,27 @@ state ready {
     timer() {
         llSetTimerEvent( 0.0 );
 
-        if( 5 == StateStatus ) {
-            CheckBaseAssumptions();
+        if( 2 & StateStatus ) {
+            state handout;
         }
 
-        if( 6 == StateStatus ) {
-            state handout;
+        if( 4 & StateStatus ) {
+            state init;
+        }
+
+        if( 1 & StateStatus ) {
+            CheckBaseAssumptions();
         }
     }
 
     state_entry() {
+        HandoutQueue = [];
+        HandoutQueueCount = 0;
+
+        if( 4 & StateStatus ) {
+            state init;
+        }
+
         CheckBaseAssumptions();
 
         llSetText( "" , ZERO_VECTOR , 0.0 );
@@ -1016,9 +1092,6 @@ state ready {
             llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
             llSetTouchText( "Play" );
         }
-
-        HandoutQueue = [];
-        HandoutQueueCount = 0;
     }
 
     touch_end( integer detected ) {
@@ -1043,7 +1116,7 @@ state ready {
             if( !Price ) {
                 HandoutQueue = ( HandoutQueue = [] ) + HandoutQueue + [ llDetectedKey( detected ) , 0 ]; // Voodoo for better memory usage
                 HandoutQueueCount += 2;
-                StateStatus = 6;
+                StateStatus = StateStatus | 2;
                 llSetTimerEvent( 0.0 ); // Take timer event off stack
                 llSetTimerEvent( 0.01 ); // Add it to end of stack
             }
@@ -1067,7 +1140,7 @@ state ready {
     money( key buyerId , integer lindensReceived ) {
         HandoutQueue = ( HandoutQueue = [] ) + HandoutQueue + [ buyerId , lindensReceived ]; // Voodoo for better memory usage
         HandoutQueueCount += 2;
-        StateStatus = 6;
+        StateStatus = StateStatus | 2;
         llSetTimerEvent( 0.0 ); // Take timer event off stack
         llSetTimerEvent( 0.01 ); // Add it to end of stack
     }

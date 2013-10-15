@@ -1,8 +1,5 @@
 # New Features #
 
-* Allow config notecard to be missing
-* Ask for debit permission up-front and not again (soft-reset script on changes) - partially complete
-
 * Option to ignore missing inventory (quietly remove from list)
 * Option to allow no-copy items (remove from list when given, implies allow_missing_inventory yes)
 * Option to list remaining inventory on touch
