@@ -366,7 +366,11 @@ NotecardParseComplete() {
             RelevantConfig += "# auto payout\npayout " + (string)DEFAULT_PRICE + " owner\n";
         } else {
             // Give a hint that we used the fallback
-            Message( "Will give L$" + (string)i0 + " to you for each item purchased. (Price taken from object description)" , FALSE , TRUE , FALSE , FALSE );
+            Message( "Price taken from object description" , FALSE , TRUE , FALSE , FALSE );
+
+            // Default to paying the owner
+            Payees = [ Owner , i0 ];
+            CountPayees = 2;
         }
     }
 
