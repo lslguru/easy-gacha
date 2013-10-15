@@ -77,8 +77,6 @@ integer DEFAULT_PRICE = 25;
 //
 // GLOBAL VARIABLES
 //
-// See state init for defaults
-//
 ////////////////////////////////////////////////////////////////////////////////
 
 // Basic object properties
@@ -561,7 +559,7 @@ default {
 
         // If we already have permission, don't ask for it
         if( llGetPermissionsKey() == Owner && ( llGetPermissions() & PERMISSION_DEBIT ) ) {
-            state init;
+            state setup;
         }
 
         // Give an extra prompt so it's obvious what's being waited on
@@ -577,7 +575,7 @@ default {
 
     run_time_permissions( integer permissionMask ) {
         CheckBaseAssumptions(); // This will reset the script if permission hasn't been given
-        state init;
+        state setup;
     }
 
     touch_end( integer detected ) {
@@ -589,7 +587,28 @@ default {
     }
 }
 
-state init {
+state setup {
+    attach( key avatarId ){ CheckBaseAssumptions(); }
+    on_rez( integer rezParam ) { CheckBaseAssumptions(); }
+    run_time_permissions( integer permissionMask ) { CheckBaseAssumptions(); }
+
+    touch_end( integer detected ) {
+        while( 0 <= ( detected -= 1 ) ) {
+            if( Owner == llDetectedKey( detected ) ) {
+                CheckBaseAssumptions();
+                state setup;
+            }
+        }
+    }
+
+    changed( integer changeMask ) {
+        CheckBaseAssumptions();
+
+        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
+            state setup;
+        }
+    }
+
     state_entry() {
         CheckBaseAssumptions();
 
@@ -622,33 +641,6 @@ state init {
         llSetPayPrice( PAY_DEFAULT , [ PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT ] );
         llSetTouchText( "" );
 
-        state setup;
-    }
-}
-
-state setup {
-    attach( key avatarId ){ CheckBaseAssumptions(); }
-    on_rez( integer rezParam ) { CheckBaseAssumptions(); }
-    run_time_permissions( integer permissionMask ) { CheckBaseAssumptions(); }
-
-    touch_end( integer detected ) {
-        while( 0 <= ( detected -= 1 ) ) {
-            if( Owner == llDetectedKey( detected ) ) {
-                CheckBaseAssumptions();
-                state init;
-            }
-        }
-    }
-
-    changed( integer changeMask ) {
-        CheckBaseAssumptions();
-
-        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
-            state init;
-        }
-    }
-
-    state_entry() {
         Message( "Initializing, please wait..." , TRUE , TRUE , FALSE , FALSE );
 
         // Ultra-simple mode
@@ -1075,7 +1067,7 @@ state setupError {
         CheckBaseAssumptions();
 
         if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
-            state init;
+            state setup;
         }
     }
 
@@ -1083,7 +1075,7 @@ state setupError {
         while( 0 <= ( detected -= 1 ) ) {
             if( Owner == llDetectedKey( detected ) ) {
                 CheckBaseAssumptions();
-                state init;
+                state setup;
             }
         }
     }
@@ -1136,7 +1128,7 @@ state ready {
         }
 
         if( 4 & StateStatus ) {
-            state init;
+            state setup;
         }
 
         if( 1 & StateStatus ) {
@@ -1149,7 +1141,7 @@ state ready {
         HandoutQueueCount = 0;
 
         if( 4 & StateStatus ) {
-            state init;
+            state setup;
         }
 
         CheckBaseAssumptions();
@@ -1261,7 +1253,7 @@ state handout {
         llSetTimerEvent( 0.0 );
 
         if( 4 & StateStatus ) {
-            state init;
+            state setup;
         } else if( 1 & StateStatus ) {
             CheckBaseAssumptions();
         } else {
