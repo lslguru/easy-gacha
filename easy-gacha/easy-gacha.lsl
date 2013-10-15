@@ -133,6 +133,11 @@ integer HandoutQueueCount; // List length (not stride item length)
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+ImmediateTimer() {
+    llSetTimerEvent( 0.0 ); // Take timer event off stack
+    llSetTimerEvent( 0.01 ); // Add it to end of stack
+}
+
 Message( string msg , integer hoverText , integer ownerSay , integer whisper , integer ownerDialog ) {
     if( hoverText ) {
         llSetText( ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
@@ -1101,20 +1106,17 @@ state setupSuccess {
 state ready {
     attach( key avatarId ){
         StateStatus = StateStatus | 1;
-        llSetTimerEvent( 0.0 ); // Take timer event off stack
-        llSetTimerEvent( 0.01 ); // Add it to end of stack
+        ImmediateTimer();
     }
 
     on_rez( integer rezParam ) {
         StateStatus = StateStatus | 1;
-        llSetTimerEvent( 0.0 ); // Take timer event off stack
-        llSetTimerEvent( 0.01 ); // Add it to end of stack
+        ImmediateTimer();
     }
 
     changed( integer changeMask ) {
         StateStatus = StateStatus | 1;
-        llSetTimerEvent( 0.0 ); // Take timer event off stack
-        llSetTimerEvent( 0.01 ); // Add it to end of stack
+        ImmediateTimer();
 
         if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
             StateStatus = StateStatus | 4;
@@ -1123,8 +1125,7 @@ state ready {
 
     run_time_permissions( integer permissionMask ) {
         StateStatus = StateStatus | 1;
-        llSetTimerEvent( 0.0 ); // Take timer event off stack
-        llSetTimerEvent( 0.01 ); // Add it to end of stack
+        ImmediateTimer();
     }
 
     timer() {
@@ -1189,8 +1190,7 @@ state ready {
                 HandoutQueue = ( HandoutQueue = [] ) + HandoutQueue + [ llDetectedKey( detected ) , 0 ]; // Voodoo for better memory usage
                 HandoutQueueCount += 2;
                 StateStatus = StateStatus | 2;
-                llSetTimerEvent( 0.0 ); // Take timer event off stack
-                llSetTimerEvent( 0.01 ); // Add it to end of stack
+                ImmediateTimer();
             }
         }
 
@@ -1213,8 +1213,7 @@ state ready {
         HandoutQueue = ( HandoutQueue = [] ) + HandoutQueue + [ buyerId , lindensReceived ]; // Voodoo for better memory usage
         HandoutQueueCount += 2;
         StateStatus = StateStatus | 2;
-        llSetTimerEvent( 0.0 ); // Take timer event off stack
-        llSetTimerEvent( 0.01 ); // Add it to end of stack
+        ImmediateTimer();
     }
 }
 
@@ -1228,21 +1227,19 @@ state handout {
             Give( llList2Key( HandoutQueue , x ) , llList2Integer( HandoutQueue , x + 1 ) );
         }
 
-        llSetTimerEvent( 0.01 );
+        ImmediateTimer();
     }
 
     attach( key avatarId ){
         StateStatus = StateStatus | 1;
 
-        llSetTimerEvent( 0.0 );
-        llSetTimerEvent( 0.01 );
+        ImmediateTimer();
     }
 
     on_rez( integer rezParam ) {
         StateStatus = StateStatus | 1;
 
-        llSetTimerEvent( 0.0 );
-        llSetTimerEvent( 0.01 );
+        ImmediateTimer();
     }
 
     changed( integer changeMask ) {
@@ -1252,15 +1249,12 @@ state handout {
             StateStatus = StateStatus | 4;
         }
 
-        llSetTimerEvent( 0.0 );
-        llSetTimerEvent( 0.01 );
+        ImmediateTimer();
     }
 
     run_time_permissions( integer permissionMask ) {
         StateStatus = StateStatus | 1;
-
-        llSetTimerEvent( 0.0 );
-        llSetTimerEvent( 0.01 );
+        ImmediateTimer();
     }
 
     timer() {
