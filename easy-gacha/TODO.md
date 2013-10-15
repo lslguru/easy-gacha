@@ -1,7 +1,15 @@
+# Fixes #
+
+* Must get memory usage down again
+
 # New Features #
+
+## Next Version ##
 
 * Option to list remaining inventory on touch
 * Option to expire inventory item after X copies given
+
+## Future Version ##
 
 * Option to restrict to group-only (in which case object group must match agent group)
 * Option to play sound effect on purchase
