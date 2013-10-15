@@ -104,6 +104,7 @@ integer AllowShowStats; // Boolean
 list Inventory; // Strided list of [ Inventory Name , Non Zero Positive Probability Number ]
 integer CountInventory; // List length (not strided item length)
 float SumProbability; // Sum
+integer SkipMissingInventory; // Boolean
 
 // Payees
 list Payees; // Strided list of [ Agent Key , Number of Lindens ]
@@ -332,16 +333,18 @@ NotecardParseComplete() {
         // Get name
         s0 = llList2String( Inventory , i0 );
 
-        // Inventory must be copyable
-        if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-            ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " );
-            return;
-        }
+        if( INVENTORY_NONE != llGetInventoryType( s0 ) ) {
+            // Inventory must be copyable
+            if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
+                ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " );
+                return;
+            }
 
-        // Inventory must be transferable
-        if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
-            ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? " );
-            return;
+            // Inventory must be transferable
+            if( ! ( PERM_TRANSFER & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
+                ShowError( "\"" + s0 + "\" is not transferable. So how can I give it out? " );
+                return;
+            }
         }
     }
 
@@ -515,6 +518,7 @@ state init {
         Inventory = [];
         CountInventory = 0;
         SumProbability = 0.0;
+        SkipMissingInventory = FALSE;
         Payees = [];
         CountPayees = 0;
         Price = 0;
@@ -693,9 +697,15 @@ state setup {
                 // Grab inventory name off string
                 s0 = llGetSubString( s0 , i0 + 1 , -1 );
 
-                // Inventory must exist
+                // Inventory should exist
                 if( INVENTORY_NONE == llGetInventoryType( s0 ) ) {
-                    BadConfig( "Cannot find \"" + s0 + "\" in inventory. " , data );
+                    if( SkipMissingInventory ) {
+                        Message( "Cannot find \"" + s0 + "\" in inventory. Skipping item and not adding to probabilities." , FALSE , TRUE , FALSE , FALSE );
+                        NextConfigLine();
+                    } else {
+                        BadConfig( "Cannot find \"" + s0 + "\" in inventory. " , data );
+                    }
+
                     return;
                 }
 
@@ -952,6 +962,23 @@ state setup {
             // Advanced option
             if( "folder_for_one" == s1 ) {
                 if( -1 == ( FolderForOne = BooleanConfigOption( s0 ) ) ) {
+                    BadConfig( "" , data );
+                    return;
+                }
+
+                // Memory check before proceeding, having just completed this line
+                if( MemoryError() ) {
+                    return;
+                }
+
+                // Load next line of config
+                NextConfigLine();
+                return;
+            }
+
+            // Advanced option
+            if( "skip_missing_inventory" == s1 ) {
+                if( -1 == ( SkipMissingInventory = BooleanConfigOption( s0 ) ) ) {
                     BadConfig( "" , data );
                     return;
                 }

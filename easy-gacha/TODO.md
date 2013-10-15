@@ -1,6 +1,5 @@
 # New Features #
 
-* Option to ignore missing inventory (quietly remove from list)
 * Option to allow no-copy items (remove from list when given, implies allow_missing_inventory yes)
 * Option to list remaining inventory on touch
 * Option to expire inventory item after X copies given

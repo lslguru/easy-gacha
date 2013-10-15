@@ -86,3 +86,9 @@ folder_for_one BOOLEAN
 
 TODO
 # If you don't want to bother with a folder when only one item is being given, change this.
+
+################################################################################
+
+skip_missing_inventory BOOLEAN
+
+TODO
