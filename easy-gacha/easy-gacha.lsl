@@ -69,7 +69,7 @@ string SERVER_URL_PURCHASE = ""; // Sent with each purchase
 string SERVER_URL_STATS = ""; // The runtime ID gets appended to the end!
 
 string CONFIG = "Easy Gacha Config";
-integer LOW_MEMORY_THRESHOLD = 16000;
+integer LOW_MEMORY_THRESHOLD = 1; // TODO: Reset to 16000
 integer MAX_FOLDER_NAME_LENGTH = 63;
 integer DEFAULT_PRICE = 25;
 
@@ -92,6 +92,9 @@ integer DataServerRequestIndex;
 integer CountConfigLines;
 key RuntimeId;
 string RelevantConfig;
+integer SuppressOwnerMessages;
+integer AllowNoCopy;
+integer MemoryErrorDetected;
 
 // Miscellaneous
 integer AllowRootPrim; // Boolean
@@ -134,13 +137,13 @@ Message( string msg , integer hoverText , integer ownerSay , integer whisper , i
     if( hoverText ) {
         llSetText( ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
     }
-    if( ownerSay ) {
+    if( ownerSay && !SuppressOwnerMessages ) {
         llOwnerSay( ScriptName + ": " + msg );
     }
     if( whisper ) {
         llWhisper( 0 , ScriptName + ": " + msg );
     }
-    if( ownerDialog ) {
+    if( ownerDialog && !SuppressOwnerMessages ) {
         llDialog( Owner , ScriptName + ":\n" + msg , [] , -1 ); // FORCED_DELAY 1.0 seconds
     }
 }
@@ -169,6 +172,7 @@ Give( key buyerId , integer lindensReceived ) {
     string hasHave = "have ";
     string objectName = llGetObjectName();
     string displayName = llGetDisplayName( buyerId );
+    string inventoryName;
 
     // Let them know we're thinking
     Message( "Please wait, getting random items for " + displayName , TRUE , FALSE , FALSE , FALSE );
@@ -193,7 +197,7 @@ Give( key buyerId , integer lindensReceived ) {
     }
 
     // While there's still enough money for another item
-    while( lindensReceived >= Price && countItemsToSend < MaxPerPurchase ) {
+    while( lindensReceived >= Price && countItemsToSend < MaxPerPurchase && CountInventory ) {
         random = llFrand( SumProbability ); // Generate a random number which is between [ 0.0 , SumProbability )
         selected = -2; // Start below the first object because the first iteration will definitely run once
 
@@ -205,8 +209,23 @@ Give( key buyerId , integer lindensReceived ) {
             random -= llList2Float( Inventory , selected + 1 );
         }
 
+        inventoryName = llList2String( Inventory , selected );
+
+        // If item is no-copy
+        if( ! ( PERM_COPY & llGetInventoryPermMask( inventoryName , MASK_OWNER ) ) ) {
+            // Note that the next inventory action should not report to the
+            // owner and queue up a re-scan of inventory
+            SuppressOwnerMessages = TRUE;
+            StateStatus = StateStatus | 4;
+
+            // Remove item from inventory list for next iteration
+            SumProbability -= llList2Float( Inventory , selected + 1 );
+            CountInventory -= 2;
+            Inventory = llListReplaceList( ( Inventory = [] ) + Inventory , [ ] , selected , selected + 1 ); // Voodoo for better memory usage
+        }
+
         // Schedule to give inventory, increment counter, decrement money
-        itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ llList2String( Inventory , selected ) ]; // Voodoo for better memory usage
+        itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ inventoryName ]; // Voodoo for better memory usage
         countItemsToSend += 1;
         lindensReceived -= Price;
     }
@@ -274,6 +293,7 @@ CheckBaseAssumptions() {
         || llGetScriptName() != ScriptName
         || llGetPermissionsKey() != Owner
         || ! ( llGetPermissions() & PERMISSION_DEBIT )
+        || MemoryErrorDetected
     ) {
         llResetScript();
     }
@@ -289,6 +309,19 @@ NotecardParseComplete() {
     integer i1;
     float f0;
     string s0;
+
+    // If we allow no-copy items, then we can ONLY support single purchases
+    // without a folder (limit of llGiveInventoryList) and we have to assume
+    // inventory will go missing
+    if( AllowNoCopy ) {
+        FolderForOne = FALSE;
+        SkipMissingInventory = TRUE;
+        PayButton1 = 0;
+        PayButton2 = 0;
+        PayButton3 = 0;
+        PayAnyAmount = 0;
+        MaxPerPurchase = 1;
+    }
 
     // Check that at least one was configured
     if( 0 == CountInventory ) {
@@ -320,12 +353,12 @@ NotecardParseComplete() {
 
         // If we still don't have anything
         if( 0 == CountInventory ) {
-            ShowError( "Bad configuration: No items were listed and nothing available in the object!" );
+            ShowError( "Nothing left to give out!" );
             return;
         }
 
         // Give a hint as to why no items configured works
-        Message( "WARNING: No items configured, using entire inventory of object with equal probabilities" , FALSE , TRUE , FALSE , TRUE );
+        Message( "WARNING: No items configured, using entire inventory of object with equal probabilities" , FALSE , TRUE , FALSE , FALSE );
     }
 
     // Check details of inventory
@@ -335,7 +368,7 @@ NotecardParseComplete() {
 
         if( INVENTORY_NONE != llGetInventoryType( s0 ) ) {
             // Inventory must be copyable
-            if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) ) {
+            if( ! ( PERM_COPY & llGetInventoryPermMask( s0 , MASK_OWNER ) ) && ! AllowNoCopy ) {
                 ShowError( "\"" + s0 + "\" is not copyable. If given, it would disappear from inventory, so it cannot be used. " );
                 return;
             }
@@ -360,10 +393,11 @@ NotecardParseComplete() {
         // any number) in the description
         if( 0 > i0 ) {
             // Give a hint as to why no-payout is allowed
-            Message( "WARNING: No payouts configured, defaulting to L$" + (string)DEFAULT_PRICE + " to you." , FALSE , TRUE , FALSE , TRUE );
+            Message( "WARNING: No payouts configured, defaulting to L$" + (string)DEFAULT_PRICE + " to you." , FALSE , TRUE , FALSE , FALSE );
 
             // Default to paying the owner
             Payees = [ Owner , DEFAULT_PRICE ];
+            Price = DEFAULT_PRICE;
             CountPayees = 2;
 
             RelevantConfig += "# auto payout\npayout " + (string)DEFAULT_PRICE + " owner\n";
@@ -373,6 +407,7 @@ NotecardParseComplete() {
 
             // Default to paying the owner
             Payees = [ Owner , i0 ];
+            Price = i0;
             CountPayees = 2;
         }
     }
@@ -441,22 +476,66 @@ NotecardParseComplete() {
     llSetTimerEvent( 30.0 );
 }
 
-integer BooleanConfigOption( string s0 ) {
-    s0 = llToLower( s0 );
+integer BooleanConfigOptions( string name , string value ) {
+    value = llToLower( value );
 
-    if( -1 != llListFindList( [ "yes" , "on" , "true" , "1" , "hai" , "yea" , "yep" , "+" ] , [ s0 ] ) ) {
-        return TRUE;
+    // Convert the value
+    integer realValue = -1;
+    if( -1 != llListFindList( [ "yes" , "on" , "true" , "1" , "hai" , "yea" , "yep" , "+" ] , [ value ] ) ) {
+        realValue = 1;
+    }
+    if( -1 != llListFindList( [ "no" , "off" , "false" , "0" , "iie" , "nay" , "nope" , "-" ] , [ value ] ) ) {
+        realValue = 0;
     }
 
-    if( -1 != llListFindList( [ "no" , "off" , "false" , "0" , "iie" , "nay" , "nope" , "-" ] , [ s0 ] ) ) {
-        return FALSE;
+    // Check each boolean option
+    if( "pay_any_amount" == name ) {
+        PayAnyAmount = realValue;
+        name = "";
+    }
+    if( "allow_send_stats" == name ) {
+        AllowStatSend = realValue;
+        name = "";
+    }
+    if( "allow_show_stats" == name ) {
+        AllowShowStats = realValue;
+        name = "";
+    }
+    if( "allow_root_prim" == name ) {
+        AllowRootPrim = realValue;
+        name = "";
+    }
+    if( "folder_for_one" == name ) {
+        FolderForOne = realValue;
+        name = "";
+    }
+    if( "skip_missing_inventory" == name ) {
+        SkipMissingInventory = realValue;
+        name = "";
+    }
+    if( "allow_no_copy" == name ) {
+        AllowNoCopy = realValue;
+        name = "";
     }
 
-    return -1;
+    // If name was found
+    if( "" == name ) {
+        // Value was invalid
+        if( -1 == realValue ) {
+            return -1;
+        }
+
+        // Option name found
+        return 1;
+    }
+
+    // Option name not found
+    return 0;
 }
 
 integer MemoryError() {
     if( llGetFreeMemory() < LOW_MEMORY_THRESHOLD ) {
+        MemoryErrorDetected = TRUE;
         ShowError( "Not enough free memory to handle large orders. Too many items in configuration?" );
         return TRUE;
     }
@@ -510,6 +589,7 @@ state init {
         CheckBaseAssumptions();
 
         RelevantConfig = "";
+        AllowNoCopy = FALSE;
         AllowRootPrim = FALSE;
         AllowStatSend = TRUE;
         AllowShowStats = TRUE;
@@ -546,6 +626,15 @@ state setup {
     on_rez( integer rezParam ) { CheckBaseAssumptions(); }
     run_time_permissions( integer permissionMask ) { CheckBaseAssumptions(); }
 
+    touch_end( integer detected ) {
+        while( 0 <= ( detected -= 1 ) ) {
+            if( Owner == llDetectedKey( detected ) ) {
+                CheckBaseAssumptions();
+                state init;
+            }
+        }
+    }
+
     changed( integer changeMask ) {
         CheckBaseAssumptions();
 
@@ -566,29 +655,29 @@ state setup {
         // Config notecard not found at all
         if( INVENTORY_NOTECARD != llGetInventoryType( CONFIG ) ) {
             ShowError( "\"" + CONFIG + "\" is not a notecard" );
-            return;
+            state setupError;
         }
 
         // Full perm required to use llGetInventoryKey() successfully
         integer mask = llGetInventoryPermMask( CONFIG , MASK_OWNER );
         if( ! ( PERM_COPY     & mask ) ) {
             ShowError( "\"" + CONFIG + "\" is not copyable"     );
-            return;
+            state setupError;
         }
         if( ! ( PERM_MODIFY   & mask ) ) {
             ShowError( "\"" + CONFIG + "\" is not modifiable"   );
-            return;
+            state setupError;
         }
         if( ! ( PERM_TRANSFER & mask ) ) {
             ShowError( "\"" + CONFIG + "\" is not transferable" );
-            return;
+            state setupError;
         }
 
         // No key returned despite permissions == no contents (which would blow
         // up llGetNotecardLine)
         if( NULL_KEY == llGetInventoryKey( CONFIG ) ) {
             ShowError( "\"" + CONFIG + "\" is new and has not yet been saved" );
-            return;
+            state setupError;
         }
 
         StateStatus = 1;
@@ -615,7 +704,7 @@ state setup {
 
         // Memory check before proceeding, having just gotten a new string
         if( MemoryError() ) {
-            return;
+            state setupError;
         }
 
         if( 1 == StateStatus ) {
@@ -655,13 +744,19 @@ state setup {
             // If there's no space on the line, it's invalid
             if( 0 >= i0 ) {
                 BadConfig( "" , data );
-                return;
+                state setupError;
+            }
+
+            // If there's nothing before the space, it's invalid
+            if( 0 == i0 ) {
+                BadConfig( "" , data );
+                state setupError;
             }
 
             // If there's nothing after the space, it's invalid
             if( llStringLength( data ) - 1 == i0 ) {
                 BadConfig( "" , data );
-                return;
+                state setupError;
             }
 
             // Split the verb from the config value
@@ -676,7 +771,7 @@ state setup {
                 // If there's not another space on the line, it's invalid
                 if( 0 >= i0 ) {
                     BadConfig( "" , data );
-                    return;
+                    state setupError;
                 }
 
                 // Pull the probability number off the front of the string
@@ -685,13 +780,13 @@ state setup {
                 // If the probability is out of bounds
                 if( 0.0 >= f0 ) {
                     BadConfig( "Number must be greater than zero. " , data );
-                    return;
+                    state setupError;
                 }
 
                 // Name must be provided
                 if( llStringLength( s0 ) - 1 == i0 ) {
                     BadConfig( "Inventory name must be provided. " , data );
-                    return;
+                    state setupError;
                 }
 
                 // Grab inventory name off string
@@ -702,17 +797,17 @@ state setup {
                     if( SkipMissingInventory ) {
                         Message( "Cannot find \"" + s0 + "\" in inventory. Skipping item and not adding to probabilities." , FALSE , TRUE , FALSE , FALSE );
                         NextConfigLine();
+                        return;
                     } else {
                         BadConfig( "Cannot find \"" + s0 + "\" in inventory. " , data );
+                        state setupError;
                     }
-
-                    return;
                 }
 
                 // If they put the same item in twice
                 if( -1 != llListFindList( Inventory , [ s0 ] ) ) {
                     BadConfig( "\"" + s0 + "\" was listed twice. Did you mean to list it once with a rarity of " + (string)( llList2Float( Inventory , llListFindList( Inventory , [ s0 ] ) + 1 ) + f0 ) + "? " , data );
-                    return;
+                    state setupError;
                 }
 
                 // Store the configuration and add probably to the sum
@@ -722,7 +817,7 @@ state setup {
 
                 // Memory check before proceeding, having just messed with a list
                 if( MemoryError() ) {
-                    return;
+                    state setupError;
                 }
 
                 // Load next line of config
@@ -749,7 +844,7 @@ state setup {
                 // If there's not another space on the line, it's invalid
                 if( 0 >= i0 ) {
                     BadConfig( "" , data );
-                    return;
+                    state setupError;
                 }
 
                 // Pull the payment number off the front of the string
@@ -758,17 +853,17 @@ state setup {
                 // If the payment is out of bounds
                 if( 0 > i1 ) {
                     BadConfig( "L$ to give must be greater than or equal to zero. " , data );
-                    return;
+                    state setupError;
                 }
                 if( 0 == i1 && "0" != llGetSubString( s0 , 0 , i0 - 1 ) ) {
                     BadConfig( "L$ to give must be greater than or equal to zero. " , data );
-                    return;
+                    state setupError;
                 }
 
                 // Name must be provided
                 if( llStringLength( s0 ) - 1 == i0 ) {
                     BadConfig( "User key must be provided. " , data );
-                    return;
+                    state setupError;
                 }
 
                 // Grab agent key off the string
@@ -799,7 +894,7 @@ state setup {
                     }
 
                     BadConfig( s0 + " was listed twice. Did you mean to list them once with a payout of " + (string)( llList2Integer( Payees , llListFindList( Payees , [ k0 ] ) + 1 ) + i1 ) + "? " , data );
-                    return;
+                    state setupError;
                 }
 
                 // Store the configuration
@@ -809,7 +904,7 @@ state setup {
 
                 // Memory check before proceeding, having just messed with a list
                 if( MemoryError() ) {
-                    return;
+                    state setupError;
                 }
 
                 // Load next line of config
@@ -825,7 +920,7 @@ state setup {
                 // If there's not another space on the line, it's invalid
                 if( 0 >= i0 ) {
                     BadConfig( "" , data );
-                    return;
+                    state setupError;
                 }
 
                 // Get the number off the end first (number of items)
@@ -842,7 +937,7 @@ state setup {
                 // format
                 if( 0 != i1 && 1 >= i1 ) {
                     BadConfig( "buy_button must have an item count greater than one. " , data );
-                    return;
+                    state setupError;
                 }
 
                 // Store button value
@@ -854,12 +949,12 @@ state setup {
                     PayButton3 = i1;
                 } else {
                     BadConfig( "Which button number did you mean to put here? " , data );
-                    return;
+                    state setupError;
                 }
 
                 // Memory check before proceeding, having just completed this line
                 if( MemoryError() ) {
-                    return;
+                    state setupError;
                 }
 
                 // Load next line of config
@@ -867,50 +962,15 @@ state setup {
                 return;
             }
 
-            // Advanced option
-            if( "pay_any_amount" == s1 ) {
-                if( -1 == ( PayAnyAmount = BooleanConfigOption( s0 ) ) ) {
+            if( i0 = BooleanConfigOptions( s1 , s0 ) ) {
+                if( -1 == i0 ) {
                     BadConfig( "" , data );
-                    return;
+                    state setupError;
                 }
 
                 // Memory check before proceeding, having just completed this line
                 if( MemoryError() ) {
-                    return;
-                }
-
-                // Load next line of config
-                NextConfigLine();
-                return;
-            }
-
-            // Advanced option
-            if( "allow_send_stats" == s1 ) {
-                if( -1 == ( AllowStatSend = BooleanConfigOption( s0 ) ) ) {
-                    BadConfig( "" , data );
-                    return;
-                }
-
-                // Memory check before proceeding, having just completed this line
-                if( MemoryError() ) {
-                    return;
-                }
-
-                // Load next line of config
-                NextConfigLine();
-                return;
-            }
-
-            // Advanced option
-            if( "allow_show_stats" == s1 ) {
-                if( -1 == ( AllowShowStats = BooleanConfigOption( s0 ) ) ) {
-                    BadConfig( "" , data );
-                    return;
-                }
-
-                // Memory check before proceeding, having just completed this line
-                if( MemoryError() ) {
-                    return;
+                    state setupError;
                 }
 
                 // Load next line of config
@@ -926,7 +986,7 @@ state setup {
                 // If the payment is out of bounds
                 if( 0 >= i1 || 100 < i1 ) {
                     BadConfig( "" , data );
-                    return;
+                    state setupError;
                 }
 
                 // Store the new value
@@ -934,58 +994,7 @@ state setup {
 
                 // Memory check before proceeding, having just completed this line
                 if( MemoryError() ) {
-                    return;
-                }
-
-                // Load next line of config
-                NextConfigLine();
-                return;
-            }
-
-            // Advanced option
-            if( "allow_root_prim" == s1 ) {
-                if( -1 == ( AllowRootPrim = BooleanConfigOption( s0 ) ) ) {
-                    BadConfig( "" , data );
-                    return;
-                }
-
-                // Memory check before proceeding, having just completed this line
-                if( MemoryError() ) {
-                    return;
-                }
-
-                // Load next line of config
-                NextConfigLine();
-                return;
-            }
-
-            // Advanced option
-            if( "folder_for_one" == s1 ) {
-                if( -1 == ( FolderForOne = BooleanConfigOption( s0 ) ) ) {
-                    BadConfig( "" , data );
-                    return;
-                }
-
-                // Memory check before proceeding, having just completed this line
-                if( MemoryError() ) {
-                    return;
-                }
-
-                // Load next line of config
-                NextConfigLine();
-                return;
-            }
-
-            // Advanced option
-            if( "skip_missing_inventory" == s1 ) {
-                if( -1 == ( SkipMissingInventory = BooleanConfigOption( s0 ) ) ) {
-                    BadConfig( "" , data );
-                    return;
-                }
-
-                // Memory check before proceeding, having just completed this line
-                if( MemoryError() ) {
-                    return;
+                    state setupError;
                 }
 
                 // Load next line of config
@@ -995,7 +1004,7 @@ state setup {
 
             // Completely unknown verb
             BadConfig( "" , data );
-            return;
+            state setupError;
         } // end if( 2 == StateStatus )
 
         // If the result is the lookup of a user from the Payees
@@ -1009,7 +1018,7 @@ state setup {
 
             // Memory check before proceeding, having just completed this check
             if( MemoryError() ) {
-                return;
+                state setupError;
             }
 
             // If there are more to look up
@@ -1025,7 +1034,11 @@ state setup {
 
             // Move along sir
             StateStatus = 0;
-            state ready;
+
+            Message( SOURCE_CODE_MESSAGE , FALSE , TRUE , FALSE , FALSE );
+            Message( "Ready! Free memory: " + (string)llGetFreeMemory() , FALSE , TRUE , FALSE , FALSE );
+
+            state setupSuccess;
         }
     }
 
@@ -1044,6 +1057,35 @@ state setup {
     }
 
     state_exit() {
+        SuppressOwnerMessages = FALSE;
+    }
+}
+
+state setupError {
+    attach( key avatarId ){ CheckBaseAssumptions(); }
+    on_rez( integer rezParam ) { CheckBaseAssumptions(); }
+    run_time_permissions( integer permissionMask ) { CheckBaseAssumptions(); }
+
+    changed( integer changeMask ) {
+        CheckBaseAssumptions();
+
+        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
+            state init;
+        }
+    }
+
+    touch_end( integer detected ) {
+        while( 0 <= ( detected -= 1 ) ) {
+            if( Owner == llDetectedKey( detected ) ) {
+                CheckBaseAssumptions();
+                state init;
+            }
+        }
+    }
+}
+
+state setupSuccess {
+    state_entry() {
         if( AllowStatSend && llStringLength( SERVER_URL_CONFIG ) ) {
             llHTTPRequest( SERVER_URL_CONFIG , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
                 RuntimeId
@@ -1052,8 +1094,7 @@ state setup {
             ) );
         }
 
-        Message( SOURCE_CODE_MESSAGE , FALSE , TRUE , FALSE , FALSE );
-        Message( "Ready! Free memory: " + (string)llGetFreeMemory() , FALSE , TRUE , TRUE , FALSE );
+        state ready;
     }
 }
 
@@ -1187,6 +1228,50 @@ state handout {
             Give( llList2Key( HandoutQueue , x ) , llList2Integer( HandoutQueue , x + 1 ) );
         }
 
-        state ready;
+        llSetTimerEvent( 0.01 );
+    }
+
+    attach( key avatarId ){
+        StateStatus = StateStatus | 1;
+
+        llSetTimerEvent( 0.0 );
+        llSetTimerEvent( 0.01 );
+    }
+
+    on_rez( integer rezParam ) {
+        StateStatus = StateStatus | 1;
+
+        llSetTimerEvent( 0.0 );
+        llSetTimerEvent( 0.01 );
+    }
+
+    changed( integer changeMask ) {
+        StateStatus = StateStatus | 1;
+
+        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
+            StateStatus = StateStatus | 4;
+        }
+
+        llSetTimerEvent( 0.0 );
+        llSetTimerEvent( 0.01 );
+    }
+
+    run_time_permissions( integer permissionMask ) {
+        StateStatus = StateStatus | 1;
+
+        llSetTimerEvent( 0.0 );
+        llSetTimerEvent( 0.01 );
+    }
+
+    timer() {
+        llSetTimerEvent( 0.0 );
+
+        if( 4 & StateStatus ) {
+            state init;
+        } else if( 1 & StateStatus ) {
+            CheckBaseAssumptions();
+        } else {
+            state ready;
+        }
     }
 }
