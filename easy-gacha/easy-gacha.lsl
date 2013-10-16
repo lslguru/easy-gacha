@@ -56,14 +56,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 string SOURCE_CODE_MESSAGE = "This is free open source software. The source can be found at: https://github.com/zannalov/opensl";
-list SERVER_OPTIONS = [
-    HTTP_METHOD , "POST"
-    , HTTP_MIMETYPE , "text/json;charset=utf-8"
-    , HTTP_BODY_MAXLENGTH , 16384
-    , HTTP_VERIFY_CERT , FALSE
-    , HTTP_VERBOSE_THROTTLE , FALSE
-    // Put any custom headers for auth here as: , HTTP_CUSTOM_HEADER , "..." , "..."
-];
 string SERVER_URL_CONFIG = ""; // Sent when object gets configured
 string SERVER_URL_PURCHASE = ""; // Sent with each purchase
 string SERVER_URL_STATS = ""; // The runtime ID gets appended to the end!
@@ -131,6 +123,21 @@ integer HandoutQueueCount; // List length (not stride item length)
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+HttpRequest( string url , list data ) {
+    llHTTPRequest(
+        url
+        , [
+            HTTP_METHOD , "POST"
+            , HTTP_MIMETYPE , "text/json;charset=utf-8"
+            , HTTP_BODY_MAXLENGTH , 16384
+            , HTTP_VERIFY_CERT , FALSE
+            , HTTP_VERBOSE_THROTTLE , FALSE
+            // Put any custom headers for auth here as: , HTTP_CUSTOM_HEADER , "..." , "..."
+        ]
+        , llList2Json( JSON_ARRAY , data )
+    );
+}
+
 ImmediateTimer() {
     llSetTimerEvent( 0.0 ); // Take timer event off stack
     llSetTimerEvent( 0.01 ); // Add it to end of stack
@@ -183,12 +190,12 @@ Give( key buyerId , integer lindensReceived ) {
     // If not enough money
     if( lindensReceived < Price ) {
         // Send statistics to server if server is configured
-        if( AllowStatSend && llStringLength( SERVER_URL_PURCHASE ) ) {
-            llHTTPRequest( SERVER_URL_PURCHASE , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
+        if( AllowStatSend && "" != SERVER_URL_PURCHASE ) {
+            HttpRequest( SERVER_URL_PURCHASE , [
                 RuntimeId
                 , buyerId
                 , displayName
-            ] ) );
+            ] );
         }
 
         // Give money back
@@ -273,13 +280,13 @@ Give( key buyerId , integer lindensReceived ) {
     }
 
     // Send statistics to server if server is configured
-    if( AllowStatSend && llStringLength( SERVER_URL_PURCHASE ) ) {
-        llHTTPRequest( SERVER_URL_PURCHASE , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
+    if( AllowStatSend && "" != SERVER_URL_PURCHASE ) {
+        HttpRequest( SERVER_URL_PURCHASE , [
             RuntimeId
             , buyerId
             , displayName
             ] + itemsToSend
-        ) );
+        );
     }
 
     // Clear the thinkin' text
@@ -1083,12 +1090,12 @@ state setupError {
 
 state setupSuccess {
     state_entry() {
-        if( AllowStatSend && llStringLength( SERVER_URL_CONFIG ) ) {
-            llHTTPRequest( SERVER_URL_CONFIG , SERVER_OPTIONS , llList2Json( JSON_ARRAY , [
+        if( AllowStatSend && "" != SERVER_URL_CONFIG ) {
+            HttpRequest( SERVER_URL_CONFIG , [
                 RuntimeId
                 , RelevantConfig
                 ]
-            ) );
+            );
         }
 
         state ready;
@@ -1160,7 +1167,7 @@ state ready {
     }
 
     touch_end( integer detected ) {
-        integer statsPossible = ( AllowStatSend && llStringLength( SERVER_URL_STATS ) );
+        integer statsPossible = ( AllowStatSend && "" != SERVER_URL_STATS );
         integer whisperStats = ( statsPossible && AllowShowStats && LastTouch != llGetUnixTime() );
         integer ownerSayStats = FALSE;
 
