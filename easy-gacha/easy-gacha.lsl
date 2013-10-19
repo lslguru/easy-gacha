@@ -25,37 +25,34 @@
 //  For more information, please refer to <http://unlicense.org/>
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
 //
 //  CONSTANTS
 //
+//  The following constants are distributed throughout the script and tagged.
+//  If you change a value here, make sure to update EVERY instance of it in the
+//  script.
+//
+//  string SOURCE_CODE_MESSAGE = "This is free open source software. The source can be found at: https://github.com/zannalov/opensl";
+//  string SERVER_URL_CONFIG = ""; // Sent when object gets configured
+//  string SERVER_URL_PURCHASE = ""; // Sent with each purchase
+//  string SERVER_URL_STATS = ""; // The runtime ID gets appended to the end!
+//  list HTTP_OPTIONS = [ ... ];
+//
+//  string VERSION = "3.2";
+//  key CONFIG_INVENTORY_ID = "517a121a-e248-ea49-b901-5dbefa4b2285"; // TODO
+//
+//  integer HIGH_MEMORY_USE_THRESHOLD = 48000;
+//  integer MAX_FOLDER_NAME_LENGTH = 63;
+//  integer MAX_PER_PURCHASE = 100;
+//  integer MAX_ITEMS = 200;
+//
+//  integer STATUS_MASK_CHECK_BASE_ASSUMPTIONS = 1;
+//  integer STATUS_MASK_INVENTORY_CHANGED = 2;
+//  integer STATUS_MASK_HANDOUT_NEEDED = 4;
+//
 ////////////////////////////////////////////////////////////////////////////////
-
-string SOURCE_CODE_MESSAGE = "This is free open source software. The source can be found at: https://github.com/zannalov/opensl";
-string SERVER_URL_CONFIG = ""; // Sent when object gets configured
-string SERVER_URL_PURCHASE = ""; // Sent with each purchase
-string SERVER_URL_STATS = ""; // The runtime ID gets appended to the end!
-
-/*
-
-The following constants are distributed throughout the script and tagged. If
-you change a value here, make sure to update EVERY instance of it in the
-script.
-
-list HTTP_METHOD_OPTIONS = [ ... ];
-
-string VERSION = "3.2";
-key CONFIG_INVENTORY_ID = "517a121a-e248-ea49-b901-5dbefa4b2285"; // TODO
-
-integer LOW_MEMORY_THRESHOLD = 16000;
-integer MAX_FOLDER_NAME_LENGTH = 63;
-integer MAX_PER_PURCHASE = 100;
-integer MAX_ITEMS = 200;
-
-integer STATUS_MASK_CHECK_BASE_ASSUMPTIONS = 1;
-integer STATUS_MASK_INVENTORY_CHANGED = 2;
-integer STATUS_MASK_HANDOUT_NEEDED = 4;
-
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -119,7 +116,7 @@ HttpRequest( string url , list data ) {
             , HTTP_VERIFY_CERT , FALSE
             , HTTP_VERBOSE_THROTTLE , FALSE
             // Put any custom headers for auth here as: , HTTP_CUSTOM_HEADER , "..." , "..."
-        ] /* HTTP_METHOD_OPTIONS */
+        ] /* HTTP_OPTIONS */
         , llList2Json( JSON_ARRAY , data )
     );
 }
@@ -159,26 +156,11 @@ CheckBaseAssumptions() {
     }
 }
 
-// Valid formats: "L$#" "$#" "#" "#L"
+// Expected formats: "L$#" "$#" "#" "#L"
 // Negative numbers are not allowed
 // Leading zeroes are stripped
 integer ParseLindens( string value ) {
-    value = llToLower( value );
-
-    // Strip "L" off the front
-    if( "l" == llGetSubString( value , 0 , 0 ) ) {
-        value = llGetSubString( value , 1 , -1 );
-    }
-
-    // Strip "$" off the front
-    if( "$" == llGetSubString( value , 0 , 0 ) ) {
-        value = llGetSubString( value , 1 , -1 );
-    }
-
-    // Strip "L" off the end
-    if( "l" == llGetSubString( value , -1 , -1 ) ) {
-        value = llGetSubString( value , 0 , -2 );
-    }
+    value = llDumpList2String( llParseStringKeepNulls( ( value = "" ) + value , [ "l" , "L" , "$" ] , [ ] ) , "" );
 
     // Strip leading zeroes
     while( "0" == llGetSubString( value , 0 , 0 ) && 1 < llStringLength( value ) ) {
@@ -202,6 +184,7 @@ integer ParseLindens( string value ) {
 
 default {
     state_entry() {
+llOwnerSay( (string)llGetUsedMemory() ); return;
         Owner = llGetOwner();
         ScriptName = llGetScriptName();
 
@@ -309,20 +292,80 @@ state setup {
 
         // First parse config entries
         for( InventoryNumber = 0 ; InventoryNumber < InventoryCount ; InventoryNumber += 1 ) {
-            // Show them progress
-
             // We're going to need the name for multiple things
             InventoryName = llGetInventoryName( INVENTORY_ALL , InventoryNumber );
 
             // If the name is a configuration string
-            if( "517a121a-e248-ea49-b901-5dbefa4b2285"/*CONFIG_INVENTORY_ID*/ == llGetInventoryKey( InventoryName ) ) {
-                // Add to config we would send to server
-                Settings += InventoryName + "\n";
+            if( "517a121a-e248-ea49-b901-5dbefa4b2285"/*CONFIG_INVENTORY_ID*/ != llGetInventoryKey( InventoryName ) ) {
+                jump break0;
+            }
 
-                // Process new line
-                i0 = llSubStringIndex( InventoryName , " " );
+            // Add to config we would send to server
+            Settings += InventoryName + "\n";
 
-                // If there's no space on the line, it's invalid
+            // Process new line
+            i0 = llSubStringIndex( InventoryName , " " );
+
+            // If there's no space on the line, it's invalid
+            if( 0 >= i0 ) {
+                Message( 11 , "Bad config: " + InventoryName );
+                jump return1;
+            }
+
+            // If there's nothing before the space, it's invalid
+            if( 0 == i0 ) {
+                Message( 11 , "Bad config: " + InventoryName );
+                jump return1;
+            }
+
+            // If there's nothing after the space, it's invalid
+            if( llStringLength( InventoryName ) - 1 == i0 ) {
+                Message( 11 , "Bad config: " + InventoryName );
+                jump return1;
+            }
+
+            // Split the verb from the config value
+            s0 = llToLower( llGetSubString( InventoryName , 0 , i0 - 1 ) );
+            s1 = llGetSubString( InventoryName , i0 + 1 , -1 );
+
+            // Check for duplicate configs of things where we can't allow duplicates
+            if( -1 == llListFindList( seen , [ s0 ] ) ) {
+                seen = seen + s0; // Voodoo for better memory usage
+            } else if( -1 != llListFindList( [ "eg_pay_any_amount" , "eg_allow_send_stats" , "eg_allow_show_stats" , "eg_set_root_prim_click" , "eg_folder_for_one" , "eg_allow_no_copy" , "eg_buy_max_items" , "eg_buy_buttons" , "eg_price" ] , [ s0 ] ) ) {
+                Message( 11 , "Bad config: \"" + s0 + "\" may only be used once" );
+                jump return1;
+            }
+
+            // Booleans are easy, handle them first
+            if( -1 != llListFindList( [ "eg_pay_any_amount" , "eg_allow_send_stats" , "eg_allow_show_stats" , "eg_set_root_prim_click" , "eg_folder_for_one" , "eg_allow_no_copy" ] , [ s0 ] ) ) {
+                // Compare all in lower case
+                s1 = llToLower( s1 );
+
+                // Check to see if the value is valid
+                if(      -1 != llListFindList( [ "no"  , "off" , "false" , "0" , "iie" , "nay" , "nope" , "-" ] , [ s1 ] ) ) { i0 = 0; }
+                else if( -1 != llListFindList( [ "yes" , "on"  , "true"  , "1" , "hai" , "yea" , "yep"  , "+" ] , [ s1 ] ) ) { i0 = 1; }
+                else {
+                    Message( 11 , "Bad config: " + InventoryName );
+                    jump return1;
+                }
+
+                // Store the value
+                if( "eg_pay_any_amount"      == s0 ) { PayAnyAmount           = i0; }
+                if( "eg_allow_send_stats"    == s0 ) { AllowStatSend          = i0; }
+                if( "eg_allow_show_stats"    == s0 ) { AllowShowStats         = i0; }
+                if( "eg_set_root_prim_click" == s0 ) { SetPayActionOnRootPrim = i0; }
+                if( "eg_folder_for_one"      == s0 ) { FolderForOne           = i0; }
+                if( "eg_allow_no_copy"       == s0 ) { AllowNoCopy            = i0; }
+
+                jump break0;
+            }
+
+            // Two-part configs (where separate by space)
+            if( -1 != llListFindList( [ "eg_item" , "eg_payout" ] , [ s0 ] ) ) {
+                // Find second space
+                i0 = llSubStringIndex( s1 , " " );
+
+                // If there's not another space on the line, it's invalid
                 if( 0 >= i0 ) {
                     Message( 11 , "Bad config: " + InventoryName );
                     jump return1;
@@ -340,200 +383,143 @@ state setup {
                     jump return1;
                 }
 
-                // Split the verb from the config value
-                s0 = llToLower( llGetSubString( InventoryName , 0 , i0 - 1 ) );
-                s1 = llGetSubString( InventoryName , i0 + 1 , -1 );
+                // Split parts of value
+                s2 = llGetSubString( s1 , i0 + 1 , -1 );
+                s1 = llGetSubString( s1 , 0 , i0 - 1 );
 
-                // Check for duplicate configs of things where we can't allow duplicates
-                if( -1 == llListFindList( seen , [ s0 ] ) ) {
-                    seen = ( seen = [] ) + seen + [ s0 ]; // Voodoo for better memory usage
-                } else if( -1 != llListFindList( [ "eg_pay_any_amount" , "eg_allow_send_stats" , "eg_allow_show_stats" , "eg_set_root_prim_click" , "eg_folder_for_one" , "eg_allow_no_copy" , "eg_buy_max_items" , "eg_buy_buttons" , "eg_price" ] , [ s0 ] ) ) {
-                    Message( 11 , "Bad config: \"" + s0 + "\" may only be used once" );
+                if( "eg_item" == s0 ) {
+                    // Pull the probability number off the front of the string
+                    f0 = (float)s1;
+
+                    // If the probability is out of bounds
+                    if( 0.0 > f0 || "0" != s1 || "0.0" != s1 ) {
+                        Message( 11 , "Bad config: Number must be greater than or equal to zero: " + InventoryName );
+                        jump return1;
+                    }
+
+                    // Items should exist, if not, skip safely but tell them about it - chat only
+                    if( INVENTORY_NONE == llGetInventoryType( s2 ) ) {
+                        Message( 2 , "Cannot find \"" + s2 + "\" in inventory. Skipping item and not adding to probabilities." );
+                        jump return1;
+                    }
+
+                    // If they put the same item in twice
+                    if( -1 != llListFindList( Items , [ s2 ] ) ) {
+                        Message( 11 , "Bad config: \"" + s2 + "\" was listed twice. Did you mean to list it once with a rarity of " + (string)( llList2Float( Items , llListFindList( Items , [ s2 ] ) + 1 ) + f0 ) + "?" );
+                        jump return1;
+                    }
+
+                    // Items must be transferable
+                    if( ! ( PERM_TRANSFER & llGetInventoryPermMask( InventoryName , MASK_OWNER ) ) ) {
+                        Message( 11 , "Bad config: \"" + s2 + "\" is not transferable. So how can I give it out?" );
+                        jump return1;
+                    }
+
+                    // Store the configuration and add probably to the sum
+                    Rarity += f0;
+                    Items = Items + s2; // Voodoo for better memory usage
+                    Items = Items + f0; // Voodoo for better memory usage
+                    ItemsCount += 2;
+
+                    // Check that we don't have too many types of items
+                    if( ItemsCount > 200/*MAX_ITEMS*/ * 2 ) {
+                        Message( 11 , "Too many items. This script can only handle " + (string)200/*MAX_ITEMS*/ + " items for sale before memory problems are likely." );
+                        jump return1;
+                    }
+
+                    jump break0;
+                }
+
+                if( "eg_payout" == s0 ) {
+                    // Pull the payment number off the front of the string
+                    i0 = ParseLindens( s1 );
+
+                    // If the payment is out of bounds
+                    if( 0 > i0 ) {
+                        Message( 11 , "Bad config: L$ to give must be greater than or equal to zero: " + InventoryName );
+                        jump return1;
+                    }
+
+                    // Convert to key
+                    k0 = (key)s2;
+                    if( "owner"    == s2 ) { k0 = Owner;                                } // magic override
+                    if( "creator"  == s2 ) { k0 = llGetCreator();                       } // magic override
+                    if( "scriptor" == s2 ) { k0 = llGetInventoryCreator( ScriptName );  } // magic override
+
+                    // If they put the same item in twice
+                    if( -1 != llListFindList( Payouts , [ k0 ] ) ) {
+                        if( Owner                               == k0 ) { s2 = "owner";     } // reverse lookup
+                        if( llGetCreator()                      == k0 ) { s2 = "creator";   } // reverse lookup
+                        if( llGetInventoryCreator( ScriptName ) == k0 ) { s2 = "scriptor";  } // reverse lookup
+
+                        Message( 11 , "Bad config: " + s2 + " was listed twice. Did you mean to list them once with a payout of " + (string)( llList2Integer( Payouts , llListFindList( Payouts , [ k0 ] ) + 1 ) + i0 ) + "?" );
+                        jump return1;
+                    }
+
+                    // Store the configuration
+                    Price += i0;
+                    Payouts = Payouts + k0; // Voodoo for better memory usage
+                    Payouts = Payouts + i0; // Voodoo for better memory usage
+                    PayoutsCount += 2;
+
+                    jump break0;
+                }
+            }
+
+            if( "eg_buy_buttons" == s0 ) {
+                l0 = llParseString2List( s1 , [ " " ] , [ ] );
+                BuyButton1 = llList2Integer( l0 , 0 );
+                BuyButton2 = llList2Integer( l0 , 1 );
+                BuyButton3 = llList2Integer( l0 , 2 );
+
+                if(    BuyButton1 < 0 || BuyButton1 > 100
+                    || BuyButton2 < 0 || BuyButton2 > 100
+                    || BuyButton3 < 0 || BuyButton3 > 100
+                    || ( BuyButton1 && BuyButton1 == BuyButton2 )
+                    || ( BuyButton1 && BuyButton1 == BuyButton3 )
+                    || ( BuyButton2 && BuyButton2 == BuyButton3 )
+                ) {
+                    Message( 11 , "Bad config: " + InventoryName );
                     jump return1;
                 }
 
-                // Booleans are easy, handle them first
-                if( -1 != llListFindList( [ "eg_pay_any_amount" , "eg_allow_send_stats" , "eg_allow_show_stats" , "eg_set_root_prim_click" , "eg_folder_for_one" , "eg_allow_no_copy" ] , [ s0 ] ) ) {
-                    // Compare all in lower case
-                    s1 = llToLower( s1 );
-
-                    // Check to see if the value is valid
-                    if(      -1 != llListFindList( [ "no"  , "off" , "false" , "0" , "iie" , "nay" , "nope" , "-" ] , [ s1 ] ) ) { i0 = 0; }
-                    else if( -1 != llListFindList( [ "yes" , "on"  , "true"  , "1" , "hai" , "yea" , "yep"  , "+" ] , [ s1 ] ) ) { i0 = 1; }
-                    else {
-                        Message( 11 , "Bad config: " + InventoryName );
-                        jump return1;
-                    }
-
-                    // Store the value
-                    if( "eg_pay_any_amount"      == s0 ) { PayAnyAmount           = i0; }
-                    if( "eg_allow_send_stats"    == s0 ) { AllowStatSend          = i0; }
-                    if( "eg_allow_show_stats"    == s0 ) { AllowShowStats         = i0; }
-                    if( "eg_set_root_prim_click" == s0 ) { SetPayActionOnRootPrim = i0; }
-                    if( "eg_folder_for_one"      == s0 ) { FolderForOne           = i0; }
-                    if( "eg_allow_no_copy"       == s0 ) { AllowNoCopy            = i0; }
-
-                    jump break0;
-                }
-    
-                // Two-part configs (where separate by space)
-                if( -1 != llListFindList( [ "eg_item" , "eg_payout" ] , [ s0 ] ) ) {
-                    // Find second space
-                    i0 = llSubStringIndex( s1 , " " );
-
-                    // If there's not another space on the line, it's invalid
-                    if( 0 >= i0 ) {
-                        Message( 11 , "Bad config: " + InventoryName );
-                        jump return1;
-                    }
-
-                    // If there's nothing before the space, it's invalid
-                    if( 0 == i0 ) {
-                        Message( 11 , "Bad config: " + InventoryName );
-                        jump return1;
-                    }
-
-                    // If there's nothing after the space, it's invalid
-                    if( llStringLength( InventoryName ) - 1 == i0 ) {
-                        Message( 11 , "Bad config: " + InventoryName );
-                        jump return1;
-                    }
-
-                    // Split parts of value
-                    s2 = llGetSubString( s1 , i0 + 1 , -1 );
-                    s1 = llGetSubString( s1 , 0 , i0 - 1 );
-
-                    if( "eg_item" == s0 ) {
-                        // Pull the probability number off the front of the string
-                        f0 = (float)s1;
-
-                        // If the probability is out of bounds
-                        if( 0.0 > f0 || "0" != s1 || "0.0" != s1 ) {
-                            Message( 11 , "Bad config: Number must be greater than or equal to zero: " + InventoryName );
-                            jump return1;
-                        }
-
-                        // Items should exist, if not, skip safely but tell them about it - chat only
-                        if( INVENTORY_NONE == llGetInventoryType( s2 ) ) {
-                            Message( 2 , "Cannot find \"" + s2 + "\" in inventory. Skipping item and not adding to probabilities." );
-                            jump return1;
-                        }
-
-                        // If they put the same item in twice
-                        if( -1 != llListFindList( Items , [ s2 ] ) ) {
-                            Message( 11 , "Bad config: \"" + s2 + "\" was listed twice. Did you mean to list it once with a rarity of " + (string)( llList2Float( Items , llListFindList( Items , [ s2 ] ) + 1 ) + f0 ) + "?" );
-                            jump return1;
-                        }
-
-                        // Items must be transferable
-                        if( ! ( PERM_TRANSFER & llGetInventoryPermMask( InventoryName , MASK_OWNER ) ) ) {
-                            Message( 11 , "Bad config: \"" + s2 + "\" is not transferable. So how can I give it out?" );
-                            jump return1;
-                        }
-
-                        // Store the configuration and add probably to the sum
-                        Rarity += f0;
-                        Items = ( Items = [] ) + Items + [ s2 , f0 ]; // Voodoo for better memory usage
-                        ItemsCount += 2;
-
-                        // Check that we don't have too many types of items
-                        if( ItemsCount > 200/*MAX_ITEMS*/ * 2 ) {
-                            Message( 11 , "Too many items. This script can only handle " + (string)200/*MAX_ITEMS*/ + " items for sale before memory problems are likely." );
-                            jump return1;
-                        }
-
-                        jump break0;
-                    }
-
-                    if( "eg_payout" == s0 ) {
-                        // Pull the payment number off the front of the string
-                        i0 = ParseLindens( s1 );
-
-                        // If the payment is out of bounds
-                        if( 0 > i0 ) {
-                            Message( 11 , "Bad config: L$ to give must be greater than or equal to zero: " + InventoryName );
-                            jump return1;
-                        }
-
-                        // Convert to key
-                        k0 = (key)s2;
-                        if( "owner"    == s2 ) { k0 = Owner;                                } // magic override
-                        if( "creator"  == s2 ) { k0 = llGetCreator();                       } // magic override
-                        if( "scriptor" == s2 ) { k0 = llGetInventoryCreator( ScriptName );  } // magic override
-
-                        // If they put the same item in twice
-                        if( -1 != llListFindList( Payouts , [ k0 ] ) ) {
-                            if( Owner                               == k0 ) { s2 = "owner";     } // reverse lookup
-                            if( llGetCreator()                      == k0 ) { s2 = "creator";   } // reverse lookup
-                            if( llGetInventoryCreator( ScriptName ) == k0 ) { s2 = "scriptor";  } // reverse lookup
-
-                            Message( 11 , "Bad config: " + s2 + " was listed twice. Did you mean to list them once with a payout of " + (string)( llList2Integer( Payouts , llListFindList( Payouts , [ k0 ] ) + 1 ) + i0 ) + "?" );
-                            jump return1;
-                        }
-
-                        // Store the configuration
-                        Price += i0;
-                        Payouts = ( Payouts = [] ) + Payouts + [ k0 , i0 ]; // Voodoo for better memory usage
-                        PayoutsCount += 2;
-
-                        jump break0;
-                    }
-                }
-
-                if( "eg_buy_buttons" == s0 ) {
-                    l0 = llParseString2List( s1 , [ " " ] , [ ] );
-                    BuyButton1 = llList2Integer( l0 , 0 );
-                    BuyButton2 = llList2Integer( l0 , 1 );
-                    BuyButton3 = llList2Integer( l0 , 2 );
-
-                    if(    BuyButton1 < 0 || BuyButton1 > 100
-                        || BuyButton2 < 0 || BuyButton2 > 100
-                        || BuyButton3 < 0 || BuyButton3 > 100
-                        || ( BuyButton1 && BuyButton1 == BuyButton2 )
-                        || ( BuyButton1 && BuyButton1 == BuyButton3 )
-                        || ( BuyButton2 && BuyButton2 == BuyButton3 )
-                    ) {
-                        Message( 11 , "Bad config: " + InventoryName );
-                        jump return1;
-                    }
-
-                    jump break0;
-                }
-
-                if( "eg_buy_max_items" == s0 ) {
-                    // Get config value
-                    MaxPerPurchase = (integer)s1;
-
-                    // If the count is out of bounds
-                    if( 0 >= MaxPerPurchase || 100/*MAX_PER_PURCHASE*/ < MaxPerPurchase ) {
-                        Message( 11 , "Bad config: " + InventoryName );
-                        jump return1;
-                    }
-                }
-
-                if( "eg_price" == s0 ) {
-                    // Get config value
-                    SetPrice = ParseLindens( s1 );
-
-                    // If the payment is out of bounds
-                    if( 0 > SetPrice ) {
-                        Message( 11 , "Bad config: L$ must be greater than or equal to zero: " + InventoryName );
-                        jump return1;
-                    }
-                }
-
-                // Completely unknown verb
-                Message( 11 , "Bad config: " + InventoryName );
-                jump return1;
+                jump break0;
             }
 
+            if( "eg_buy_max_items" == s0 ) {
+                // Get config value
+                MaxPerPurchase = (integer)s1;
+
+                // If the count is out of bounds
+                if( 0 >= MaxPerPurchase || 100/*MAX_PER_PURCHASE*/ < MaxPerPurchase ) {
+                    Message( 11 , "Bad config: " + InventoryName );
+                    jump return1;
+                }
+            }
+
+            if( "eg_price" == s0 ) {
+                // Get config value
+                SetPrice = ParseLindens( s1 );
+
+                // If the payment is out of bounds
+                if( 0 > SetPrice ) {
+                    Message( 11 , "Bad config: L$ must be greater than or equal to zero: " + InventoryName );
+                    jump return1;
+                }
+            }
+
+            // Completely unknown verb
+            Message( 11 , "Bad config: " + InventoryName );
+            jump return1;
+
             @break0;
-        }
+        } // End first parse config entries
 
         // Second pass, check items
         for( InventoryNumber = 0 ; InventoryNumber < InventoryCount ; InventoryNumber += 1 ) {
             // We're going to need the name for multiple things
             InventoryName = llGetInventoryName( INVENTORY_ALL , InventoryNumber );
+llOwnerSay( "Processing: " + InventoryName );
 
             // If it's ourself, skip it
             if( ScriptName == InventoryName ) {
@@ -575,7 +561,8 @@ state setup {
 
             // Store the configuration and add probably to the sum
             Rarity += 1.0;
-            Items = ( Items = [] ) + Items + [ InventoryName , 1.0 ]; // Voodoo for better memory usage
+            Items = Items + InventoryName; // Voodoo for better memory usage
+            Items = Items + 1.0; // Voodoo for better memory usage
             ItemsCount += 2;
             Settings += "item 1 " + InventoryName + "\n";
 
@@ -641,7 +628,6 @@ state setup {
         llSetTimerEvent( 30.0 );
 
         @return1;
-        //Message( 3 , "Free memory: " + (string)llGetFreeMemory() ); // TODO - remove, this is for during development
     } // end state_entry()
 
     dataserver( key queryId , string data ) {
@@ -671,27 +657,27 @@ state setup {
         Message( 2 , "The total price is L$" + (string)Price );
 
         // Send config to server
-        if( AllowStatSend && "" != SERVER_URL_CONFIG ) {
-            HttpRequest( SERVER_URL_CONFIG , [
-                RuntimeId
-                , Settings
-                ]
-            );
-        }
+        //if( AllowStatSend ) {
+            //HttpRequest( ""/*SERVER_URL_CONFIG*/ , [
+                //RuntimeId
+                //, Settings
+                //]
+            //);
+        //}
         Settings = ""; // Cleanup
 
         // Allow time for garbage collection to work
         llSleep( 3.0 );
 
         // Check memory now that we're all done messing around
-        if( llGetFreeMemory() < 16000/*LOW_MEMORY_THRESHOLD*/ ) {
-            Message( 11 , "Not enough free memory to handle large orders. Too many items? Resetting... (" + (string)llGetFreeMemory() + ")" );
+        if( llGetUsedMemory() > 48000/*HIGH_MEMORY_USE_THRESHOLD*/ ) {
+            Message( 11 , "Not enough free memory to handle large orders. Too many items? Resetting... (Used: " + (string)llGetUsedMemory() + ")" );
             llResetScript();
         }
 
         // All done!
-        Message( 2 , SOURCE_CODE_MESSAGE );
-        Message( 2 , "Ready! Free memory: " + (string)llGetFreeMemory() );
+        Message( 2 , "This is free open source software. The source can be found at: https://github.com/zannalov/opensl"/*SOURCE_CODE_MESSAGE*/ );
+        Message( 2 , "Ready! Memory in use: " + (string)llGetUsedMemory() );
 
         state ready;
     }
@@ -736,6 +722,7 @@ state ready {
     }
 
     state_entry() {
+        CheckBaseAssumptions();
         SuppressOwnerMessages = FALSE;
         HandoutQueue = [];
         HandoutQueueCount = 0;
@@ -762,10 +749,9 @@ state ready {
     }
 
     touch_end( integer detected ) {
-        integer statsPossible = ( AllowStatSend && "" != SERVER_URL_STATS );
         integer messageMode = 0;
 
-        if( statsPossible && AllowShowStats && LastTouch != llGetUnixTime() ) {
+        if( AllowStatSend && AllowShowStats && LastTouch != llGetUnixTime() ) {
             messageMode = 4;
         }
 
@@ -774,17 +760,18 @@ state ready {
             // This is the exception which will be direct to owner
             if( llDetectedKey( detected ) == Owner ) {
                 // Only if we're not going to whisper it
-                if( statsPossible && !AllowShowStats ) {
+                if( AllowStatSend && !AllowShowStats ) {
                     messageMode = messageMode | 2;
                 }
 
                 // Memory will only be shown to owner now
-                Message( 2 , "Script free memory is: " + (string)llGetFreeMemory() );
+                Message( 2 , "Script memory usage is: " + (string)llGetUsedMemory() );
             }
 
             // If price is zero, has to be touch based
             if( !Price ) {
-                HandoutQueue = ( HandoutQueue = [] ) + HandoutQueue + [ llDetectedKey( detected ) , 0 ]; // Voodoo for better memory usage
+                HandoutQueue = HandoutQueue + llDetectedKey( detected ); // Voodoo for better memory usage
+                HandoutQueue = HandoutQueue + 0; // Voodoo for better memory usage
                 HandoutQueueCount += 2;
                 StatusMask = StatusMask | 4/*STATUS_MASK_HANDOUT_NEEDED*/;
                 ImmediateTimer();
@@ -792,10 +779,12 @@ state ready {
         }
 
         // Whisper source code message
-        Message( 4 , SOURCE_CODE_MESSAGE );
+        Message( 4 , "This is free open source software. The source can be found at: https://github.com/zannalov/opensl"/*SOURCE_CODE_MESSAGE*/ );
 
         // Otherwise stats get whispered
-        Message( messageMode , ( "Want to see some statistics for this object? Click this link: " + SERVER_URL_STATS + (string)RuntimeId ) );
+        //if( AllowStatSend ) {
+            //Message( messageMode , ( "Want to see some statistics for this object? Click this link: " + ""/*SERVER_URL_STATS*/ + (string)RuntimeId ) );
+        //}
 
         LastTouch = llGetUnixTime();
     }
@@ -805,7 +794,8 @@ state ready {
     // which would kill any orders placed in parallel. We have to honor the
     // event queue, so... do things as fast and efficiently as we can
     money( key buyerId , integer lindensReceived ) {
-        HandoutQueue = ( HandoutQueue = [] ) + HandoutQueue + [ buyerId , lindensReceived ]; // Voodoo for better memory usage
+        HandoutQueue = HandoutQueue + buyerId; // Voodoo for better memory usage
+        HandoutQueue = HandoutQueue + lindensReceived; // Voodoo for better memory usage
         HandoutQueueCount += 2;
         StatusMask = StatusMask | 4/*STATUS_MASK_HANDOUT_NEEDED*/;
         ImmediateTimer();
@@ -846,13 +836,13 @@ state handout {
             // If not enough money
             if( lindensReceived < Price ) {
                 // Send statistics to server if server is configured
-                if( AllowStatSend && "" != SERVER_URL_PURCHASE ) {
-                    HttpRequest( SERVER_URL_PURCHASE , [
-                        RuntimeId
-                        , buyerId
-                        , displayName
-                    ] );
-                }
+                //if( AllowStatSend ) {
+                    //HttpRequest( ""/*SERVER_URL_PURCHASE*/ , [
+                        //RuntimeId
+                        //, buyerId
+                        //, displayName
+                    //] );
+                //}
 
                 // Give money back
                 if( lindensReceived ) {
@@ -889,21 +879,18 @@ state handout {
                 string inventoryName = llList2String( Items , selected );
 
                 // If item is no-copy, then we know we can only hand out one at
-                // a time anyway
+                // a time anyway, so no need to shorten the list or worry about
+                // inventory being missing on the next iteration. There won't
+                // be another iteration, and after handing out, we'll rescan
+                // inventory anyway.
                 if( ! ( PERM_COPY & llGetInventoryPermMask( inventoryName , MASK_OWNER ) ) ) {
                     // Note that the next inventory action should not report to the
                     // owner and queue up a re-scan of inventory
                     SuppressOwnerMessages = TRUE;
-                    StatusMask = StatusMask | 2/*STATUS_MASK_INVENTORY_CHANGED*/;
-
-                    // Remove item from inventory list for next iteration
-                    Rarity -= llList2Float( Items , selected + 1 );
-                    ItemsCount -= 2;
-                    Items = llListReplaceList( ( Items = [] ) + Items , [ ] , selected , selected + 1 ); // Voodoo for better memory usage
                 }
 
                 // Schedule to give inventory, increment counter, decrement money
-                itemsToSend = ( itemsToSend = [] ) + itemsToSend + [ inventoryName ]; // Voodoo for better memory usage
+                itemsToSend = itemsToSend + inventoryName; // Voodoo for better memory usage
                 countItemsToSend += 1;
                 lindensReceived -= Price;
             }
@@ -952,14 +939,14 @@ state handout {
             }
 
             // Send statistics to server if server is configured
-            if( AllowStatSend && "" != SERVER_URL_PURCHASE ) {
-                HttpRequest( SERVER_URL_PURCHASE , [
-                    RuntimeId
-                    , buyerId
-                    , displayName
-                    ] + itemsToSend
-                );
-            }
+            //if( AllowStatSend ) {
+                //HttpRequest( ""/*SERVER_URL_PURCHASE*/ , [
+                    //RuntimeId
+                    //, buyerId
+                    //, displayName
+                    //] + itemsToSend
+                //);
+            //}
 
             @break2;
         }
@@ -967,45 +954,8 @@ state handout {
         // Clear the thinkin' text
         llSetText( "" , ZERO_VECTOR , 0.0 );
 
-        // Get back to work
-        ImmediateTimer();
-    }
-
-    attach( key avatarId ){
-        StatusMask = StatusMask | 1/*STATUS_MASK_CHECK_BASE_ASSUMPTIONS*/;
-
-        ImmediateTimer();
-    }
-
-    on_rez( integer rezParam ) {
-        StatusMask = StatusMask | 1/*STATUS_MASK_CHECK_BASE_ASSUMPTIONS*/;
-
-        ImmediateTimer();
-    }
-
-    run_time_permissions( integer permissionMask ) {
-        StatusMask = StatusMask | 1/*STATUS_MASK_CHECK_BASE_ASSUMPTIONS*/;;
-        ImmediateTimer();
-    }
-
-    changed( integer changeMask ) {
-        StatusMask = StatusMask | 1/*STATUS_MASK_CHECK_BASE_ASSUMPTIONS*/;
-
-        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
-            StatusMask = StatusMask | 2/*STATUS_MASK_INVENTORY_CHANGED*/;
-        }
-
-        ImmediateTimer();
-    }
-
-    timer() {
-        llSetTimerEvent( 0.0 );
-
-        if( 1/*STATUS_MASK_CHECK_BASE_ASSUMPTIONS*/ & StatusMask ) {
-            CheckBaseAssumptions();
-        }
-
-        if( 2/*STATUS_MASK_INVENTORY_CHANGED*/ & StatusMask ) {
+        // If we know we need to re-scan, do so
+        if( SuppressOwnerMessages ) {
             state setup;
         }
 
