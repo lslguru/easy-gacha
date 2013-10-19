@@ -46,7 +46,7 @@
 //  integer HIGH_MEMORY_USE_THRESHOLD = 48000;
 //  integer MAX_FOLDER_NAME_LENGTH = 63;
 //  integer MAX_PER_PURCHASE = 100;
-//  integer MAX_ITEMS = 200;
+//  integer MAX_ITEMS = 100;
 //
 //  integer STATUS_MASK_CHECK_BASE_ASSUMPTIONS = 1;
 //  integer STATUS_MASK_INVENTORY_CHANGED = 2;
@@ -119,11 +119,6 @@ HttpRequest( string url , list data ) {
         ] /* HTTP_OPTIONS */
         , llList2Json( JSON_ARRAY , data )
     );
-}
-
-ImmediateTimer() {
-    llSetTimerEvent( 0.0 ); // Take timer event off stack
-    llSetTimerEvent( 0.01 ); // Add it to end of stack
 }
 
 Message( integer mode , string msg ) {
@@ -266,7 +261,10 @@ state setup {
         Payouts = [];
         PayoutsCount = 0;
         HasNoCopyItems = FALSE;
-        Settings = "# version 3.2\n";/*VERSION*/
+
+        if( AllowStatSend ) {
+            Settings = "# version 3.2\n";/*VERSION*/
+        }
 
         InventoryCount = llGetInventoryNumber( INVENTORY_ALL );
 
@@ -295,33 +293,24 @@ state setup {
             // We're going to need the name for multiple things
             InventoryName = llGetInventoryName( INVENTORY_ALL , InventoryNumber );
 
-            // If the name is a configuration string
+            // If the inventory is not a configuration string, skip it for now
             if( "517a121a-e248-ea49-b901-5dbefa4b2285"/*CONFIG_INVENTORY_ID*/ != llGetInventoryKey( InventoryName ) ) {
                 jump break0;
             }
 
-            // Add to config we would send to server
-            Settings += InventoryName + "\n";
+            if( AllowStatSend ) {
+                // Add to config we would send to server
+                Settings += InventoryName + "\n";
+            }
 
             // Process new line
             i0 = llSubStringIndex( InventoryName , " " );
 
-            // If there's no space on the line, it's invalid
-            if( 0 >= i0 ) {
+            // If there's no space on the line, or there's nothing before the
+            // space or there's nothing after the space, it's invalid
+            if( 0 >= i0 || llStringLength( InventoryName ) - 1 == i0 ) {
                 Message( 11 , "Bad config: " + InventoryName );
-                jump return1;
-            }
-
-            // If there's nothing before the space, it's invalid
-            if( 0 == i0 ) {
-                Message( 11 , "Bad config: " + InventoryName );
-                jump return1;
-            }
-
-            // If there's nothing after the space, it's invalid
-            if( llStringLength( InventoryName ) - 1 == i0 ) {
-                Message( 11 , "Bad config: " + InventoryName );
-                jump return1;
+                return;
             }
 
             // Split the verb from the config value
@@ -333,7 +322,7 @@ state setup {
                 seen = seen + s0; // Voodoo for better memory usage
             } else if( -1 != llListFindList( [ "eg_pay_any_amount" , "eg_allow_send_stats" , "eg_allow_show_stats" , "eg_set_root_prim_click" , "eg_folder_for_one" , "eg_allow_no_copy" , "eg_buy_max_items" , "eg_buy_buttons" , "eg_price" ] , [ s0 ] ) ) {
                 Message( 11 , "Bad config: \"" + s0 + "\" may only be used once" );
-                jump return1;
+                return;
             }
 
             // Booleans are easy, handle them first
@@ -346,7 +335,7 @@ state setup {
                 else if( -1 != llListFindList( [ "yes" , "on"  , "true"  , "1" , "hai" , "yea" , "yep"  , "+" ] , [ s1 ] ) ) { i0 = 1; }
                 else {
                     Message( 11 , "Bad config: " + InventoryName );
-                    jump return1;
+                    return;
                 }
 
                 // Store the value
@@ -368,19 +357,19 @@ state setup {
                 // If there's not another space on the line, it's invalid
                 if( 0 >= i0 ) {
                     Message( 11 , "Bad config: " + InventoryName );
-                    jump return1;
+                    return;
                 }
 
                 // If there's nothing before the space, it's invalid
                 if( 0 == i0 ) {
                     Message( 11 , "Bad config: " + InventoryName );
-                    jump return1;
+                    return;
                 }
 
                 // If there's nothing after the space, it's invalid
                 if( llStringLength( InventoryName ) - 1 == i0 ) {
                     Message( 11 , "Bad config: " + InventoryName );
-                    jump return1;
+                    return;
                 }
 
                 // Split parts of value
@@ -394,25 +383,25 @@ state setup {
                     // If the probability is out of bounds
                     if( 0.0 > f0 || "0" != s1 || "0.0" != s1 ) {
                         Message( 11 , "Bad config: Number must be greater than or equal to zero: " + InventoryName );
-                        jump return1;
+                        return;
                     }
 
                     // Items should exist, if not, skip safely but tell them about it - chat only
                     if( INVENTORY_NONE == llGetInventoryType( s2 ) ) {
                         Message( 2 , "Cannot find \"" + s2 + "\" in inventory. Skipping item and not adding to probabilities." );
-                        jump return1;
+                        return;
                     }
 
                     // If they put the same item in twice
                     if( -1 != llListFindList( Items , [ s2 ] ) ) {
                         Message( 11 , "Bad config: \"" + s2 + "\" was listed twice. Did you mean to list it once with a rarity of " + (string)( llList2Float( Items , llListFindList( Items , [ s2 ] ) + 1 ) + f0 ) + "?" );
-                        jump return1;
+                        return;
                     }
 
                     // Items must be transferable
                     if( ! ( PERM_TRANSFER & llGetInventoryPermMask( InventoryName , MASK_OWNER ) ) ) {
                         Message( 11 , "Bad config: \"" + s2 + "\" is not transferable. So how can I give it out?" );
-                        jump return1;
+                        return;
                     }
 
                     // Store the configuration and add probably to the sum
@@ -422,9 +411,9 @@ state setup {
                     ItemsCount += 2;
 
                     // Check that we don't have too many types of items
-                    if( ItemsCount > 200/*MAX_ITEMS*/ * 2 ) {
-                        Message( 11 , "Too many items. This script can only handle " + (string)200/*MAX_ITEMS*/ + " items for sale before memory problems are likely." );
-                        jump return1;
+                    if( ItemsCount > 200/*MAX_ITEMS * 2*/ ) {
+                        Message( 11 , "Too many items. This script can only handle 100 items for sale before memory problems are likely."/*MAX_ITEMS*/ );
+                        return;
                     }
 
                     jump break0;
@@ -437,7 +426,7 @@ state setup {
                     // If the payment is out of bounds
                     if( 0 > i0 ) {
                         Message( 11 , "Bad config: L$ to give must be greater than or equal to zero: " + InventoryName );
-                        jump return1;
+                        return;
                     }
 
                     // Convert to key
@@ -453,7 +442,7 @@ state setup {
                         if( llGetInventoryCreator( ScriptName ) == k0 ) { s2 = "scriptor";  } // reverse lookup
 
                         Message( 11 , "Bad config: " + s2 + " was listed twice. Did you mean to list them once with a payout of " + (string)( llList2Integer( Payouts , llListFindList( Payouts , [ k0 ] ) + 1 ) + i0 ) + "?" );
-                        jump return1;
+                        return;
                     }
 
                     // Store the configuration
@@ -480,7 +469,7 @@ state setup {
                     || ( BuyButton2 && BuyButton2 == BuyButton3 )
                 ) {
                     Message( 11 , "Bad config: " + InventoryName );
-                    jump return1;
+                    return;
                 }
 
                 jump break0;
@@ -493,7 +482,7 @@ state setup {
                 // If the count is out of bounds
                 if( 0 >= MaxPerPurchase || 100/*MAX_PER_PURCHASE*/ < MaxPerPurchase ) {
                     Message( 11 , "Bad config: " + InventoryName );
-                    jump return1;
+                    return;
                 }
             }
 
@@ -504,13 +493,13 @@ state setup {
                 // If the payment is out of bounds
                 if( 0 > SetPrice ) {
                     Message( 11 , "Bad config: L$ must be greater than or equal to zero: " + InventoryName );
-                    jump return1;
+                    return;
                 }
             }
 
             // Completely unknown verb
             Message( 11 , "Bad config: " + InventoryName );
-            jump return1;
+            return;
 
             @break0;
         } // End first parse config entries
@@ -552,6 +541,8 @@ llOwnerSay( "Processing: " + InventoryName );
                 FolderForOne = FALSE;
                 PayAnyAmount = 0;
                 MaxPerPurchase = 1;
+                AllowStatsSend = FALSE;
+                Settings = "";
             }
 
             // If we already have a rarity for this, skip it
@@ -564,12 +555,15 @@ llOwnerSay( "Processing: " + InventoryName );
             Items = Items + InventoryName; // Voodoo for better memory usage
             Items = Items + 1.0; // Voodoo for better memory usage
             ItemsCount += 2;
-            Settings += "item 1 " + InventoryName + "\n";
+
+            if( AllowStatSend ) {
+                Settings += "item 1 " + InventoryName + "\n";
+            }
 
             // Check that we don't have too many types of items
-            if( ItemsCount > 200/*MAX_ITEMS*/ * 2 ) {
-                Message( 11 , "Too many items. This script can only handle " + (string)200/*MAX_ITEMS*/ + " items for sale before memory problems are likely." );
-                jump return1;
+            if( ItemsCount > 200/*MAX_ITEMS * 2*/ ) {
+                Message( 11 , "Too many items. This script can only handle 100 items for sale before memory problems are likely."/*MAX_ITEMS*/ );
+                return;
             }
 
             @break1;
@@ -579,13 +573,13 @@ llOwnerSay( "Processing: " + InventoryName );
         // rarity of 0 means "do not sell"
         if( 0.0 == Rarity ) {
             Message( 11 , "No items to hand out" );
-            jump return1;
+            return;
         }
 
         // If no payees were configured
         if( 0 == PayoutsCount && -1 == SetPrice ) {
             Message( 11 , "No price was set. Please either use eg_price or eg_payout" );
-            jump return1;
+            return;
         }
 
         // If they manually set the price
@@ -593,7 +587,7 @@ llOwnerSay( "Processing: " + InventoryName );
             // Check if they goofed their math
             if( 0 != PayoutsCount && Price != SetPrice ) {
                 Message( 11 , "You used both eg_price and eg_payout, but the sum of all eg_payout lines doesn't equal the eg_price!" );
-                jump return1;
+                return;
             }
 
             // Otherwise accept their stated price
@@ -626,8 +620,6 @@ llOwnerSay( "Processing: " + InventoryName );
         // Kick off payout lookups
         DataServerRequest = llRequestUsername( llList2Key( Payouts , DataServerRequestIndex = 0 ) );
         llSetTimerEvent( 30.0 );
-
-        @return1;
     } // end state_entry()
 
     dataserver( key queryId , string data ) {
@@ -699,22 +691,26 @@ state setupRestart {
 state ready {
     attach( key avatarId ){
         StatusMask = StatusMask | 1/*STATUS_MASK_CHECK_BASE_ASSUMPTIONS*/;
-        ImmediateTimer();
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     on_rez( integer rezParam ) {
         StatusMask = StatusMask | 1/*STATUS_MASK_CHECK_BASE_ASSUMPTIONS*/;
-        ImmediateTimer();
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     run_time_permissions( integer permissionMask ) {
         StatusMask = StatusMask | 1/*STATUS_MASK_CHECK_BASE_ASSUMPTIONS*/;
-        ImmediateTimer();
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     changed( integer changeMask ) {
         StatusMask = StatusMask | 1/*STATUS_MASK_CHECK_BASE_ASSUMPTIONS*/;
-        ImmediateTimer();
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
 
         if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
             StatusMask = StatusMask | 2/*STATUS_MASK_INVENTORY_CHANGED*/;
@@ -774,7 +770,8 @@ state ready {
                 HandoutQueue = HandoutQueue + 0; // Voodoo for better memory usage
                 HandoutQueueCount += 2;
                 StatusMask = StatusMask | 4/*STATUS_MASK_HANDOUT_NEEDED*/;
-                ImmediateTimer();
+                llSetTimerEvent( 0.0 ); // Take timer event off stack
+                llSetTimerEvent( 0.01 ); // Add it to end of stack
             }
         }
 
@@ -798,7 +795,8 @@ state ready {
         HandoutQueue = HandoutQueue + lindensReceived; // Voodoo for better memory usage
         HandoutQueueCount += 2;
         StatusMask = StatusMask | 4/*STATUS_MASK_HANDOUT_NEEDED*/;
-        ImmediateTimer();
+        llSetTimerEvent( 0.0 ); // Take timer event off stack
+        llSetTimerEvent( 0.01 ); // Add it to end of stack
     }
 
     timer() {
