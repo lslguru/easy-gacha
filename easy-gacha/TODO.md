@@ -1,7 +1,3 @@
-# Fixes #
-
-* Must get memory usage down again
-
 # New Features #
 
 ## Next Version ##
