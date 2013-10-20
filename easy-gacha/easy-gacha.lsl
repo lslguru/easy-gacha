@@ -80,6 +80,7 @@ integer BuyButton3; // Should be item count during config, price after config
 integer PayAnyAmount; // 0/1 during config ends, price after config
 integer MaxPerPurchase; // Not to exceed MAX_PER_PURCHASE
 integer FolderForOne; // Boolean
+integer ListOnTouch; // Boolean
 integer HasNoCopyItems; // Boolean
 integer Verbose; // Boolean
 integer UseHoverText; // Boolean
@@ -159,6 +160,45 @@ CheckBaseAssumptions() {
         || ! ( llGetPermissions() & PERMISSION_DEBIT )
     ) {
         llResetScript();
+    }
+}
+
+ListProbabilities( integer mode ) {
+    integer iterate;
+    string inventoryName;
+    float f0;
+    string value;
+
+    // Report percentages now that we know the totals
+    for( iterate = 0 ; iterate < InventoryCount ; iterate += 1 ) {
+        // Get the name
+        inventoryName = llGetInventoryName( INVENTORY_ALL , iterate );
+
+        // If it's ourself, skip it
+        if( ScriptName == inventoryName ) {
+            jump break5;
+        }
+
+        // If it's a config item, skip it
+        if( "517a121a-e248-ea49-b901-5dbefa4b2285" == llGetInventoryKey( inventoryName ) ) { // CONFIG_INVENTORY_ID
+            jump break5;
+        }
+
+        // Items must be transferable
+        if( ! ( PERM_TRANSFER & llGetInventoryPermMask( inventoryName , MASK_OWNER ) ) ) {
+            jump break5;
+        }
+
+        f0 = 1.0;
+        if( EOF != ( value = FindConfigVerbId( "eg_rarity" , inventoryName , 0 ) ) ) {
+            f0 = (float)value;
+        }
+
+        if( 0.0 < f0 ) {
+            Message( mode , "\"" + inventoryName + "\" has a probability of " + (string)( f0 / Rarity * 100 ) + "%" );
+        }
+
+        @break5;
     }
 }
 
@@ -247,12 +287,6 @@ default {
         Owner = llGetOwner();
         ScriptName = llGetScriptName();
 
-        // On the off chance they changed things and we can start out with this
-        // permission because it was previously granted... don't ask for it
-        if( llGetPermissionsKey() == Owner && ( llGetPermissions() & PERMISSION_DEBIT ) ) {
-            state setup;
-        }
-
         // Give an extra prompt so it's obvious what's being waited on
         Message( 2 , "Please grant debit permission (touch to reset)..." );
 
@@ -321,6 +355,7 @@ state setup {
         PayAnyAmount = 1;
         MaxPerPurchase = 100; // MAX_PER_PURCHASE
         FolderForOne = TRUE;
+        ListOnTouch = FALSE;
         RuntimeId = llGenerateKey();
         StatusMask = 0;
         DataServerRequest = NULL_KEY;
@@ -411,6 +446,7 @@ state setup {
                         , "eg_allow_show_stats"
                         , "eg_set_root_prim_click"
                         , "eg_folder_for_one"
+                        , "eg_list_on_touch"
                         , "eg_buy_max_items"
                         , "eg_buy_buttons"
                         , "eg_price"
@@ -432,6 +468,7 @@ state setup {
                         , "eg_allow_show_stats"
                         , "eg_set_root_prim_click"
                         , "eg_folder_for_one"
+                        , "eg_list_on_touch"
                         , "eg_buy_max_items"
                         , "eg_buy_buttons"
                         , "eg_price"
@@ -454,6 +491,7 @@ state setup {
                         , "eg_allow_show_stats"
                         , "eg_set_root_prim_click"
                         , "eg_folder_for_one"
+                        , "eg_list_on_touch"
                         , "eg_verbose"
                         , "eg_hover_text"
                     ] , [ verb ] )
@@ -471,6 +509,7 @@ state setup {
                     if( "eg_allow_show_stats"    == verb ) { AllowShowStats         = i0; }
                     if( "eg_set_root_prim_click" == verb ) { SetPayActionOnRootPrim = i0; }
                     if( "eg_folder_for_one"      == verb ) { FolderForOne           = i0; }
+                    if( "eg_list_on_touch"       == verb ) { ListOnTouch            = i0; }
                 }
 
                 // Manually specified price
@@ -732,37 +771,7 @@ state setup {
         }
 
         // Report percentages now that we know the totals
-        for( iterate = 0 ; iterate < InventoryCount ; iterate += 1 ) {
-            // Get the name
-            inventoryName = llGetInventoryName( INVENTORY_ALL , iterate );
-            Message( 1 , "Initializing, please wait...\nStep 4 of 7: " + (string)( ( iterate + 1 ) * 100 / InventoryCount ) + "%" );
-
-            // If it's ourself, skip it
-            if( ScriptName == inventoryName ) {
-                jump break1;
-            }
-
-            // If it's a config item, skip it
-            if( "517a121a-e248-ea49-b901-5dbefa4b2285" == llGetInventoryKey( inventoryName ) ) { // CONFIG_INVENTORY_ID
-                jump break1;
-            }
-
-            // Items must be transferable
-            if( ! ( PERM_TRANSFER & llGetInventoryPermMask( inventoryName , MASK_OWNER ) ) ) {
-                jump break1;
-            }
-
-            f0 = 1.0;
-            if( EOF != ( value = FindConfigVerbId( "eg_rarity" , inventoryName , 0 ) ) ) {
-                f0 = (float)value;
-            }
-
-            if( 0.0 < f0 ) {
-                Message( 2 , "\"" + inventoryName + "\" has a probability of " + (string)( f0 / Rarity * 100 ) + "%" );
-            }
-
-            @break1;
-        }
+        ListProbabilities( 2 );
 
         // Show a warning if there are a lot of items to choose from
         if( 25 < ItemCount ) { // MANY_ITEMS_WARNING
@@ -875,7 +884,7 @@ state setup {
         llSleep( 3.0 );
 
         // Check memory now that we're all done messing around
-        if( !HaveHandedOut && llGetFreeMemory() < 12000 ) { // LOW_MEMORY_THRESHOLD_SETUP
+        if( !HaveHandedOut && llGetFreeMemory() < 8000 ) { // LOW_MEMORY_THRESHOLD_SETUP TODO
             Message( 11 , "Not enough free memory. Resetting... (Used: " + (string)llGetUsedMemory() + " Free: " + (string)llGetFreeMemory() + ")" );
             llResetScript();
         }
@@ -1008,6 +1017,10 @@ state ready {
         // If stats can be sent at all
         if( AllowStatSend ) {
             Message( messageMode , ( "Want to see some statistics for this object? Click this link: SERVER_URL_STATS" + (string)RuntimeId ) );
+        }
+
+        if( ListOnTouch ) {
+            ListProbabilities( 4 );
         }
     }
 
