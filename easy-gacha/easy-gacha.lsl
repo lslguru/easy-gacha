@@ -1,36 +1,10 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-//  LICENSE
-//
-//  This is free and unencumbered software released into the public domain.
-//
-//  Anyone is free to copy, modify, publish, use, compile, sell, or distribute
-//  this software, either in source code form or as a compiled binary, for any
-//  purpose, commercial or non-commercial, and by any means.
-//
-//  In jurisdictions that recognize copyright laws, the author or authors of
-//  this software dedicate any and all copyright interest in the software to
-//  the public domain. We make this dedication for the benefit of the public at
-//  large and to the detriment of our heirs and successors. We intend this
-//  dedication to be an overt act of relinquishment in perpetuity of all
-//  present and future rights to this software under copyright law.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-//  THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
-//  AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
-//  For more information, please refer to <http://unlicense.org/>
-//
-////////////////////////////////////////////////////////////////////////////////
+#include lib/message.lsl
+#include lib/convert-to-key.lsl
+#include lib/parse-lindens.lsl
+#include lib/convert-boolean-setting.lsl
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  CONSTANTS
-//
-////////////////////////////////////////////////////////////////////////////////
+#define SCRIPT_NAME ScriptName
+#define OWNER Owner
 
 #define CONFIG_INVENTORY_ID "517a121a-e248-ea49-b901-5dbefa4b2285"
 #define VERSION "3.2"
@@ -70,18 +44,6 @@
 #define INVENTORY_ITERATOR_PROCESS_PAYOUTS 8
 #define INVENTORY_ITERATOR_FIND_NTH_TWO_PART_VERB 9
 
-// Message modes (bitmask)
-#define MESSAGE_SET_TEXT 1
-#define MESSAGE_OWNER_SAY 2
-#define MESSAGE_WHISPER 4
-#define MESSAGE_DIALOG 8
-#define MESSAGE_IS_VERBOSE 16
-
-// Message modes (convenience)
-#define MESSAGE_TEXT_AND_OWNER 3
-#define MESSAGE_ERROR 11
-#define MESSAGE_DEBUG 18
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  SETUP STEPS
@@ -96,11 +58,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// GLOBAL VARIABLES
-//
-////////////////////////////////////////////////////////////////////////////////
+#startglobalvariables
 
 // Basic object properties
 string ScriptName; // Cached because this shouldn't change
@@ -121,15 +79,12 @@ integer MaxPerPurchase; // Not to exceed MAX_PER_PURCHASE
 integer FolderForOne; // Boolean
 integer ListOnTouch; // Boolean
 integer HasNoCopyItems; // Boolean
-integer Verbose; // Boolean
-integer UseHoverText; // Boolean
 
 // Runtime
 key RuntimeId; // Generated each time inventory is scanned
 integer StatusMask; // Bitmask
 key DataServerRequest;
 integer DataServerRequestIndex;
-integer SuppressOwnerMessages; // boolean, used when we know inventory will change
 integer InventoryCount; // cache this and only update it in setup
 integer TextureCount; // cache this and only update it in setup
 integer ItemCount; // The number of items which will actually be given away
@@ -141,11 +96,8 @@ list HandoutQueue; // Strided list of [ Agent Key , Lindens Given ]
 integer HandoutQueueCount; // List length (not stride item length)
 integer HaveHandedOut; // Boolean
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// LOGIC
-//
-////////////////////////////////////////////////////////////////////////////////
+#endglobalvariables
+#startglobalfunctions
 
 HttpRequest( string url , list data ) {
     if( "" == url ) {
@@ -155,25 +107,6 @@ HttpRequest( string url , list data ) {
     llHTTPRequest( url , HTTP_OPTIONS , llList2Json( JSON_ARRAY , data ) );
 
     llSleep( 1.0 ); // FORCED_DELAY 1.0 seconds
-}
-
-Message( integer mode , string msg ) {
-    if( MESSAGE_IS_VERBOSE & mode && !Verbose ) {
-        // If message is a verbose-mode one and verbose isn't turned on, skip
-        return;
-    }
-    if( MESSAGE_SET_TEXT & mode && UseHoverText ) {
-        llSetText( ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
-    }
-    if( MESSAGE_OWNER_SAY & mode && !SuppressOwnerMessages ) {
-        llOwnerSay( ScriptName + ": " + msg );
-    }
-    if( MESSAGE_WHISPER & mode ) {
-        llWhisper( 0 , "/me : " + ScriptName + ": " + msg );
-    }
-    if( MESSAGE_DIALOG & mode && !SuppressOwnerMessages ) {
-        llDialog( Owner , ScriptName + ":\n\n" + msg , [] , -1 ); // FORCED_DELAY 1.0 seconds
-    }
 }
 
 // attach: Could be rezzed from inventory of different user
@@ -189,39 +122,6 @@ CheckBaseAssumptions() {
     ) {
         llResetScript();
     }
-}
-
-key ConvertToKey( string value ) {
-    if( "owner"    == value ) { return Owner;                               } // magic override
-    if( "creator"  == value ) { return llGetCreator();                      } // magic override
-    if( "scriptor" == value ) { return llGetInventoryCreator( ScriptName ); } // magic override
-    return (key)value;
-}
-
-// Expected formats: "L$#" "$#" "#" "#L"
-integer ParseLindens( string value ) {
-    value = llDumpList2String( llParseString2List( ( value = "" ) + value , [ "l" , "L" , "$" ] , [ ] ) , "" );
-
-    // There shouldn't be anything else in the string now except the raw number
-    if( (string)((integer)value) != value ) {
-        return -1;
-    }
-
-    return (integer)value;
-}
-
-integer ConvertBooleanSetting( string config ) {
-    config = llToLower( config );
-
-    if( -1 != llSubStringIndex( "|no|off|false|0|iie|nay|nope|-|" , "|" + config + "|" ) ) {
-        return FALSE;
-    }
-    if( -1 != llSubStringIndex( "|yes|on|true|1|hai|yea|yep|+|" , "|" + config + "|" ) ) {
-        return TRUE;
-    }
-
-    // Invalid value
-    return -1;
 }
 
 list InventoryIterator( list config ) {
@@ -311,11 +211,11 @@ list InventoryIterator( list config ) {
             // Quick lookup of pre-setup config values
             if( INVENTORY_ITERATOR_STARTUP_CONFIGS == mode ) {
                 if( "eg_verbose" == verb && TRUE == ConvertBooleanSetting( value ) ) {
-                    Verbose = TRUE;
+                    MessageVerbose = TRUE;
                 }
 
                 if( "eg_hover_text" == verb && FALSE == ConvertBooleanSetting( value ) ) {
-                    UseHoverText = FALSE;
+                    MessageHoverText = FALSE;
                 }
             }
 
@@ -714,11 +614,8 @@ list InventoryIterator( list config ) {
     return [];
 } // end InventoryIterator()
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// STATES
-//
-////////////////////////////////////////////////////////////////////////////////
+#endglobalfunctions
+#startstates
 
 default {
     state_entry() {
@@ -804,8 +701,8 @@ state setup {
         MostRare = 0.0;
         MostCommon = 0.0;
         HasNoCopyItems = FALSE;
-        Verbose = FALSE;
-        UseHoverText = TRUE;
+        MessageVerbose = FALSE;
+        MessageHoverText = TRUE;
 
         InventoryCount = llGetInventoryNumber( INVENTORY_ALL );
         TextureCount = llGetInventoryNumber( INVENTORY_TEXTURE );
@@ -953,7 +850,7 @@ state debounceInventoryUpdates {
     }
 
     state_entry() {
-        SuppressOwnerMessages = FALSE;
+        MessageOwner = TRUE;
         Message( MESSAGE_SET_TEXT , "Restarting..." );
         llSetTimerEvent( 1.0 ); // Wait 1 second in case events are still firing
     }
@@ -994,7 +891,7 @@ state ready {
     }
 
     state_entry() {
-        SuppressOwnerMessages = FALSE;
+        MessageOwner = TRUE;
         HandoutQueue = [];
         HandoutQueueCount = 0;
 
@@ -1162,7 +1059,7 @@ state handout {
                 if( ! ( PERM_COPY & llGetInventoryPermMask( inventoryName , MASK_OWNER ) ) ) {
                     // Note that the next inventory action should not report to the
                     // owner and queue up a re-scan of inventory
-                    SuppressOwnerMessages = TRUE;
+                    MessageOwner = FALSE;
                 }
 
                 // Schedule to give inventory, increment counter, decrement money
@@ -1235,10 +1132,12 @@ state handout {
         }
 
         // If we know we need to re-scan, do so
-        if( SuppressOwnerMessages || STATUS_MASK_INVENTORY_CHANGED & StatusMask ) {
+        if( !MessageOwner || STATUS_MASK_INVENTORY_CHANGED & StatusMask ) {
             state setup;
         }
 
         state ready;
     }
 }
+
+#endstates
