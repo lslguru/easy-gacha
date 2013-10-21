@@ -1,112 +1,13 @@
-################################################################################
-## EASY GACHA CONFIGURATION
-################################################################################
-
-# Any line that is empty or begins with a "#" is ignored.
-
-################################################################################
-
-item RARITY NAME
-
-This represents an inventory item.
-
-RARITY is a non-zero positive number. The higher the number, the less rare it is. The exact percentage is based on dividing this number by the sum of all of the numbers. The script will tell you the percentages at startup.
-
-NAME is the EXACT inventory name (leading/trailing spaces count).
-
-Default: If no item lines are present, the script pretends there was one for each inventory item with a rarity of one.
-
-Examples:
-item 0.01 Really rare item name here
-item 1 Something rather rare
-item 5.7 Why are you using such weird numbers?
-item 100 Wow this is common
-
-################################################################################
-
-payout MONEY AGENT_KEY
-
-This represents a person to whom money should be given.
-
-MONEY is a whole number greater than or equal to zero. For each ITEM given (not purchase) this much money will be given to this person. The total price is the sum of all "payout" lines.
-
-AGENT_KEY is the UUID of the user. There are numerous ways to look this up.
-AGENT_KEY may be "scriptor", in which case it is the creator of the script.
-AGENT_KEY may be "creator", in which case it is the creator of the OBJECT (not prim).
-AGENT_KEY may be "owner", in which case it is the owner of the object.
-
-Default: If no payout lines are present, the script pretends there was one that read "payout 25 owner"
-
-################################################################################
-
-buy_button BUTTON COUNT
-
-TODO
-# When you choose to pay the object, it will ask you how much you want to pay. We're allowed to show up to four buttons and a number-entry box.
-# The option "buy_button" may be "off" (hide button), or a number greater than one (1), which is the number of ITEMS a person is buying with that button. If the final price is L$10 and the button is for 5 items, that means the button will show L$50. Each buy_button must be less than the value for "buy_max_items".
-
-################################################################################
-
-pay_any_amount BOOLEAN
-
-TODO
-# The option "pay_any_amount" may either be "yes" or "no". If the value is "no", the number-entry box will be hidden.
-
-################################################################################
-
-buy_max_items COUNT
-
-TODO
-# The option "buy_max_items" may be followed by a number between 1 and 100.  This is the absolute maximum number of items someone can buy at a time.
-
-################################################################################
-
-allow_root_prim BOOLEAN
-
-TODO
-# If you use this option, the script will not complain about being the root prim in a linked set. If the script is in the root prim of a linked set, the entire linked set will have a default action of payment. This means that you will have to right-click to access the touch even for the statistics script!
-
-################################################################################
-
-allow_send_stats BOOLEAN
-
-TODO
-# Sends statistics to the server about your configuration and the number of people who paid. Each time the object is reset it gets a new ID.
-
-################################################################################
-
-allow_show_stats BOOLEAN
-
-TODO
-# You can also choose whether you want to allow the stats to be visible to anyone other than yourself.
-
-################################################################################
-
-folder_for_one BOOLEAN
-
-TODO
-# If you don't want to bother with a folder when only one item is being given, change this.
-
-################################################################################
-
-skip_missing_inventory BOOLEAN
-
-TODO
-
-################################################################################
-
-allow_no_copy BOOLEAN
-
-TODO
-
-################################################################################
-
-default_rarity RARITY
-
-TODO
-
-################################################################################
-
-always_scan_inventory BOOLEAN
-
-TODO
+eg_folder_for_one       BOOL
+eg_price                MONEY
+eg_rarity               RARITY  ITEM
+eg_set_root_prim_click  BOOL
+eg_pay_any_amount       BOOL
+eg_buy_max_items        COUNT
+eg_buy_buttons          COUNT   COUNT   COUNT
+eg_hover_text           BOOL
+eg_verbose              BOOL
+eg_allow_send_stats     BOOL
+eg_allow_show_stats     BOOL
+eg_payout               MONEY   PERSON
+eg_list_on_touch        BOOL
