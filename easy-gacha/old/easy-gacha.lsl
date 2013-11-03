@@ -606,36 +606,7 @@ list InventoryIterator( list config ) {
 #start states
 
 state setup {
-    attach( key avatarId ){ CheckBaseAssumptions(); }
-    on_rez( integer rezParam ) { CheckBaseAssumptions(); }
-    run_time_permissions( integer permissionMask ) { CheckBaseAssumptions(); }
-
-    changed( integer changeMask ) {
-        CheckBaseAssumptions();
-
-        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
-            state debounceInventoryUpdates;
-        }
-    }
-
-    touch_end( integer detected ) {
-        while( 0 <= ( detected -= 1 ) ) {
-            if( Owner == llDetectedKey( detected ) ) {
-                if( llGetFreeMemory() < LOW_MEMORY_THRESHOLD_RUNNING ) {
-                    llResetScript();
-                }
-
-                CheckBaseAssumptions();
-                state debounceInventoryUpdates;
-            } else if( llGetFreeMemory() < LOW_MEMORY_THRESHOLD_RUNNING ) {
-                Message( MESSAGE_WHISPER , "Temporarily out of order (memory low)\nOwner should touch to reset" );
-            }
-        }
-    }
-
     state_entry() {
-        CheckBaseAssumptions();
-
         Rarity = 0.0;
         Price = 0;
         PayoutsCount = 0;

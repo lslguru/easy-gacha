@@ -79,7 +79,7 @@
         changed( integer changeMask ) {
             CheckBaseAssumptions();
 
-            if( CHANGED_INVENTORY & changeMask ) {
+            if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
                 // TODO: Reset all child scripts to prevent weirdness during config
 
                 // Tell them why we're not doing anything right now
@@ -90,6 +90,18 @@
                 // (debounce event)
                 llSetTimerEvent( 0.0 ); // Take timer event off the queue
                 llSetTimerEvent( 1.0 ); // Add it to the end of the queue
+            }
+        }
+
+        touch_end( integer detected ) {
+            while( 0 <= ( detected -= 1 ) ) {
+                if( Owner == llDetectedKey( detected ) ) {
+                    // Tell them why we're not doing anything right now
+                    Message( MESSAGE_TEXT_AND_OWNER , "Resetting per your request, please wait..." );
+
+                    llSetTimerEvent( 0.0 ); // Take timer event off the queue
+                    llSetTimerEvent( 1.0 ); // Add it to the end of the queue
+                }
             }
         }
 
