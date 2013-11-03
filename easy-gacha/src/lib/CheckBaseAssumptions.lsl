@@ -2,8 +2,8 @@
 
 // Basic object properties - Override included-file settings for these because
 // this script takes care of these
-string ScriptName; // Cached because this shouldn't change
-key Owner; // Cached because this shouldn't change
+string ScriptName = ""; // Cached because this shouldn't change
+key Owner = NULL_KEY; // Cached because this shouldn't change
 #define SCRIPT_NAME ScriptName
 #define OWNER Owner
 

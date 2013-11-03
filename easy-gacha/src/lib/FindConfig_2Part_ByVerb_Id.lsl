@@ -6,6 +6,7 @@ string FindConfig_2Part_ByVerb_Id( integer searchIndex , string searchVerb ) {
     integer iterate;
     string inventoryName;
     integer spaceIndex;
+    integer foundIndex;
 
     for( iterate = 0 ; iterate < TEXTURE_COUNT ; iterate += 1 ) {
         // Get the name

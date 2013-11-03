@@ -74,6 +74,44 @@ HttpRequest( string url , list data ) {
     llSleep( 1.0 ); // FORCED_DELAY 1.0 seconds
 }
 
+// TODO
+    // For each config...
+        // Init configs: eg_verbose eg_hover_text
+        // For each config, split on space, left side is verb, right side is value
+            // If no space, invalid
+            // If left side is empty string, invalid
+            // If right side is empty string, invalid
+        // If verb isn't known, invalid
+        // If verb may only be used once and is present twice, invalid
+        // Check format of boolean verbs
+        // eg_price restrictions
+        // eg_buy_max_items restrictions
+        // eg_buy_buttons restrictions
+        // eg_rarity
+            // check for inventory
+        // eg_payout
+            // L$ >= 0
+            // payout listed only once
+        // For 2part configs, split value on space, left side is value, right side is id
+            // If no second space, invalid
+            // If left side is empty string, invalid
+            // If right side is empty string, invalid
+        // For each payout
+            // llGiveMoney( target , itemCount * payoutAmount )
+    // For each item...
+        // If not transferable, skip (report?)
+        // Find all rarity settings and add up for total rarity
+            // If more than one setting, bark
+            // If no setting, report default to 1.0
+            // If explicitly set to 0.0, report skip
+            // Add to total rarity
+            // Track most common/rare
+        // If not copyable, toggle settings
+        // If initial scan complete, can show rarity %
+        // If finding random item, consider this one
+        // If no rarity setting, create pseudo setting for server
+    // Progress reporting
+    // Price vs payouts checks
 list InventoryIterator( list config ) {
     integer mode = llList2Integer( config , 0 );
     integer iterate;

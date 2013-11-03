@@ -72,7 +72,7 @@ for( s in organized ) {
         do {
             var oldLine = line;
             for( s in defines ) {
-                line = line.replace( s , defines[ s ] );
+                line = line.replace( new RegExp( '\\b' + s + '\\b' ) , defines[ s ] );
             }
         } while( oldLine != line );
 

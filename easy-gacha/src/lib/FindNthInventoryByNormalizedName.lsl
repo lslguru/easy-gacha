@@ -5,6 +5,7 @@
     string FindNthInventoryByNormalizedName( integer searchIndex , string searchName ) {
         integer iterate;
         string inventoryName;
+        integer foundIndex;
 
         searchName = llToLower( llStringTrim( searchName , STRING_TRIM ) );
 

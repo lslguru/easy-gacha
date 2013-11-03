@@ -57,18 +57,18 @@
         state_entry() {
             CheckBaseAssumptions();
 
-            if( INVENTORY_SCRIPT != llGetInventoryType( "SCRIPT_CONFIG_VALIDATOR" ) ) {
-                Message( MESSAGE_ERROR , "Missing script: SCRIPT_CONFIG_VALIDATOR" );
+            if( INVENTORY_SCRIPT != llGetInventoryType( "SCRIPT_VALIDATOR" ) ) {
+                Message( MESSAGE_ERROR , "Missing or not a script: SCRIPT_VALIDATOR" );
                 return;
             }
 
-            if( llGetInventoryCreator( "SCRIPT_CONFIG_VALIDATOR" ) != llGetInventoryCreator( ScriptName ) ) {
-                Message( MESSAGE_ERROR , "Invalid script: SCRIPT_CONFIG_VALIDATOR" );
+            if( llGetInventoryCreator( "SCRIPT_VALIDATOR" ) != llGetInventoryCreator( ScriptName ) ) {
+                Message( MESSAGE_ERROR , "Invalid script: SCRIPT_VALIDATOR" );
                 return;
             }
 
             // Start up config checker and tell it to begin its work
-            llSetScriptState( "SCRIPT_CONFIG_VALIDATOR" , TRUE ); // Occurs immediately, although script may not be processing yet
+            llSetScriptState( "SCRIPT_VALIDATOR" , TRUE ); // Occurs immediately, although script may not be processing yet
             llMessageLinked( LINK_THIS , 3000166 , "" , NULL_KEY ); // Queues event for script, even if it's not processing yet
             llSleep( 0.05 ); // FORCED_DELAY 0.05 seconds: Strictly limit rate to prevent queue overflow
         }
@@ -80,8 +80,14 @@
             CheckBaseAssumptions();
 
             if( CHANGED_INVENTORY & changeMask ) {
+                // TODO: Reset all child scripts to prevent weirdness during config
+
+                // Tell them why we're not doing anything right now
+                Message( MESSAGE_TEXT_AND_OWNER , "Inventory changes detected, please wait..." );
+
                 // Reset timer so we can absorb multiple inventory change
                 // events at once, in case inventory is still changing
+                // (debounce event)
                 llSetTimerEvent( 0.0 ); // Take timer event off the queue
                 llSetTimerEvent( 1.0 ); // Add it to the end of the queue
             }
@@ -95,7 +101,7 @@
         link_message( integer fromPrim , integer messageInt , string messageStr , key messageKey ) {
             // If the config checker came back and said everything is ready
             if( 3000167 == messageInt ) {
-                // TODO: Continue
+                llOwnerSay( "TODO: Continue" );
             }
         }
     }

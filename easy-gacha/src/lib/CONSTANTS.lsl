@@ -26,7 +26,7 @@
 
 // Script names (note: you must provide your own quote marks)
 #define SCRIPT_CORE Easy Gacha Core
-#define SCRIPT_CONFIG_VALIDATOR Easy Gacha Config
+#define SCRIPT_VALIDATOR Easy Gacha Validator
 #define SCRIPT_PURCHASE_BUTTONS Easy Gacha Buttons
 #define SCRIPT_STATS_ENGINE Easy Gacha Stats
 #define SCRIPT_PAYOUTS Easy Gacha Payouts
