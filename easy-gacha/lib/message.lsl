@@ -10,16 +10,16 @@
 #define MESSAGE_ERROR 11
 #define MESSAGE_DEBUG 18
 
-#startglobalvariables
+#start globalvariables
 
     integer MessageVerbose      = FALSE;
     integer MessageHoverText    = TRUE;
     integer MessageOwner        = TRUE;
     integer MessageChat         = TRUE;
 
-#endglobalvariables
+#end globalvariables
 
-#startglobalfunctions
+#start globalfunctions
 
     Message( integer mode , string msg ) {
         if( MESSAGE_IS_VERBOSE & mode && !MessageVerbose ) {
@@ -40,4 +40,4 @@
         }
     }
 
-#endglobalfunctions
+#end globalfunctions

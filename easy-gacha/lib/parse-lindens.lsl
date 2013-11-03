@@ -1,4 +1,4 @@
-#startglobalfunctions
+#start globalfunctions
 
     // Expected formats: "L$#" "$#" "#" "#L"
     // Does not support leading zeroes
@@ -13,4 +13,4 @@
         return (integer)value;
     }
 
-#endglobalfunctions
+#end globalfunctions

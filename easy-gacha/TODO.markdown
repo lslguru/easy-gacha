@@ -2,31 +2,31 @@
 
 ## Split script up into separate scripts ##
 
-    * Easy Gacha (REQUIRED)
+    * Easy Gacha
         * eg_folder_for_one
         * eg_price
         * eg_rarity
         * eg_hover_text
         * eg_buy_max_items
 
-    * Easy Gacha Config Checker (OPTIONAL)
+    * Easy Gacha Config Checker
         * eg_verbose
         * eg_hover_text
 
-    * Easy Gacha Purchase Buttons (OPTIONAL)
+    * Easy Gacha Purchase Buttons
         * eg_set_root_prim_click
         * eg_pay_any_amount
         * eg_buy_max_items
         * eg_buy_buttons
 
-    * Easy Gacha Stats (OPTIONAL)
+    * Easy Gacha Stats
         * eg_allow_send_stats
         * eg_allow_show_stats
 
-    * Easy Gacha Payouts (OPTIONAL)
+    * Easy Gacha Payouts
         * eg_payout
 
-    * Easy Gacha List Contents On Touch (OPTIONAL)
+    * Easy Gacha List Contents On Touch
         * eg_list_on_touch
 
     llMessageLinked(...); llSleep( 0.05 ); // Strictly limit rate to prevent queue overflow

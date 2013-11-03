@@ -6,10 +6,10 @@
 #define PRIM_NUMBER llGetLinkNumber()
 #define PRIM_KEY llGetLinkKey( PRIM_NUMBER )
 
-#startglobalfunctions
+#start globalfunctions
 
     key ToKey( string value ) {
-        value = llToLower( value ); // Be nice and allow upper case letters
+        value = llToLower( llStringTrim( value , STRING_TRIM ) ); // Be nice and allow upper case letters
 
         if( "owner"    == value ) { return OWNER;       } // special shorthand
         if( "creator"  == value ) { return CREATOR;     } // special shorthand
@@ -21,4 +21,4 @@
         else                      { return NULL_KEY;    } // invalid key
     }
 
-#endglobalfunctions
+#end globalfunctions
