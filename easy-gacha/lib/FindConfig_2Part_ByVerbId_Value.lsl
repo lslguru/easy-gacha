@@ -1,3 +1,5 @@
+#define TEXTURE_COUNT llGetInventoryNumber( INVENTORY_TEXTURE )
+
 #start globalfunctions
 
 string FindConfig_2Part_ByVerbId_Value( integer searchIndex , string searchVerb , string searchId ) {
@@ -5,7 +7,7 @@ string FindConfig_2Part_ByVerbId_Value( integer searchIndex , string searchVerb 
     string inventoryName;
     integer spaceIndex;
 
-    for( iterate = 0 ; iterate < TextureCount ; iterate += 1 ) {
+    for( iterate = 0 ; iterate < TEXTURE_COUNT ; iterate += 1 ) {
         // Get the name
         inventoryName = llStringTrim( llGetInventoryName( INVENTORY_TEXTURE , iterate ) , STRING_TRIM );
 
@@ -14,7 +16,7 @@ string FindConfig_2Part_ByVerbId_Value( integer searchIndex , string searchVerb 
             // Find the space
             spaceIndex = llSubStringIndex( inventoryName , " " );
 
-            if( llGetSubString( inventoryName , 0 , spaceIndex - 1 ) == searchVerb ) {
+            if( llToLower( llGetSubString( inventoryName , 0 , spaceIndex - 1 ) ) == searchVerb ) {
                 // Now just the value and id parts
                 inventoryName = llStringTrim( llGetSubString( inventoryName , spaceIndex + 1 , -1 ) , STRING_TRIM );
 

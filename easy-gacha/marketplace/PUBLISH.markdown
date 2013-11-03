@@ -66,7 +66,7 @@
 
 ### Extended Description ###
 
-Easy Gacha configuration is simple and comes with examples and explanations. What's more, the script has been written to try to give you good feedback when something is wrong with the configuration.
+Easy Gacha configuration is simple and comes with examples and explanations. What's more, the script has been written to try to give you good feedback when something is wrong with the configuration. Easy Gacha even works with many common inventory name mistakes!
 
 Easy Gacha allows people to buy more than one random prize at a time. Really want that 1% rare item? Buy 100 items at the same time, all delivered in a handy folder! That doesn't guarantee you'll get the rare item, but why wear out your finger clicking 100 times? Don't want people to be able to do this? It's configurable, so you can turn it off.
 

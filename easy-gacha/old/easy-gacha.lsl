@@ -1,8 +1,14 @@
-#include lib/message.lsl
-#include lib/convert-to-key.lsl
-#include lib/parse-lindens.lsl
-#include lib/convert-boolean-setting.lsl
-#include lib/constants.lsl
+#include lib/CONSTANTS.lsl
+#include lib/CheckBaseAssumptions.lsl
+#include lib/ConvertBooleanSetting.lsl
+#include lib/FindConfig_1Part_ByVerb_Value.lsl
+#include lib/FindConfig_2Part_ByVerbId_Value.lsl
+#include lib/FindConfig_2Part_ByVerb_Id.lsl
+#include lib/FindConfig_2Part_ByVerb_Value.lsl
+#include lib/Message.lsl
+#include lib/ParseLindens.lsl
+#include lib/ToKey.lsl
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -19,10 +25,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #start globalvariables
-
-// Basic object properties
-string ScriptName; // Cached because this shouldn't change
-key Owner; // Cached because this shouldn't change
 
 // Config settings
 float Rarity; // Sum
@@ -45,11 +47,14 @@ key RuntimeId; // Generated each time inventory is scanned
 integer StatusMask; // Bitmask
 key DataServerRequest;
 integer DataServerRequestIndex;
-integer InventoryCount; // cache this and only update it in setup
-integer TextureCount; // cache this and only update it in setup
 integer ItemCount; // The number of items which will actually be given away
 float MostRare; // The rarity index of the most rare item
 float MostCommon; // The rarity index of the least rare item
+
+#define INVENTORY_COUNT InventoryCount
+#define TEXTURE_COUNT TextureCount
+integer InventoryCount; // cache this and only update it in setup
+integer TextureCount; // cache this and only update it in setup
 
 // Delivery
 list HandoutQueue; // Strided list of [ Agent Key , Lindens Given ]
@@ -67,21 +72,6 @@ HttpRequest( string url , list data ) {
     llHTTPRequest( url , HTTP_OPTIONS , llList2Json( JSON_ARRAY , data ) );
 
     llSleep( 1.0 ); // FORCED_DELAY 1.0 seconds
-}
-
-// attach: Could be rezzed from inventory of different user
-// on_rez: Could be rezzed by new owner
-// changed: Change in owner, change in inventory (script name)
-// run_time_permissions: Permissions revoked or denied
-CheckBaseAssumptions() {
-    if(
-        llGetOwner() != Owner
-        || llGetScriptName() != ScriptName
-        || llGetPermissionsKey() != Owner
-        || ! ( llGetPermissions() & PERMISSION_DEBIT )
-    ) {
-        llResetScript();
-    }
 }
 
 list InventoryIterator( list config ) {
@@ -576,38 +566,6 @@ list InventoryIterator( list config ) {
 
 #end globalfunctions
 #start states
-
-default {
-    state_entry() {
-        Owner = llGetOwner();
-        ScriptName = llGetScriptName();
-
-        // Seek these out specifically, as they impact setup
-        InventoryIterator( [ INVENTORY_ITERATOR_STARTUP_CONFIGS ] );
-
-        // Give an extra prompt so it's obvious what's being waited on
-        Message( MESSAGE_TEXT_AND_OWNER , "Please grant debit permission (touch to reset)..." );
-
-        // Ask for permission
-        llRequestPermissions( Owner , PERMISSION_DEBIT );
-    }
-
-    attach( key avatarId ){ CheckBaseAssumptions(); }
-    on_rez( integer rezParam ) { CheckBaseAssumptions(); }
-
-    run_time_permissions( integer permissionMask ) {
-        CheckBaseAssumptions(); // This will reset the script if permission hasn't been given
-        state setup;
-    }
-
-    touch_end( integer detected ) {
-        while( 0 <= ( detected -= 1 ) ) {
-            if( Owner == llDetectedKey( detected ) ) {
-                CheckBaseAssumptions();
-            }
-        }
-    }
-}
 
 state setup {
     attach( key avatarId ){ CheckBaseAssumptions(); }
