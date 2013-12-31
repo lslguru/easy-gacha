@@ -10,6 +10,10 @@
 #define MESSAGE_ERROR 11
 #define MESSAGE_DEBUG 18
 
+// Overrideable parts
+#define OWNER llGetOwner()
+#define SCRIPT_NAME llGetScriptName()
+
 #start globalvariables
 
     integer MessageVerbose      = FALSE;
@@ -27,16 +31,16 @@
             return;
         }
         if( MESSAGE_SET_TEXT & mode && MessageHoverText ) {
-            llSetText( ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+            llSetText( SCRIPT_NAME + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
         }
         if( MESSAGE_OWNER_SAY & mode && MessageOwner ) {
-            llOwnerSay( ScriptName + ": " + msg );
+            llOwnerSay( SCRIPT_NAME + ": " + msg );
         }
         if( MESSAGE_WHISPER & mode && MessageChat ) {
-            llWhisper( 0 , "/me : " + ScriptName + ": " + msg );
+            llWhisper( 0 , "/me : " + SCRIPT_NAME + ": " + msg );
         }
         if( MESSAGE_DIALOG & mode && MessageOwner ) {
-            llDialog( Owner , ScriptName + ":\n\n" + msg , [] , -1 ); // FORCED_DELAY 1.0 seconds
+            llDialog( OWNER , SCRIPT_NAME + ":\n\n" + msg , [] , -1 ); // FORCED_DELAY 1.0 seconds
         }
     }
 

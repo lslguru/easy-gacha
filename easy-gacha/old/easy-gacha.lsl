@@ -9,6 +9,8 @@
 #include lib/ParseLindens.lsl
 #include lib/ToKey.lsl
 
+#define INVENTORY_COUNT InventoryCount
+#define TEXTURE_COUNT TextureCount
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -26,40 +28,35 @@
 
 #start globalvariables
 
-// Config settings
-float Rarity; // Sum
-integer Price; // Sum
-integer PayoutsCount; // Number of payout records
-integer SetPayActionOnRootPrim; // Boolean
-integer AllowStatSend; // Boolean
-integer AllowShowStats; // Boolean
-integer BuyButton1; // Should be item count during config, price after config
-integer BuyButton2; // Should be item count during config, price after config
-integer BuyButton3; // Should be item count during config, price after config
-integer PayAnyAmount; // 0/1 during config ends, price after config
-integer MaxPerPurchase; // Not to exceed MAX_PER_PURCHASE
-integer FolderForOne; // Boolean
-integer ListOnTouch; // Boolean
-integer HasNoCopyItems; // Boolean
+    // Config settings
+    float Rarity; // Sum
+    integer Price; // Sum
+    integer PayoutsCount; // Number of payout records
+    integer SetPayActionOnRootPrim; // Boolean
+    integer AllowStatSend; // Boolean
+    integer AllowShowStats; // Boolean
+    integer BuyButton1; // Should be item count during config, price after config
+    integer BuyButton2; // Should be item count during config, price after config
+    integer BuyButton3; // Should be item count during config, price after config
+    integer PayAnyAmount; // 0/1 during config ends, price after config
+    integer MaxPerPurchase; // Not to exceed MAX_PER_PURCHASE
+    integer FolderForOne; // Boolean
+    integer ListOnTouch; // Boolean
+    integer HasNoCopyItems; // Boolean
 
-// Runtime
-key RuntimeId; // Generated each time inventory is scanned
-integer StatusMask; // Bitmask
-key DataServerRequest;
-integer DataServerRequestIndex;
-integer ItemCount; // The number of items which will actually be given away
-float MostRare; // The rarity index of the most rare item
-float MostCommon; // The rarity index of the least rare item
+    // Runtime
+    key RuntimeId; // Generated each time inventory is scanned
+    integer StatusMask; // Bitmask
+    key DataServerRequest;
+    integer DataServerRequestIndex;
+    integer ItemCount; // The number of items which will actually be given away
+    float MostRare; // The rarity index of the most rare item
+    float MostCommon; // The rarity index of the least rare item
 
-#define INVENTORY_COUNT InventoryCount
-#define TEXTURE_COUNT TextureCount
-integer InventoryCount; // cache this and only update it in setup
-integer TextureCount; // cache this and only update it in setup
-
-// Delivery
-list HandoutQueue; // Strided list of [ Agent Key , Lindens Given ]
-integer HandoutQueueCount; // List length (not stride item length)
-integer HaveHandedOut; // Boolean
+    // Delivery
+    list HandoutQueue; // Strided list of [ Agent Key , Lindens Given ]
+    integer HandoutQueueCount; // List length (not stride item length)
+    integer HaveHandedOut; // Boolean
 
 #end globalvariables
 #start globalfunctions
@@ -630,9 +627,6 @@ state setup {
         HasNoCopyItems = FALSE;
         MessageVerbose = FALSE;
         MessageHoverText = TRUE;
-
-        InventoryCount = llGetInventoryNumber( INVENTORY_ALL );
-        TextureCount = llGetInventoryNumber( INVENTORY_TEXTURE );
 
         llSetTimerEvent( 0.0 );
 

@@ -27,7 +27,14 @@
 // Script names (note: you must provide your own quote marks)
 #define SCRIPT_CORE Easy Gacha Core
 #define SCRIPT_VALIDATOR Easy Gacha Validator
+#define SCRIPT_VALIDATE_CONFIG_FORMATS Easy Gacha Validate Config Formats
 #define SCRIPT_PURCHASE_BUTTONS Easy Gacha Buttons
 #define SCRIPT_STATS_ENGINE Easy Gacha Stats
 #define SCRIPT_PAYOUTS Easy Gacha Payouts
 #define SCRIPT_INFO Easy Gacha Info
+
+// Signals
+#define SIGNAL_CORE_TO_VALIDATOR_START 3000166
+#define SIGNAL_VALIDATOR_TO_CORE_FINISHED 3000167
+#define SIGNAL_VALIDATOR_TO_SUB_SCRIPT_START 3000168
+#define SIGNAL_SUB_SCRIPT_TO_VALIDATOR_FINISHED 3000169

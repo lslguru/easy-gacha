@@ -46,8 +46,10 @@ while( linesToParse.length ) {
             match = line.match( /^#include (.*)/ );
             if( -1 === included.indexOf( match[1] ) ) {
                 data = require( 'fs' ).readFileSync( match[1] );
-                linesToParse = String(data).split( /\n/ ).concat( linesToParse );
+                data = String( data ).split( /\n/ );
+                linesToParse = data.concat( linesToParse );
                 included.push( match[1] );
+                process.stderr.write( 'Included file: ' + match[1] + '\n' );
             }
             return;
         }
