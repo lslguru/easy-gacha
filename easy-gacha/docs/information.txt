@@ -1,18 +1,13 @@
 Folders
 =======
 
-The script will give people a folder which is the name of the Easy Gacha object
+The script can give people a folder which is the name of the Easy Gacha object
 followed by the date.
 
 For example, if you name the object "My Stuff", then someone might receive a
 folder that says:
 
     My Stuff (Easy Gacha 3 items 2013-10-06)
-
-Other Stuff
-===========
-
-TODO
 
 Caveats / Assumptions
 =====================

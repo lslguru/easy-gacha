@@ -7,9 +7,8 @@
 #define MESSAGE_IS_DEBUG 32
 
 // Convenience modes
-#define MESSAGE_TEXT_AND_OWNER 3
 #define MESSAGE_ERROR 11
-#define MESSAGE_DEBUG 40
+#define MESSAGE_DEBUG 34
 
 // Overrideable parts
 #define OWNER llGetOwner()
@@ -28,26 +27,35 @@
 #start globalfunctions
 
     Message( integer mode , string msg ) {
+
         if( MESSAGE_IS_VERBOSE & mode && !MessageVerbose ) {
-            // If message is a verbose-mode one and verbose isn't turned on, skip
+            // If message is a verbose-mode one and verbose isn't turned on,
+            // skip message altogether
             return;
         }
+
         if( MESSAGE_IS_DEBUG & mode && !MessageDebug ) {
-            // If message is a verbose-mode one and verbose isn't turned on, skip
+            // If message is debug and debug isn't turned on, skip message
+            // altogether
             return;
         }
+
         if( MESSAGE_SET_TEXT & mode && MessageHoverText ) {
             llSetText( SCRIPT_NAME + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
         }
+
         if( MESSAGE_OWNER_SAY & mode && MessageOwner ) {
             llOwnerSay( SCRIPT_NAME + ": " + msg );
         }
+
         if( MESSAGE_WHISPER & mode && MessageChat ) {
             llWhisper( 0 , "/me : " + SCRIPT_NAME + ": " + msg );
         }
+
         if( MESSAGE_DIALOG & mode && MessageOwner ) {
             llDialog( OWNER , SCRIPT_NAME + ":\n\n" + msg , [] , -1 ); // FORCED_DELAY 1.0 seconds
         }
+
     }
 
 #end globalfunctions

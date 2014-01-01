@@ -7,11 +7,14 @@
     integer ConvertBooleanSetting( string config ) {
         config = llToLower( llStringTrim( config , STRING_TRIM ) );
 
+        // False options
         if( -1 != llSubStringIndex( CONVERT_BOOLEAN_SETTING_FALSE , CONVERT_BOOLEAN_SETTING_DELIMITER + config + CONVERT_BOOLEAN_SETTING_DELIMITER ) ) {
-            return FALSE;
+            return 0;
         }
+
+        // True options
         if( -1 != llSubStringIndex( CONVERT_BOOLEAN_SETTING_TRUE , CONVERT_BOOLEAN_SETTING_DELIMITER + config + CONVERT_BOOLEAN_SETTING_DELIMITER ) ) {
-            return TRUE;
+            return 1;
         }
 
         // Invalid value
