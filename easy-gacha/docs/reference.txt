@@ -1,13 +1,28 @@
-eg_folder_for_one       BOOL
-eg_price                MONEY
-eg_rarity               RARITY  ITEM
-eg_set_root_prim_click  BOOL
-eg_pay_any_amount       BOOL
-eg_buy_max_items        COUNT
-eg_buy_buttons          COUNT   COUNT   COUNT
-eg_hover_text           BOOL
-eg_verbose              BOOL
-eg_allow_send_stats     BOOL
-eg_allow_show_stats     BOOL
-eg_payout               MONEY   PERSON
-eg_list_on_touch        BOOL
+rarity RARITY
+ITEM
+
+limit COUNT_PER_ITEM
+ITEM
+
+price MONEY
+payout MONEY AGENT_KEY
+buy_max_items COUNT
+buy_button LETTER COUNT
+pay_any_amount BOOLEAN
+
+folder_for_one BOOLEAN
+set_root_prim_click_action BOOLEAN
+
+allow_send_stats BOOLEAN
+allow_show_stats BOOLEAN
+list_rarity_on_touch BOOLEAN
+
+whisper BOOLEAN
+hover_text BOOLEAN
+verbose BOOLEAN
+debug BOOLEAN
+
+group_only BOOLEAN
+
+report_sales_via_email EMAIL_ADDRESS
+report_sales_via_im AGENT_KEY

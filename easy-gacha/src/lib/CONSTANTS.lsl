@@ -2,7 +2,6 @@
 #define VERSION 3.3
 
 // Specific to scriptor
-#define CONFIG_INVENTORY_ID "517a121a-e248-ea49-b901-5dbefa4b2285"
 #define DEFAULT_STATS_ALLOWED FALSE
 #define SOURCE_CODE_MESSAGE "This is free open source software. The source can be found at: https:\/\/github.com/zannalov/opensl"
 #define SERVER_URL_CONFIG ""
@@ -13,18 +12,15 @@
 // System default
 #define MAX_FOLDER_NAME_LENGTH 63
 
-// Based on max length of list we want to have for each handout
-#define MAX_PER_PURCHASE 100
-
-// Set based on wanting 0.5 seconds on average per item randomly selected
-#define MANY_ITEMS_WARNING 25
-
 // StatusMask
 #define STATUS_MASK_CHECK_BASE_ASSUMPTIONS 1
 #define STATUS_MASK_INVENTORY_CHANGED 2
 #define STATUS_MASK_HANDOUT_NEEDED 4
 
 // Script names (note: you must provide your own quote marks)
+#define SCRIPT_BOOT Easy Gacha Boot
+#define SCRIPT_
+
 #define SCRIPT_CORE Easy Gacha Core
 #define SCRIPT_VALIDATOR Easy Gacha Validator
 #define SCRIPT_VALIDATE_CONFIG_FORMATS Easy Gacha Validate Config Formats

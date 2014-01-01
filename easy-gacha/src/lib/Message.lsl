@@ -4,11 +4,12 @@
 #define MESSAGE_WHISPER 4
 #define MESSAGE_DIALOG 8
 #define MESSAGE_IS_VERBOSE 16
+#define MESSAGE_IS_DEBUG 32
 
 // Convenience modes
 #define MESSAGE_TEXT_AND_OWNER 3
 #define MESSAGE_ERROR 11
-#define MESSAGE_DEBUG 18
+#define MESSAGE_DEBUG 40
 
 // Overrideable parts
 #define OWNER llGetOwner()
@@ -17,6 +18,7 @@
 #start globalvariables
 
     integer MessageVerbose      = FALSE;
+    integer MessageDebug        = FALSE;
     integer MessageHoverText    = TRUE;
     integer MessageOwner        = TRUE;
     integer MessageChat         = TRUE;
@@ -27,6 +29,10 @@
 
     Message( integer mode , string msg ) {
         if( MESSAGE_IS_VERBOSE & mode && !MessageVerbose ) {
+            // If message is a verbose-mode one and verbose isn't turned on, skip
+            return;
+        }
+        if( MESSAGE_IS_DEBUG & mode && !MessageDebug ) {
             // If message is a verbose-mode one and verbose isn't turned on, skip
             return;
         }

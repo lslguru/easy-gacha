@@ -13,3 +13,15 @@ Other Stuff
 ===========
 
 TODO
+
+Caveats / Assumptions
+=====================
+
+If the currently running script is deleted, the boot script won't auto-restart,
+which means no scripts will be running. This can only be undone by deleting the
+boot-script and re-adding it.
+
+User/agent identification MUST be provided as UUID because SL has yet to
+implement a way of looking up a UUID from a user-name or legacy-name reliably.
+It might be possible to reverse engineer the key via site-scraping, but that's
+not sustainable/maintainable and plain not worth it. We want llRequestAgentKey!
