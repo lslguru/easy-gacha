@@ -8,7 +8,7 @@
 
 #start globalfunctions
 
-    key ParseKey( string value ) {
+    key ParseKeyConfig( string value ) {
         value = llToLower( llStringTrim( value , STRING_TRIM ) ); // Be nice and allow upper case letters
 
         if( "owner"    == value ) { return OWNER;       } // special shorthand

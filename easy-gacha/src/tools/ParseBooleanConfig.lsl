@@ -4,7 +4,7 @@
 
 #start globalfunctions
 
-    integer ConvertBooleanSetting( string config ) {
+    integer ParseBooleanConfig( string config ) {
         config = llToLower( llStringTrim( config , STRING_TRIM ) );
 
         // False options

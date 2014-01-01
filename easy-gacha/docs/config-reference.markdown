@@ -1,4 +1,6 @@
-# Rarity #
+# Config Notecard Settings #
+
+## Rarity ##
 
     rarity RARITY
     ITEM
@@ -9,7 +11,7 @@ ITEM is case insensitive and whitespace-trimmed.
 
 RARITY must be an integer or float and greater than or equal to zero.
 
-# Money #
+## Money ##
 
     price MONEY
     payout MONEY AGENT_KEY
@@ -30,13 +32,13 @@ The price must equal the sum of all payout lines. If no payout lines are
 specified, a single payout line to the owner is implied. Either price or payout
 must be used. The price may be zero.
 
-# Handouts #
+## Handouts ##
 
     folder_for_one BOOLEAN
 
 Whether or not to use a folder when someone only bought one item.
 
-# Object Confguration #
+## Object Confguration ##
 
     set_root_prim_click_action BOOLEAN
 
@@ -44,7 +46,7 @@ If the script is in the root prim of a linked set and changes the default click
 action, the change will be applied to ALL prims. This is not true for non-root
 prims, and is not applicable to unlinked prims.
 
-# Stats #
+## Stats ##
 
     allow_send_stats BOOLEAN
     allow_show_stats BOOLEAN
@@ -52,22 +54,25 @@ prims, and is not applicable to unlinked prims.
 
 Pretty straight forward options here.
 
-# Communication #
-
-    whisper BOOLEAN
-    hovertext BOOLEAN
-    verbose BOOLEAN
-    debug BOOLEAN
-
-One of "whisper" or "hovertext" must be true.
-
-# Access Permissions #
+## Access Permissions ##
 
     group BOOLEAN
 
-# Reporting #
+## Reporting ##
 
     email EMAIL_ADDRESS
     im AGENT_KEY
 
 If provided, sends a report of each purchase/play
+
+# Config-Via-Inventory Settings #
+
+## Communication ##
+
+    whisper_disabled
+    hovertext_disabled
+    verbose_enabled
+    debug_enabled
+
+One of "whisper" or "hovertext" must be enabled.
+

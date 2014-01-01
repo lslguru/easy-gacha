@@ -1,7 +1,7 @@
 #start globalfunctions
 
     // Expected formats: "L$#" "$#" "#" "#L"
-    integer ParseLindens( string value ) {
+    integer ParseLindensConfig( string value ) {
         // Remove valid prefixes and suffixes
         value = llDumpList2String( llParseString2List( ( value = "" ) + value , [ "l" , "L" , "$" ] , [ ] ) , "" );
 
