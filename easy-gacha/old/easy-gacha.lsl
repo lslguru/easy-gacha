@@ -9,6 +9,10 @@
 #include lib/ParseLindens.lsl
 #include lib/ToKey.lsl
 
+#define STATUS_MASK_CHECK_BASE_ASSUMPTIONS 1
+#define STATUS_MASK_INVENTORY_CHANGED 2
+#define STATUS_MASK_HANDOUT_NEEDED 4
+
 #define INVENTORY_COUNT InventoryCount
 #define TEXTURE_COUNT TextureCount
 
