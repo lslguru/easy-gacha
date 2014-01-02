@@ -1,13 +1,4 @@
-#include lib/CONSTANTS.lsl
 #include lib/CheckBaseAssumptions.lsl
-#include lib/ConvertBooleanSetting.lsl
-#include lib/FindConfig_1Part_ByVerb_Value.lsl
-#include lib/FindConfig_2Part_ByVerbId_Value.lsl
-#include lib/FindConfig_2Part_ByVerb_Id.lsl
-#include lib/FindConfig_2Part_ByVerb_Value.lsl
-#include lib/Message.lsl
-#include lib/ParseLindens.lsl
-#include lib/ToKey.lsl
 
 #define STATUS_MASK_CHECK_BASE_ASSUMPTIONS 1
 #define STATUS_MASK_INVENTORY_CHANGED 2
@@ -65,54 +56,6 @@
 #end globalvariables
 #start globalfunctions
 
-HttpRequest( string url , list data ) {
-    if( "" == url ) {
-        return;
-    }
-
-    llHTTPRequest( url , HTTP_OPTIONS , llList2Json( JSON_ARRAY , data ) );
-
-    llSleep( 1.0 ); // FORCED_DELAY 1.0 seconds
-}
-
-// TODO
-    // For each config...
-        // Init configs: eg_verbose eg_hover_text
-        // For each config, split on space, left side is verb, right side is value
-            // If no space, invalid
-            // If left side is empty string, invalid
-            // If right side is empty string, invalid
-        // If verb isn't known, invalid
-        // If verb may only be used once and is present twice, invalid
-        // Check format of boolean verbs
-        // eg_price restrictions
-        // eg_buy_max_items restrictions
-        // eg_buy_buttons restrictions
-        // eg_rarity
-            // check for inventory
-        // eg_payout
-            // L$ >= 0
-            // payout listed only once
-        // For 2part configs, split value on space, left side is value, right side is id
-            // If no second space, invalid
-            // If left side is empty string, invalid
-            // If right side is empty string, invalid
-        // For each payout
-            // llGiveMoney( target , itemCount * payoutAmount )
-    // For each item...
-        // If not transferable, skip (report?)
-        // Find all rarity settings and add up for total rarity
-            // If more than one setting, bark
-            // If no setting, report default to 1.0
-            // If explicitly set to 0.0, report skip
-            // Add to total rarity
-            // Track most common/rare
-        // If not copyable, toggle settings
-        // If initial scan complete, can show rarity %
-        // If finding random item, consider this one
-        // If no rarity setting, create pseudo setting for server
-    // Progress reporting
-    // Price vs payouts checks
 list InventoryIterator( list config ) {
     integer mode = llList2Integer( config , 0 );
     integer iterate;
@@ -126,42 +69,12 @@ list InventoryIterator( list config ) {
     float rarity;
     integer setPrice;
     string settings;
-    integer spaceIndex;
-    string verb;
-    string value;
     float random;
     integer i0;
     list l0;
     key k0;
     integer foundIndex;
 
-    if( INVENTORY_ITERATOR_REPORT_PERCENTAGES_TO_OWNER == mode ) {
-        messageMode = 2;
-    }
-    if( INVENTORY_ITERATOR_REPORT_PERCENTAGES_VIA_WHISPER == mode ) {
-        messageMode = 4;
-    }
-    if( INVENTORY_ITERATOR_SCAN_CONFIGS == mode ) {
-        setPrice = -1;
-    }
-    if(
-        INVENTORY_ITERATOR_STARTUP_CONFIGS == mode
-        || INVENTORY_ITERATOR_SCAN_CONFIGS == mode
-        || INVENTORY_ITERATOR_FIND_NTH_VERB_ID == mode
-        || INVENTORY_ITERATOR_PROCESS_PAYOUTS == mode
-        || INVENTORY_ITERATOR_FIND_NTH_TWO_PART_VERB == mode
-    ) {
-        iterateOver = INVENTORY_TEXTURE;
-        iterateFor = TextureCount;
-        skipNonConfig = TRUE;
-    }
-    if(
-        INVENTORY_ITERATOR_REPORT_PERCENTAGES_TO_OWNER == mode
-        || INVENTORY_ITERATOR_REPORT_PERCENTAGES_VIA_WHISPER == mode
-        || INVENTORY_ITERATOR_SCAN_INVENTORY == mode
-        || INVENTORY_ITERATOR_FIND_RANDOM_ITEM == mode ) {
-        skipConfig = TRUE;
-    }
     if( INVENTORY_ITERATOR_SEND_CONFIG == mode ) {
         settings = "# version VERSION\n";
     }
@@ -170,216 +83,8 @@ list InventoryIterator( list config ) {
     }
 
     for( iterate = 0 ; iterate < iterateFor ; iterate += 1 ) {
-        // Get the name
-        inventoryName = llGetInventoryName( iterateOver , iterate );
-
-        // If it's ourself, skip it
-        if( ScriptName == inventoryName ) {
-            jump break5;
-        }
-
         // If it's a config item / not a config item, skip it
         if( CONFIG_INVENTORY_ID == llGetInventoryKey( inventoryName ) ) {
-            if( skipConfig ) {
-                jump break5;
-            }
-
-            // Skip parsing the config line because we're just going to add it
-            // to a string anyway
-            if( INVENTORY_ITERATOR_SEND_CONFIG == mode ) {
-                jump addToConfig;
-            }
-
-            // Find the space
-            spaceIndex = llSubStringIndex( inventoryName , " " );
-
-            // Break apart on space
-            verb = llGetSubString( inventoryName , 0 , spaceIndex - 1 );
-            value = llGetSubString( inventoryName , spaceIndex + 1 , -1 );
-
-            // Quick lookup of pre-setup config values
-            if( INVENTORY_ITERATOR_STARTUP_CONFIGS == mode ) {
-                if( "eg_verbose" == verb && TRUE == ConvertBooleanSetting( value ) ) {
-                    MessageVerbose = TRUE;
-                }
-
-                if( "eg_hover_text" == verb && FALSE == ConvertBooleanSetting( value ) ) {
-                    MessageHoverText = FALSE;
-                }
-            }
-
-            if( INVENTORY_ITERATOR_SCAN_CONFIGS == mode ) {
-                // If the first space isn't present, is the first character, or
-                // is the last character (meaning no value before/after it)
-                if( 0 >= spaceIndex || llStringLength( inventoryName ) - 1 == spaceIndex ) {
-                    Message( MESSAGE_ERROR , "Bad config: " + inventoryName );
-                    return [1];
-                }
-
-                // If the verb isn't known
-                if( -1 == llSubStringIndex( "|eg_pay_any_amount|eg_allow_send_stats|eg_allow_show_stats|eg_set_root_prim_click|eg_folder_for_one|eg_list_on_touch|eg_buy_max_items|eg_buy_buttons|eg_price|eg_rarity|eg_payout|eg_verbose|eg_hover_text|" , "|" + verb + "|" ) ) {
-                    Message( MESSAGE_ERROR , "Bad config: Unknown option: " + inventoryName );
-                    return [1];
-                }
-
-                // If the verb may only be used once
-                if( -1 != llSubStringIndex( "|eg_pay_any_amount|eg_allow_send_stats|eg_allow_show_stats|eg_set_root_prim_click|eg_folder_for_one|eg_list_on_touch|eg_buy_max_items|eg_buy_buttons|eg_price|eg_verbose|eg_hover_text|" , "|" + verb + "|" ) ) {
-                    if( EOF != llList2String( InventoryIterator( [ INVENTORY_ITERATOR_FIND_NTH_TWO_PART_VERB , verb , 1 , TRUE ] ) , 0 ) ) {
-                        Message( MESSAGE_ERROR , "Bad config: " + verb + " may only be used once" );
-                        return [1];
-                    }
-                }
-
-                // Boolean verbs
-                if( -1 != llSubStringIndex( "|eg_pay_any_amount|eg_allow_send_stats|eg_allow_show_stats|eg_set_root_prim_click|eg_folder_for_one|eg_list_on_touch|eg_verbose|eg_hover_text|" , "|" + verb + "|" ) ) {
-                    i0 = ConvertBooleanSetting( value );
-
-                    // If invalid input
-                    if( -1 == i0 ) {
-                        Message( MESSAGE_ERROR , "Bad config: Setting must be boolean (yes/no): " + inventoryName );
-                        return [1];
-                    }
-
-                    if( "eg_pay_any_amount"      == verb ) { PayAnyAmount           = i0; }
-                    if( "eg_allow_send_stats"    == verb ) { AllowStatSend          = i0; }
-                    if( "eg_allow_show_stats"    == verb ) { AllowShowStats         = i0; }
-                    if( "eg_set_root_prim_click" == verb ) { SetPayActionOnRootPrim = i0; }
-                    if( "eg_folder_for_one"      == verb ) { FolderForOne           = i0; }
-                    if( "eg_list_on_touch"       == verb ) { ListOnTouch            = i0; }
-                }
-
-                // Manually specified price
-                if( "eg_price" == verb ) {
-                    setPrice = ParseLindens( value );
-
-                    // If the payment is out of bounds
-                    if( 0 > setPrice ) {
-                        Message( MESSAGE_ERROR , "Bad config: L$ must be greater than or equal to zero: " + inventoryName );
-                        return [1];
-                    }
-                }
-
-                // Max number of items at a time
-                if( "eg_buy_max_items" == verb ) {
-                    MaxPerPurchase = (integer)value;
-
-                    // If the count is out of bounds
-                    if( 0 >= MaxPerPurchase || MAX_PER_PURCHASE < MaxPerPurchase ) {
-                        Message( MESSAGE_ERROR , "Bad config: Max purchases must be between 1 and 100: " + inventoryName );
-                        return [1];
-                    }
-                }
-
-                // BuyButton*
-                if( "eg_buy_buttons" == verb ) {
-                    l0 = llParseString2List( value , [ " " ] , [ ] );
-                    BuyButton1 = llList2Integer( l0 , 0 );
-                    BuyButton2 = llList2Integer( l0 , 1 );
-                    BuyButton3 = llList2Integer( l0 , 2 );
-
-                    if(
-                        llDumpList2String( [ BuyButton1 , BuyButton2 , BuyButton3 ] , " " ) != value
-                        || BuyButton1 < 0 || BuyButton1 > 100
-                        || BuyButton2 < 0 || BuyButton2 > 100
-                        || BuyButton3 < 0 || BuyButton3 > 100
-                        || ( BuyButton1 && BuyButton1 == BuyButton2 )
-                        || ( BuyButton1 && BuyButton1 == BuyButton3 )
-                        || ( BuyButton2 && BuyButton2 == BuyButton3 )
-                    ) {
-                        Message( MESSAGE_ERROR , "Bad config: Please see documentation for: " + inventoryName );
-                        return [1];
-                    }
-                }
-
-                // Check format of multi-part configs
-                if( "eg_rarity" == verb || "eg_payout" == verb ) {
-                    // Find the space
-                    spaceIndex = llSubStringIndex( value , " " );
-
-                    // If the first space isn't present, is the first character, or
-                    // is the last character (meaning no value before/after it)
-                    if( 0 >= spaceIndex || llStringLength( inventoryName ) - 1 == spaceIndex ) {
-                        Message( MESSAGE_ERROR , "Bad config: " + inventoryName );
-                        return [1];
-                    }
-
-                    // Check that inventory exists if it was configured, warn
-                    // (but not error) if not
-                    if( "eg_rarity" == verb ) {
-                        // Convert value to the inventory name
-                        value = llGetSubString( value , spaceIndex + 1 , -1 );
-
-                        // Items should exist, if not, skip safely but tell
-                        // them about it - chat only
-                        if( INVENTORY_NONE == llGetInventoryType( value ) ) {
-                            Message( MESSAGE_OWNER_SAY , "WARNING: Cannot find \"" + value + "\" in inventory. Skipping item and not adding to probabilities: " + inventoryName );
-                        }
-                    }
-
-                    // Add up the configured payouts
-                    if( "eg_payout" == verb ) {
-                        // Split string - replaces i0 and value
-                        i0 = ParseLindens( llGetSubString( value , 0 , llSubStringIndex( value , " " ) - 1 ) );
-                        value = llGetSubString( value , llSubStringIndex( value , " " ) + 1 , -1 );
-
-                        // If the payment is out of bounds
-                        if( 0 >= i0 ) {
-                            Message( MESSAGE_ERROR , "Bad config: L$ to give must be greater than zero: " + inventoryName );
-                            return [1];
-                        }
-
-                        // Convert to key
-                        k0 = ConvertToKey( value );
-                        if( "owner"    == value ) { k0 = Owner;                                } // magic override
-                        if( "creator"  == value ) { k0 = llGetCreator();                       } // magic override
-                        if( "scriptor" == value ) { k0 = llGetInventoryCreator( ScriptName );  } // magic override
-
-                        // If they put the same item in twice
-                        if( EOF != llList2String( InventoryIterator( [ INVENTORY_ITERATOR_FIND_NTH_VERB_ID , "eg_payout" , k0 , 1 ] ) , 0 ) ) {
-                            Message( MESSAGE_ERROR , "Bad config: Payout was listed more than once: " + inventoryName );
-                            return [1];
-                        }
-
-                        // Store the configuration
-                        Price += i0;
-                        PayoutsCount += 1;
-                    }
-                } // end multi-part config checks
-
-                Message( MESSAGE_DEBUG , "Valid config: " + inventoryName );
-            }
-
-            if(
-                INVENTORY_ITERATOR_FIND_NTH_VERB_ID == mode
-                || INVENTORY_ITERATOR_PROCESS_PAYOUTS == mode
-                || INVENTORY_ITERATOR_FIND_NTH_TWO_PART_VERB == mode
-            ) {
-                if( "eg_payout" == verb ) {
-                    // Find the space
-                    spaceIndex = llSubStringIndex( value , " " );
-
-                    // Convert special values internally
-                    value = llGetSubString( value , 0 , spaceIndex ) + (string)ConvertToKey( llGetSubString( value , spaceIndex + 1 , -1 ) );
-                }
-            }
-
-            // Finding config for id
-            if( INVENTORY_ITERATOR_FIND_NTH_VERB_ID == mode && llList2String( config , 1 ) == verb ) {
-                // Find the space
-                spaceIndex = llSubStringIndex( value , " " );
-
-                // Compare last part of the string to searched value
-                if( llList2String( config , 2 ) == llGetSubString( value , spaceIndex + 1 , -1 ) ) {
-                    // If it's the index we want
-                    if( foundIndex == llList2Integer( config , 3 ) ) {
-                        // Found it
-                        return [ llGetSubString( value , 0 , spaceIndex - 1 ) ];
-                    }
-
-                    foundIndex += 1;
-                }
-            }
-
             if( INVENTORY_ITERATOR_PROCESS_PAYOUTS == mode && "eg_payout" == verb ) {
                 // Find the space
                 spaceIndex = llSubStringIndex( value , " " );
@@ -394,76 +99,15 @@ list InventoryIterator( list config ) {
                 }
             }
 
-            // Finding config line for two-part configs
-            if( INVENTORY_ITERATOR_FIND_NTH_TWO_PART_VERB == mode && llList2String( config , 1 ) == verb ) {
-                // Find the space
-                spaceIndex = llSubStringIndex( value , " " );
-
-                // If it's the index we want
-                if( foundIndex == llList2Integer( config , 2 ) ) {
-                    return [
-                        value
-                        , llGetSubString( value , 0 , spaceIndex - 1 )
-                        , llGetSubString( value , spaceIndex + 1  , -1 )
-                    ];
-                }
-
-                foundIndex += 1;
-            }
-
         } else { // end if config item, begin else not a config item
 
-            if( skipNonConfig ) {
-                jump break5;
-            }
-
-            // Items must be transferable
-            if( ! ( PERM_TRANSFER & llGetInventoryPermMask( inventoryName , MASK_OWNER ) ) ) {
-                jump break5;
-            }
-
             if( INVENTORY_ITERATOR_SCAN_INVENTORY == mode ) {
-                // Find all config lines for this item: Note, expensive because we
-                // have to do sub-iteration here for each config line. Worth it for
-                // the output, though.
-                i0 = 0;
-                rarity = 0.0;
-                while( EOF != ( value = llList2String( InventoryIterator( [ INVENTORY_ITERATOR_FIND_NTH_VERB_ID , "eg_rarity" , inventoryName , 0 ] ) , 0 ) ) ) {
-                    i0 += 1;
-                    rarity += (float)value;
-
-                    // If the probability is out of bounds
-                    if( 0.0 > (float)value ) {
-                        Message( MESSAGE_ERROR , "Bad config: Number must be greater than or equal to zero: eg_rarity " + value + " " + inventoryName );
-                        return [1];
-                    }
-                    if( 0.0 == (float)value && "0" != value && "0.0" != value ) {
-                        Message( MESSAGE_ERROR , "Bad config: eg_rarity " + value + " " + inventoryName );
-                        return [1];
-                    }
-                }
-
                 // If more than one config line was found, use the sum of
                 // rarities for error message
                 if( 1 < i0 ) {
                     Message( MESSAGE_ERROR , "Bad config: \"" + inventoryName + "\" was listed more than once. Did you mean to list it once like this? eg_rarity " + (string)( rarity ) + " " + inventoryName );
                     return [1];
                 }
-
-                // If no config lines were provided, default to a rarity of one
-                if( 0 == i0 ) {
-                    rarity = 1.0;
-                    Message( MESSAGE_DEBUG , "No rarity listed for \"" + inventoryName + "\", setting to 1.0" );
-                }
-
-                // Rarity explicitly set to zero
-                if( 0.0 == rarity ) {
-                    Message( MESSAGE_DEBUG , "Will not hand out: " + inventoryName );
-                    jump break5;
-                }
-
-                // Add to total rarity
-                Rarity += rarity;
 
                 // Some stats
                 ItemCount += 1;
@@ -550,34 +194,12 @@ list InventoryIterator( list config ) {
 
         @break5;
 
-        if( INVENTORY_ITERATOR_REPORT_PERCENTAGES_TO_OWNER == mode || INVENTORY_ITERATOR_SCAN_CONFIGS == mode || INVENTORY_ITERATOR_SCAN_INVENTORY == mode || INVENTORY_ITERATOR_SEND_CONFIG == mode ) {
-            if( INVENTORY_ITERATOR_SCAN_CONFIGS == mode ) { value = "1"; }
+        if( INVENTORY_ITERATOR_REPORT_PERCENTAGES_TO_OWNER == mode || INVENTORY_ITERATOR_SCAN_INVENTORY == mode || INVENTORY_ITERATOR_SEND_CONFIG == mode ) {
             if( INVENTORY_ITERATOR_SCAN_INVENTORY == mode ) { value = "2"; }
             if( INVENTORY_ITERATOR_REPORT_PERCENTAGES_TO_OWNER == mode ) { value = "4"; }
             if( INVENTORY_ITERATOR_SEND_CONFIG == mode ) { value = "6"; }
 
             Message( MESSAGE_SET_TEXT , "Initializing, please wait...\nStep " + value + " of 7: " + (string)( ( iterate + 1 ) * 100 / iterateFor ) + "%" );
-        }
-    }
-
-    if( INVENTORY_ITERATOR_SCAN_CONFIGS == mode ) {
-        // If no payees were configured
-        if( 0 == PayoutsCount && -1 == setPrice ) {
-            Message( MESSAGE_ERROR , "No price was set. Please either use eg_price or eg_payout" );
-            return [1];
-        }
-
-        // If they manually set the price
-        if( -1 != setPrice ) {
-            // Check if they goofed their math
-            if( 0 != PayoutsCount ) {
-                if( Price != setPrice ) {
-                    Message( MESSAGE_ERROR , "You used both eg_price and eg_payout, but the sum of all eg_payout lines L$" + (string)Price + " doesn't equal the eg_price L$" + (string)setPrice + "! Which one is right?" );
-                    return [1];
-                }
-            } else {
-                Price = setPrice;
-            }
         }
     }
 
@@ -629,16 +251,11 @@ state setup {
         MostRare = 0.0;
         MostCommon = 0.0;
         HasNoCopyItems = FALSE;
-        MessageVerbose = FALSE;
-        MessageHoverText = TRUE;
 
         llSetTimerEvent( 0.0 );
 
         llSetPayPrice( PAY_DEFAULT , [ PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT ] );
         llSetTouchText( "" );
-
-        // Seek these out specifically, as they impact setup
-        InventoryIterator( [ INVENTORY_ITERATOR_STARTUP_CONFIGS ] );
 
         // Step 1 of 7
         if( llList2Integer( InventoryIterator( [ INVENTORY_ITERATOR_SCAN_CONFIGS ] ) , 0 ) ) {
@@ -702,34 +319,6 @@ state setup {
     } // end state_entry()
 
     dataserver( key queryId , string data ) {
-        // Ignore other results that might show up
-        if( queryId != DataServerRequest ) {
-            return;
-        }
-
-        // Stop/reset timeout timer
-        llSetTimerEvent( 0.0 );
-
-        // Note that this user was looked up correctly and report the amount to be given
-        integer amount = Price;
-        if( PayoutsCount ) {
-            amount = ParseLindens( llList2String( InventoryIterator( [ INVENTORY_ITERATOR_FIND_NTH_TWO_PART_VERB , "eg_payout" , DataServerRequestIndex ] ) , 1 ) );
-        }
-
-        Message( MESSAGE_OWNER_SAY , "Will give L$" + (string)amount + " to " + data + " for each item purchased." );
-
-        // Increment to next value
-        DataServerRequestIndex += 1;
-
-        // If there are more to look up
-        if( DataServerRequestIndex < PayoutsCount ) {
-            // Look up the next one
-            Message( MESSAGE_SET_TEXT , "Initializing, please wait...\nStep 5 of 7: " + (string)( DataServerRequestIndex * 100 / PayoutsCount ) + "%" );
-            DataServerRequest = llRequestUsername( llList2Key( InventoryIterator( [ INVENTORY_ITERATOR_FIND_NTH_TWO_PART_VERB , "eg_payout" , DataServerRequestIndex ] ) , 2 ) );
-            llSetTimerEvent( 30.0 );
-            return;
-        }
-
         // Report total price
         Message( MESSAGE_OWNER_SAY , "The total price is L$" + (string)Price );
 
@@ -740,19 +329,6 @@ state setup {
 
         Message( MESSAGE_SET_TEXT , "Initializing, please wait...\nStep 7 of 7" );
 
-        // Allow time for garbage collection to work
-        llSleep( 3.0 ); // FORCED_DELAY 3.0 seconds
-
-        // Check memory now that we're all done messing around
-        if( !HaveHandedOut && llGetFreeMemory() < LOW_MEMORY_THRESHOLD_SETUP ) {
-            Message( MESSAGE_ERROR , "Not enough free memory. Resetting... (Used: " + (string)llGetUsedMemory() + " Free: " + (string)llGetFreeMemory() + ")" );
-            llResetScript();
-        }
-        if( HaveHandedOut && llGetFreeMemory() < LOW_MEMORY_THRESHOLD_RUNNING ) {
-            Message( MESSAGE_SET_TEXT , "Temporarily out of order (memory low)\nOwner should touch to reset" );
-            return;
-        }
-
         // All done!
         Message( MESSAGE_OWNER_SAY , SOURCE_CODE_MESSAGE );
         Message( MESSAGE_DEBUG , "Memory Used: " + (string)llGetUsedMemory() + " Memory Free: " + (string)llGetFreeMemory() );
@@ -760,31 +336,7 @@ state setup {
 
         state ready;
     } // end dataserver()
-
-    timer() {
-        llSetTimerEvent( 0.0 );
-
-        Message( MESSAGE_ERROR , "Timed out while trying to look up user key. The user \"" + llList2String( InventoryIterator( [ INVENTORY_ITERATOR_FIND_NTH_TWO_PART_VERB , "eg_payout" , DataServerRequestIndex ] ) , 2 ) + "\" doesn't seem to exist, or the data server is being too slow." );
-    }
 } // end state setup
-
-state debounceInventoryUpdates {
-    changed( integer changeMask ) {
-        llSetTimerEvent( 0.0 ); // Take timer event off stack
-        llSetTimerEvent( 1.0 ); // Add it to end of stack
-    }
-
-    state_entry() {
-        MessageOwner = TRUE;
-        Message( MESSAGE_SET_TEXT , "Restarting..." );
-        llSetTimerEvent( 1.0 ); // Wait 1 second in case events are still firing
-    }
-
-    timer() {
-        llSetTimerEvent( 0.0 );
-        state setup;
-    }
-}
 
 state ready {
     attach( key avatarId ){

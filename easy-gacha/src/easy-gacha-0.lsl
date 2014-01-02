@@ -3,6 +3,14 @@
 #include lib/CONSTANTS.lsl
 #include tools/Message.lsl
 
+#start globalfunctions
+
+    LoadMessageConfigs() {
+        #include lib/message-configs.lsl
+    }
+
+#end globalfunctions
+
 #start states
 
     default {
@@ -10,13 +18,13 @@
         state_entry() {
             llSetTimerEvent( INVENTORY_SETTLE_TIME );
 
-            #include lib/message-configs.lsl
+            LoadMessageConfigs();
             Message( MESSAGE_DEBUG , "llGetFreeMemory(): " + (string)llGetFreeMemory() );
         }
 
         changed( integer changeMask ) {
-            if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
-                #include lib/message-configs.lsl
+            if( CHANGED_INVENTORY & changeMask ) {
+                LoadMessageConfigs();
                 Message( MESSAGE_DEBUG , "Inventory changed, resetting timer" );
 
                 llSetTimerEvent( 0.0 );
@@ -27,8 +35,8 @@
         timer() {
             llSetTimerEvent( 0.0 );
 
-            #include lib/message-configs.lsl
-            Message( MESSAGE_VIA_HOVER | MESSAGE_VIA_OWNER , "Initializing, please wait..." );
+            LoadMessageConfigs();
+            Message( MESSAGE_VIA_HOVER , "Initializing, please wait..." );
 
             // Check for all scripts
             list scripts = [
@@ -38,7 +46,7 @@
             ];
             integer x;
             string script;
-            for( x = 0 ; x < llGetListLength( scripts ) ; x += 1 ) {
+            for( x = 0 ; x < llGetListLength( scripts ) ; ++x ) {
                 script = llList2String( scripts , x );
                 Message( MESSAGE_DEBUG , "Checking script: " + script );
 
@@ -68,8 +76,7 @@
 
             Message( MESSAGE_DEBUG , "llGetFreeMemory(): " + (string)llGetFreeMemory() );
 
-            // Set timer event for next time we wake and disable self - no lag, woot!
-            llSetTimerEvent( INVENTORY_SETTLE_TIME );
+            // No lag, woot!
             llSetScriptState( llGetScriptName() , FALSE );
         }
 

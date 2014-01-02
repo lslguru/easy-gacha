@@ -28,16 +28,28 @@
 
     Message( integer mode , string msg ) {
 
-        if( MESSAGE_TYPE_VERBOSE & mode && !MessageVerbose ) {
-            // If message is a verbose-mode one and verbose isn't turned on,
-            // skip message altogether
-            return;
+        if( MessageDebug ) {
+            mode = mode | MESSAGE_VIA_OWNER;
         }
 
-        if( MESSAGE_TYPE_DEBUG & mode && !MessageDebug ) {
-            // If message is debug and debug isn't turned on, skip message
-            // altogether
-            return;
+        if( MESSAGE_TYPE_VERBOSE & mode ) {
+            if( !MessageVerbose ) {
+                // If message is a verbose-mode one and verbose isn't turned on,
+                // skip message altogether
+                return;
+            }
+
+            msg = "VERBOSE: " + msg;
+        }
+
+        if( MESSAGE_TYPE_DEBUG & mode ) {
+            if( !MessageDebug ) {
+                // If message is debug and debug isn't turned on, skip message
+                // altogether
+                return;
+            }
+
+            msg = "DEBUG: " + msg;
         }
 
         if( MESSAGE_VIA_HOVER & mode && MessageHover ) {

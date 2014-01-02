@@ -2,6 +2,11 @@
 
 * Process everything from "old" directory, removing as I go
 
+Setup Steps
+0. easy-gacha-0 (no number shown)
+1. easy-gacha-1 Fetching number of lines from notecard
+2. easy-gacha-2 Fetching lines from notecard
+
 * Preserve original strings
 * Case-insensitive
 * Leading/trailing white-space insensitive

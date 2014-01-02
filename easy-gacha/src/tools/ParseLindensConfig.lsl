@@ -6,7 +6,7 @@
         value = llDumpList2String( llParseString2List( ( value = "" ) + value , [ "l" , "L" , "$" ] , [ ] ) , "" );
 
         // Strip leading zeroes
-        while( 1 < llStringLength( value ) && "0" == llGetSubString( value ) ) {
+        while( 1 < llStringLength( value ) && "0" == llGetSubString( value , 0 , 0 ) ) {
             value = llGetSubString( value , 1 , -1 );
         }
 

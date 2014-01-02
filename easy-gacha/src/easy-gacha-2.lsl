@@ -1,4 +1,4 @@
-// easy-gacha-#: SHORT_NAME: DESCRIPTION
+// easy-gacha-2: validate-inventory
 
 #include lib/CONSTANTS.lsl
 #include tools/Message.lsl
@@ -35,7 +35,7 @@
 
     state TODO {
         state_entry() {
-            // Message( MESSAGE_VIA_HOVER , "Initializing, please wait...\nStep #: 0%" );
+            Message( MESSAGE_VIA_HOVER , "Initializing, please wait...\nStep 2: 0%" );
             // TODO
         }
 
