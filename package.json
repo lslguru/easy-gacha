@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/zannalov/opensl.git"
+    "url": "git://github.com/lslguru/easy-gacha.git"
   },
   "keywords": [
     "SecondLife",
@@ -21,6 +21,6 @@
   "author": "Zan Lightfoot",
   "license": "Unlicense",
   "bugs": {
-    "url": "https://github.com/zannalov/opensl/issues"
+    "url": "https://github.com/lslguru/easy-gacha/issues"
   }
 }

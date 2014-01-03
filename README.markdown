@@ -1,7 +1,7 @@
-OpenSL
-======
+Easy Gacha
+==========
 
-Open source scripts for SecondLife in the Linden Scripting Language (LSL)
+This is a very configurable implementation of a [Gashapon](http://en.wikipedia.org/wiki/Gashapon)-style device.
 
 Safety Warning
 ==============
