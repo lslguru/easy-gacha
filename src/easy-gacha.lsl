@@ -36,6 +36,7 @@
 // Specific to scriptor
 #define DEFAULT_CONFIG_URL_BASE ""
 #define REPORT_TO ""
+#define PERMANENT_KEY ""
 #define SOURCE_CODE_MESSAGE "This is free open source software. The source can be found at: https:\/\/github.com/lslguru/easy-gacha"
 #define HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
 

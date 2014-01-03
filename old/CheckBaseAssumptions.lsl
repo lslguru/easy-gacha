@@ -40,4 +40,6 @@
         }
     }
 
+    // llRequestPermissions( Owner , PERMISSION_DEBIT );
+
 #end globalfunctions

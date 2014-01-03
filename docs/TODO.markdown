@@ -1,5 +1,6 @@
 # Work In Progress #
 
+* On touch, llLoadURL
 * Process everything from "old" directory, removing as I go
 * List final rarity of each item
 * If no-copy item is to be handed out
