@@ -55,20 +55,18 @@
     list Items; // Inventory names, strings <= 63 chars in length
     list Rarity; // float
     list Limit; // integer, -1 == infinite
+    list Bought; // counter
     list Payouts; // strided: [ avatar key , lindens ]
     integer MaxPerPurchase = 50;
     integer PayPrice; // Price || -1
     list PayPriceButtons; // [ Price || -1 , ... ]
-    integer UseFolderForSingleItem = TRUE;
-    integer SetRootPrimClickAction = FALSE;
-    integer AllowShowMask = 7; // 1 == show configured inventory list, 2 = show rarity settings, 4 = show stats
-    integer AllowShowRarity = TRUE; // If false, AllowShowStats forced to false
-    integer AllowShowStats = TRUE; // If false, just show source-code URL
-    key RuntimeId; // Changed each time set to ready-mode
-    integer GroupAdmin = FALSE; // If group may administer
-    integer GroupPlay = FALSE; // If play is restricted to group members
-    string NotifyEmail; // Who to email after each play
-    key NotifyIm; // Who to IM after each play
+    integer FolderForSingleItem = TRUE;
+    integer RootClickAction = FALSE;
+    integer Stats = TRUE;
+    key Runtime; // Changed each time set to ready-mode
+    integer Group = FALSE; // If group may administer
+    string Email; // Who to email after each play
+    key Im; // Who to IM after each play
     integer Whisper = TRUE; // Whether or not to allow whisper
     integer Hovertext = TRUE; // Whether or not to allow hovertext output
 

@@ -18,23 +18,19 @@
 * Release
 * Contact those who have already purchased
 
-# Config Parameters #
+# Config Notecard Format #
 
-    rarity RARITY
-    item ITEM
-    price MONEY
-    payout MONEY AGENT_KEY
-    buy_max_items COUNT
-    buy_button LETTER COUNT
-    pay_any_amount BOOLEAN
-    folder_for_one BOOLEAN
-    set_root_prim_click_action BOOLEAN
-    allow_send_stats BOOLEAN
-    allow_show_stats BOOLEAN
-    list_rarity_on_touch BOOLEAN
+    inv RARITY LIMIT BOUGHT ITEM
+    payout AGENT MONEY
+    max_per_purchase COUNT
+    pay_price COUNT
+    pay_price_buttons COUNT COUNT COUNT COUNT
+    folder_for_single_item BOOLEAN
+    root_click_action BOOLEAN
+    stats BOOLEAN
     group BOOLEAN
-    email EMAIL_ADDRESS
-    im AGENT_KEY
+    email EMAIL
+    im AGENT
     whisper BOOLEAN
     hovertext BOOLEAN
 
