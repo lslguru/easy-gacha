@@ -44,10 +44,39 @@
 #define MAX_FOLDER_NAME_LENGTH 63
 
 // Tweaks
+#define ASSET_SERVER_TIMEOUT 5.0
 #define INVENTORY_SETTLE_TIME 5.0
 
 // Config notecard
 #define CONFIG_NOTECARD "Easy Gacha Config"
+
+#start globalvariables
+
+    list Items; // Inventory names, strings <= 63 chars in length
+    list Rarity; // float
+    list Limit; // integer, -1 == infinite
+    list Payouts; // strided: [ avatar key , lindens ]
+    integer MaxPerPurchase = 50;
+    integer PayPrice; // Price || -1
+    list PayPriceButtons; // [ Price || -1 , ... ]
+    integer UseFolderForSingleItem = TRUE;
+    integer SetRootPrimClickAction = FALSE;
+    integer AllowShowMask = 7; // 1 == show configured inventory list, 2 = show rarity settings, 4 = show stats
+    integer AllowShowRarity = TRUE; // If false, AllowShowStats forced to false
+    integer AllowShowStats = TRUE; // If false, just show source-code URL
+    key RuntimeId; // Changed each time set to ready-mode
+    integer GroupAdmin = FALSE; // If group may administer
+    integer GroupPlay = FALSE; // If play is restricted to group members
+    string NotifyEmail; // Who to email after each play
+    key NotifyIm; // Who to IM after each play
+    integer Whisper = TRUE; // Whether or not to allow whisper
+    integer Hovertext = TRUE; // Whether or not to allow hovertext output
+
+#end globalvariables
+
+#start globalfunctions
+
+#end globalfunctions
 
 #start states
 
