@@ -1,6 +1,6 @@
 {
   "name": "opensl",
-  "version": "0.0.0",
+  "version": "5.0.0",
   "description": "Open source scripts for SecondLife in the Linden Scripting Language (LSL)",
   "main": "index.js",
   "dependencies": { },
@@ -16,7 +16,9 @@
   },
   "keywords": [
     "SecondLife",
-    "LSL"
+    "LSL",
+    "Gacha",
+    "Gashapon"
   ],
   "author": "Zan Lightfoot",
   "license": "Unlicense",
