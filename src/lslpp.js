@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 
+// #include file
+// #includeonce file
+// #define key value
+// #start section
+// #end section
+
 var data = require( 'fs' ).readFileSync( process.argv[ 2 ] );
 var linesToParse = String(data).split( /\n/ );
 var match;
@@ -42,9 +48,9 @@ while( linesToParse.length ) {
         }
 
         // Include directives
-        if( /^#include /.test( line ) ) {
+        if( /^#include /.test( line ) || /^#includeonce /.test( line ) ) {
             match = line.match( /^#include (.*)/ );
-            if( -1 === included.indexOf( match[1] ) ) {
+            if( /^#include /.test( line ) || -1 === included.indexOf( match[1] ) ) {
                 data = require( 'fs' ).readFileSync( match[1] );
                 data = String( data ).split( /\n/ );
                 linesToParse = data.concat( linesToParse );
