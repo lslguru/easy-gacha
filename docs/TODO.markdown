@@ -46,6 +46,26 @@ Setup Steps
 * Release
 * Contact those who have already purchased
 
+# Config Parameters #
+
+    rarity RARITY
+    item ITEM
+    price MONEY
+    payout MONEY AGENT_KEY
+    buy_max_items COUNT
+    buy_button LETTER COUNT
+    pay_any_amount BOOLEAN
+    folder_for_one BOOLEAN
+    set_root_prim_click_action BOOLEAN
+    allow_send_stats BOOLEAN
+    allow_show_stats BOOLEAN
+    list_rarity_on_touch BOOLEAN
+    group BOOLEAN
+    email EMAIL_ADDRESS
+    im AGENT_KEY
+    whisper BOOLEAN
+    hovertext BOOLEAN
+
 # Future Features #
 
 * Ability to limit number of each item handed out
