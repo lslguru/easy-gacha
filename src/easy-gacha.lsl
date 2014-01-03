@@ -74,6 +74,24 @@
 
 #start globalfunctions
 
+    Debug( string msg ) {
+        if( INVENTORY_NONE != llGetInventoryType( "eg_debug" ) ) {
+            llOwnerSay( "/me : " + llGetScriptName() + ": DEBUG: " + msg );
+        }
+    }
+
+    Whisper( string msg ) {
+        if( Whisper ) {
+            llWhisper( 0 , "/me : " + llGetScriptName() + ": " + msg );
+        }
+    }
+
+    Hover( string msg ) {
+        if( Hovertext ) {
+            llSetText( llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+        }
+    }
+
 #end globalfunctions
 
 #start states
