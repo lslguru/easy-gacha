@@ -34,7 +34,7 @@
 #define VERSION 5.0
 
 // Specific to scriptor
-#define DEFAULT_CONFIG_URL_BASE "http://lslguru.github.io/easy-gacha/v5/index.html#"
+#define DEFAULT_CONFIG_URL_BASE "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#"
 // TODO: #define HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
 #define REGISTRY_URL ""
 // TODO: #define PERMANENT_KEY ""
@@ -232,7 +232,7 @@
 
     Shorten( string url ) {
         DataServerRequest = llHTTPRequest(
-            "https://www.googleapis.com/urlshortener/v1/url" ,
+            "https:\/\/www.googleapis.com/urlshortener/v1/url" ,
             [
                 HTTP_METHOD , "POST" ,
                 HTTP_MIMETYPE , "application/json" ,

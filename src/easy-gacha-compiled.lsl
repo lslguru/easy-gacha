@@ -130,7 +130,7 @@ Hover( "Configuration Needed / Configuration In Progress / Out of Order" );
 }
 Shorten( string url ) {
 DataServerRequest = llHTTPRequest(
-"https:
+"https:\/\/www.googleapis.com/urlshortener/v1/url" ,
 [
 HTTP_METHOD , "POST" ,
 HTTP_MIMETYPE , "application/json" ,
@@ -209,8 +209,8 @@ integer responseStatus = 400;
 string responseBody = "Bad request";
 if( URL_REQUEST_GRANTED == httpMethod ) {
 BaseUrl = requestBody;
-ShortenedInfoUrl = "http: + llEscapeURL( BaseUrl );
-ShortenedAdminUrl = "http: + llEscapeURL( BaseUrl + '/' + (string)AdminKey );
+ShortenedInfoUrl = "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#" + llEscapeURL( BaseUrl );
+ShortenedAdminUrl = "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#" + llEscapeURL( BaseUrl + '/' + (string)AdminKey );
 DataServerMode = 1;
 Shorten( ShortenedInfoUrl );
 DebugGlobals();
