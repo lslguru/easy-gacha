@@ -205,6 +205,11 @@ anything longer will be truncated to 2048 bytes.
     llSetPayPrice( PAY_DEFAULT , [ PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT ] );
     llSetTouchText( "" );
 
+    !( llGetOwner() == Owner )
+    !( llGetScriptName() == ScriptName )
+    !( llGetPermissionsKey() == Owner )
+    !( llGetPermissions() & PERMISSION_DEBIT )
+
 * Documentation
 * Release
 * Contact those who have already purchased
