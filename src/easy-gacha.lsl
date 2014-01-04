@@ -40,7 +40,7 @@
 #define PERMANENT_KEY ""
 
 // System constraints
-// TODO: #define MAX_FOLDER_NAME_LENGTH 63
+#define MAX_FOLDER_NAME_LENGTH 63
 
 // Tweaks
 #define ASSET_SERVER_TIMEOUT 5.0
@@ -90,6 +90,12 @@
     integer InventoryChangeExpected; // When we give out no-copy items...
     integer NextPing; // UnixTime
     integer TotalPrice; // Updated when Payouts is updated, sum
+    integer TotalBought;
+    integer TotalLimit;
+    integer HasUnlimitedItems;
+    float TotalEffectiveRarity;
+    integer CountItems;
+    integer CountPayouts;
 
 #end globalvariables
 
@@ -161,6 +167,12 @@
         Debug( "    InventoryChangeExpected = " + (string)InventoryChangeExpected );
         Debug( "    NextPing = " + (string)NextPing );
         Debug( "    TotalPrice = " + (string)TotalPrice );
+        Debug( "    TotalBought = " + (string)TotalBought );
+        Debug( "    TotalLimit = " + (string)TotalLimit );
+        Debug( "    HasUnlimitedItems = " + (string)HasUnlimitedItems );
+        Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
+        Debug( "    CountItems = " + (string)CountItems );
+        Debug( "    CountPayouts = " + (string)CountPayouts );
         Debug( "    Free memory: " + (string)llGetFreeMemory() );
     "Debug";}
 
@@ -225,10 +237,21 @@
             Hover( "Configuration needed, please touch this object" );
         }
 
-        // Calculate total price from payouts
+        // Calculated values
         TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
+        TotalBought = (integer)llListStatistics( LIST_STAT_SUM , Bought );
+        TotalLimit = (integer)llListStatistics( LIST_STAT_SUM , Limit );
+        CountItems = llGetListLength( Items );
+        CountPayouts = llGetListLength( Payouts );
+        HasUnlimitedItems = ( -1 != llListFindList( Limit , [ -1 ] ) );
 
-        // TODO: What else needs to be updated?
+        integer itemIndex;
+        TotalEffectiveRarity = 0.0;
+        for( itemIndex = 0 ; itemIndex < CountItems ; ++itemIndex ) {
+            if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+                TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
+            }
+        }
     }
 
     Shorten( string url ) {
@@ -250,7 +273,125 @@
     Play( key buyerId , integer lindensReceived ) {
         Debug( "Play( " + (string)buyerId + " , " + (string)lindensReceived + " )" );
 
-        // TODO
+        // Iterator
+
+        // Cache this because it's used several times
+        string displayName = llGetDisplayName( buyerId );
+
+        // Visually note that we're now in the middle of something
+        Hover( "Please wait, getting random items for: " + displayName );
+
+        // Figure out how many objects we need to give
+        integer totalItems = lindensReceived / TotalPrice;
+
+        // If their order would exceed the hard-coded limit
+        if( totalItems > MaxPerPurchase ) {
+            totalItems = MaxPerPurchase;
+            Debug( "    totalItems > MaxPerPurchase, set to: " + (string)totalItems );
+        }
+
+        // If their order would exceed the total allowed purchases
+        if( totalItems > MaxBuys - TotalBought ) {
+            totalItems = MaxBuys - TotalBought;
+            Debug( "    totalItems > MaxBuysRemaining, set to: " + (string)totalItems );
+        }
+
+        // If their order would exceed the total available supply
+        if( !HasUnlimitedItems && totalItems > TotalLimit - TotalBought ) {
+            totalItems = TotalLimit - TotalBought;
+            Debug( "    totalItems > RemainingInventory, set to: " + (string)totalItems );
+        }
+
+        // Iterate until we've met our total, because it should now be
+        // guaranteed to happen
+        list itemsToSend = [];
+        integer countItemsToSend = 0;
+        float random;
+        integer itemIndex;
+        while( countItemsToSend < totalItems ) {
+            // Indicate our progress
+            Hover( "Please wait, getting random item " + (string)( countItemsToSend + 1 ) + " of " + (string)totalItems + " for: " + displayName );
+
+            // Generate a random number which is between [ TotalEffectiveRarity , 0.0 )
+            random = TotalEffectiveRarity - llFrand( TotalEffectiveRarity );
+            Debug( "    random = " + (string)random );
+
+            // Find the item's index
+            for( itemIndex = 0 ; itemIndex < CountItems && random >= 0.0 ; ++itemIndex ) {
+                // Skip over sold-out items
+                if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+                    random -= llList2Float( Rarity , itemIndex );
+                }
+            }
+            Debug( "    index of item = " + (string)itemIndex );
+
+            // llGiveInventoryList uses the inventory names
+            itemsToSend += [ llList2String( Items , itemIndex ) ];
+            Debug( "    Item picked: " + llList2String( Items , itemIndex ) );
+
+            // Mark that we found a valid thing to give, otherwise we'll loop
+            // through again until we do find one
+            ++countItemsToSend;
+
+            // Mark this item as bought, increasing the count
+            Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
+
+            // If the inventory has run out, reduce rarity total
+            if( -1 != llList2Integer( Limit , itemIndex ) && llList2Integer( Bought , itemIndex ) >= llList2Integer( Limit , itemIndex ) ) {
+                TotalEffectiveRarity -= llList2Float( Rarity , itemIndex );
+                InventoryChangeExpected = TRUE;
+            }
+        }
+
+        // Fix verbage, just because it bothers me
+        string itemPlural = " items ";
+        string hasHave = "have ";
+        if( 1 == countItemsToSend ) {
+            itemPlural = " item ";
+            hasHave = "has ";
+        }
+
+        // Build the name of the folder to give
+        string objectName = llGetObjectName();
+        string folderSuffix = ( " (Easy Gacha: " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
+        if( llStringLength( objectName ) + llStringLength( folderSuffix ) > MAX_FOLDER_NAME_LENGTH ) {
+            // 4 == 3 for ellipses + 1 because this is end index, not count
+            objectName = ( llGetSubString( objectName , 0 , MAX_FOLDER_NAME_LENGTH - llStringLength( folderSuffix ) - 4 ) + "..." );
+        }
+        Debug( "    Truncated object name: " + objectName );
+
+        // If too much money was given
+        string change = "";
+        lindensReceived -= ( totalItems * TotalPrice );
+        if( lindensReceived ) {
+            // Give back the excess
+            llGiveMoney( buyerId , lindensReceived );
+            change = " Your change is L$" + (string)lindensReceived;
+        }
+
+        // Distribute the payouts
+        integer payoutIndex;
+        for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) { // Strided list
+            if( llList2Key( Payouts , payoutIndex ) != Owner ) {
+                Debug( "    Giving L$" + (string)(llList2Integer( Payouts , payoutIndex + 1 ) * totalItems) + " to " + llList2String( Payouts , payoutIndex ) );
+                llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
+            }
+        }
+
+        // Thank them for their purchase
+        Whisper( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
+
+        // Give the inventory
+        Hover( "Please wait, giving items to: " + displayName );
+        if( 1 < countItemsToSend || FolderForSingleItem ) {
+            llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend ); // FORCED_DELAY 3.0 seconds
+        } else {
+            llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) ); // FORCED_DELAY 2.0 seconds
+        }
+
+        // TODO: Send info to registry
+
+        Hover( "" );
     }
 
 #end globalfunctions
@@ -412,6 +553,8 @@
             if( queryId != DataServerRequest )
                 return;
 
+            // TODO
+
             llSetTimerEvent( 0.0 );
             DataServerRequest = NULL_KEY;
             DataServerMode = 0;
@@ -428,7 +571,7 @@
             // purchases while it is processing.
             llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
 
-            // TODO: Handout code
+            Play( buyerId , lindensReceived );
 
             Update();
 
@@ -438,9 +581,11 @@
         timer() {
             Debug( "running::timer()" );
 
+            // TODO
+            llSetTimerEvent( 0.0 );
+
             // If we're waiting on a dataserver event
             if( NULL_KEY != DataServerRequest ) {
-                llSetTimerEvent( 0.0 );
                 // TODO: llSetTimerEvent( NextPing - llGetUnixTime() );
 
                 // TODO: Handle dataserver or http_response timeout

@@ -28,6 +28,12 @@ integer InventoryChanged;
 integer InventoryChangeExpected;
 integer NextPing;
 integer TotalPrice;
+integer TotalBought;
+integer TotalLimit;
+integer HasUnlimitedItems;
+float TotalEffectiveRarity;
+integer CountItems;
+integer CountPayouts;
 Debug( string msg ) { if( INVENTORY_NONE != llGetInventoryType( "easy-gacha-debug" ) ) { llOwnerSay( "/me : " + llGetScriptName() + ": DEBUG: " + msg ); } }
 Whisper( string msg ) {
 Debug( "Whisper( \"" + msg + "\" );" );
@@ -85,6 +91,12 @@ Debug( "    InventoryChanged = " + (string)InventoryChanged );
 Debug( "    InventoryChangeExpected = " + (string)InventoryChangeExpected );
 Debug( "    NextPing = " + (string)NextPing );
 Debug( "    TotalPrice = " + (string)TotalPrice );
+Debug( "    TotalBought = " + (string)TotalBought );
+Debug( "    TotalLimit = " + (string)TotalLimit );
+Debug( "    HasUnlimitedItems = " + (string)HasUnlimitedItems );
+Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
+Debug( "    CountItems = " + (string)CountItems );
+Debug( "    CountPayouts = " + (string)CountPayouts );
 Debug( "    Free memory: " + (string)llGetFreeMemory() );
 "Debug";}
 RequestUrl() {
@@ -126,6 +138,18 @@ Hover( "" );
 Hover( "Configuration needed, please touch this object" );
 }
 TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
+TotalBought = (integer)llListStatistics( LIST_STAT_SUM , Bought );
+TotalLimit = (integer)llListStatistics( LIST_STAT_SUM , Limit );
+CountItems = llGetListLength( Items );
+CountPayouts = llGetListLength( Payouts );
+HasUnlimitedItems = ( -1 != llListFindList( Limit , [ -1 ] ) );
+integer itemIndex;
+TotalEffectiveRarity = 0.0;
+for( itemIndex = 0 ; itemIndex < CountItems ; ++itemIndex ) {
+if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
+}
+}
 }
 Shorten( string url ) {
 Debug( "Shorten( \"" + url + "\" )" );
@@ -143,6 +167,77 @@ llJsonSetValue( "{}" , [ "longUrl" ] , url )
 }
 Play( key buyerId , integer lindensReceived ) {
 Debug( "Play( " + (string)buyerId + " , " + (string)lindensReceived + " )" );
+string displayName = llGetDisplayName( buyerId );
+Hover( "Please wait, getting random items for: " + displayName );
+integer totalItems = lindensReceived / TotalPrice;
+if( totalItems > MaxPerPurchase ) {
+totalItems = MaxPerPurchase;
+Debug( "    totalItems > MaxPerPurchase, set to: " + (string)totalItems );
+}
+if( totalItems > MaxBuys - TotalBought ) {
+totalItems = MaxBuys - TotalBought;
+Debug( "    totalItems > MaxBuysRemaining, set to: " + (string)totalItems );
+}
+if( !HasUnlimitedItems && totalItems > TotalLimit - TotalBought ) {
+totalItems = TotalLimit - TotalBought;
+Debug( "    totalItems > RemainingInventory, set to: " + (string)totalItems );
+}
+list itemsToSend = [];
+integer countItemsToSend = 0;
+float random;
+integer itemIndex;
+while( countItemsToSend < totalItems ) {
+Hover( "Please wait, getting random item " + (string)( countItemsToSend + 1 ) + " of " + (string)totalItems + " for: " + displayName );
+random = TotalEffectiveRarity - llFrand( TotalEffectiveRarity );
+Debug( "    random = " + (string)random );
+for( itemIndex = 0 ; itemIndex < CountItems && random >= 0.0 ; ++itemIndex ) {
+if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+random -= llList2Float( Rarity , itemIndex );
+}
+}
+Debug( "    index of item = " + (string)itemIndex );
+itemsToSend += [ llList2String( Items , itemIndex ) ];
+Debug( "    Item picked: " + llList2String( Items , itemIndex ) );
+++countItemsToSend;
+Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
+if( -1 != llList2Integer( Limit , itemIndex ) && llList2Integer( Bought , itemIndex ) >= llList2Integer( Limit , itemIndex ) ) {
+TotalEffectiveRarity -= llList2Float( Rarity , itemIndex );
+InventoryChangeExpected = TRUE;
+}
+}
+string itemPlural = " items ";
+string hasHave = "have ";
+if( 1 == countItemsToSend ) {
+itemPlural = " item ";
+hasHave = "has ";
+}
+string objectName = llGetObjectName();
+string folderSuffix = ( " (Easy Gacha: " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
+if( llStringLength( objectName ) + llStringLength( folderSuffix ) > 63 ) {
+objectName = ( llGetSubString( objectName , 0 , 63 - llStringLength( folderSuffix ) - 4 ) + "..." );
+}
+Debug( "    Truncated object name: " + objectName );
+string change = "";
+lindensReceived -= ( totalItems * TotalPrice );
+if( lindensReceived ) {
+llGiveMoney( buyerId , lindensReceived );
+change = " Your change is L$" + (string)lindensReceived;
+}
+integer payoutIndex;
+for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) {
+if( llList2Key( Payouts , payoutIndex ) != Owner ) {
+Debug( "    Giving L$" + (string)(llList2Integer( Payouts , payoutIndex + 1 ) * totalItems) + " to " + llList2String( Payouts , payoutIndex ) );
+llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
+}
+}
+Whisper( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
+Hover( "Please wait, giving items to: " + displayName );
+if( 1 < countItemsToSend || FolderForSingleItem ) {
+llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend );
+} else {
+llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) );
+}
+Hover( "" );
 }
 default {
 state_entry() {
@@ -267,13 +362,14 @@ DebugGlobals();
 money( key buyerId , integer lindensReceived ) {
 Debug( "running::money( " + (string)buyerId + ", " + (string)lindensReceived + " )" );
 llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
+Play( buyerId , lindensReceived );
 Update();
 DebugGlobals();
 }
 timer() {
 Debug( "running::timer()" );
-if( NULL_KEY != DataServerRequest ) {
 llSetTimerEvent( 0.0 );
+if( NULL_KEY != DataServerRequest ) {
 DataServerRequest = NULL_KEY;
 DataServerMode = 0;
 DebugGlobals();
