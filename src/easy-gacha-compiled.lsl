@@ -125,7 +125,7 @@ integer totalItems = lindensReceived / TotalPrice;
 if( totalItems > MaxPerPurchase ) {
 totalItems = MaxPerPurchase;
 }
-if( totalItems > MaxBuys - TotalBought ) {
+if( -1 != MaxBuys && totalItems > MaxBuys - TotalBought ) {
 totalItems = MaxBuys - TotalBought;
 }
 if( !HasUnlimitedItems && totalItems > TotalLimit - TotalBought ) {
@@ -138,11 +138,12 @@ integer itemIndex;
 while( countItemsToSend < totalItems ) {
 Hover( "Please wait, getting random item " + (string)( countItemsToSend + 1 ) + " of " + (string)totalItems + " for: " + displayName );
 random = TotalEffectiveRarity - llFrand( TotalEffectiveRarity );
-for( itemIndex = 0 ; itemIndex < CountItems && random >= 0.0 ; ++itemIndex ) {
+for( itemIndex = 0 ; itemIndex < CountItems && random > 0.0 ; ++itemIndex ) {
 if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
 random -= llList2Float( Rarity , itemIndex );
 }
 }
+--itemIndex;
 itemsToSend += [ llList2String( Items , itemIndex ) ];
 ++countItemsToSend;
 Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
@@ -181,7 +182,6 @@ llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend );
 } else {
 llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) );
 }
-Hover( "" );
 }
 default {
 state_entry() {
@@ -198,6 +198,10 @@ DataServerRequest = llGetNotecardLine( "Easy Gacha Config" , DataServerMode );
 llSetTimerEvent( 5.0 );
 }
 dataserver( key queryId , string data ) {
+if( queryId != DataServerRequest )
+return;
+}
+llSetTimerEvent( 0.0 );
 if( EOF == data ) {
 llOwnerSay( "Previous config loaded. Starting up..." );
 DataServerMode = 0;
@@ -290,7 +294,6 @@ Play( buyerId , lindensReceived );
 Update();
 }
 timer() {
-llSetTimerEvent( 0.0 );
 if( NULL_KEY != DataServerRequest ) {
 DataServerRequest = NULL_KEY;
 DataServerMode = 0;
@@ -334,10 +337,6 @@ Shorten( ShortenedAdminUrl );
 }
 }
 touch_end( integer detected ) {
-if( "" == BaseUrl && llGetFreeURLs() ) {
-llOwnerSay( "Trying to get a new URL now..." );
-RequestUrl();
-}
 while( 0 <= ( detected -= 1 ) ) {
 key detectedKey = llDetectedKey( detected );
 if( detectedKey == Owner ) {
@@ -351,10 +350,15 @@ if( Configured && !TotalPrice ) {
 Play( detectedKey , 0 );
 }
 }
+if( "" == BaseUrl && llGetFreeURLs() ) {
+llOwnerSay( "Trying to get a new URL now..." );
+RequestUrl();
+}
 if( ShortenedInfoUrl ) {
 llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
 } else {
 llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
 }
+Update();
 }
 }

@@ -174,7 +174,7 @@ if( totalItems > MaxPerPurchase ) {
 totalItems = MaxPerPurchase;
 Debug( "    totalItems > MaxPerPurchase, set to: " + (string)totalItems );
 }
-if( totalItems > MaxBuys - TotalBought ) {
+if( -1 != MaxBuys && totalItems > MaxBuys - TotalBought ) {
 totalItems = MaxBuys - TotalBought;
 Debug( "    totalItems > MaxBuysRemaining, set to: " + (string)totalItems );
 }
@@ -190,18 +190,21 @@ while( countItemsToSend < totalItems ) {
 Hover( "Please wait, getting random item " + (string)( countItemsToSend + 1 ) + " of " + (string)totalItems + " for: " + displayName );
 random = TotalEffectiveRarity - llFrand( TotalEffectiveRarity );
 Debug( "    random = " + (string)random );
-for( itemIndex = 0 ; itemIndex < CountItems && random >= 0.0 ; ++itemIndex ) {
+for( itemIndex = 0 ; itemIndex < CountItems && random > 0.0 ; ++itemIndex ) {
 if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
 random -= llList2Float( Rarity , itemIndex );
 }
 }
+--itemIndex;
 Debug( "    index of item = " + (string)itemIndex );
 itemsToSend += [ llList2String( Items , itemIndex ) ];
 Debug( "    Item picked: " + llList2String( Items , itemIndex ) );
 ++countItemsToSend;
 Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
 if( -1 != llList2Integer( Limit , itemIndex ) && llList2Integer( Bought , itemIndex ) >= llList2Integer( Limit , itemIndex ) ) {
+Debug( "    Inventory has run out for item!" );
 TotalEffectiveRarity -= llList2Float( Rarity , itemIndex );
+Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
 InventoryChangeExpected = TRUE;
 }
 }
@@ -237,7 +240,6 @@ llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend );
 } else {
 llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) );
 }
-Hover( "" );
 }
 default {
 state_entry() {
@@ -257,6 +259,10 @@ DebugGlobals();
 }
 dataserver( key queryId , string data ) {
 Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
+if( queryId != DataServerRequest )
+return;
+}
+llSetTimerEvent( 0.0 );
 if( EOF == data ) {
 llOwnerSay( "Previous config loaded. Starting up..." );
 DataServerMode = 0;
@@ -368,7 +374,6 @@ DebugGlobals();
 }
 timer() {
 Debug( "running::timer()" );
-llSetTimerEvent( 0.0 );
 if( NULL_KEY != DataServerRequest ) {
 DataServerRequest = NULL_KEY;
 DataServerMode = 0;
@@ -419,10 +424,6 @@ DebugGlobals();
 }
 touch_end( integer detected ) {
 Debug( "running::touch_end( " + (string)detected + " )" );
-if( "" == BaseUrl && llGetFreeURLs() ) {
-llOwnerSay( "Trying to get a new URL now..." );
-RequestUrl();
-}
 while( 0 <= ( detected -= 1 ) ) {
 key detectedKey = llDetectedKey( detected );
 Debug( "    Touched by: " + llDetectedName( detected ) + " (" + (string)detectedKey + ")" );
@@ -437,11 +438,16 @@ if( Configured && !TotalPrice ) {
 Play( detectedKey , 0 );
 }
 }
+if( "" == BaseUrl && llGetFreeURLs() ) {
+llOwnerSay( "Trying to get a new URL now..." );
+RequestUrl();
+}
 if( ShortenedInfoUrl ) {
 llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
 } else {
 llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
 }
+Update();
 DebugGlobals();
 }
 }

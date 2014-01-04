@@ -291,7 +291,7 @@
         }
 
         // If their order would exceed the total allowed purchases
-        if( totalItems > MaxBuys - TotalBought ) {
+        if( -1 != MaxBuys && totalItems > MaxBuys - TotalBought ) {
             totalItems = MaxBuys - TotalBought;
             Debug( "    totalItems > MaxBuysRemaining, set to: " + (string)totalItems );
         }
@@ -317,12 +317,16 @@
             Debug( "    random = " + (string)random );
 
             // Find the item's index
-            for( itemIndex = 0 ; itemIndex < CountItems && random >= 0.0 ; ++itemIndex ) {
+            for( itemIndex = 0 ; itemIndex < CountItems && random > 0.0 ; ++itemIndex ) {
                 // Skip over sold-out items
                 if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+                    // Otherwise decrement the random number
                     random -= llList2Float( Rarity , itemIndex );
                 }
             }
+
+            // Last iteration of the loop increments the index past where we want
+            --itemIndex;
             Debug( "    index of item = " + (string)itemIndex );
 
             // llGiveInventoryList uses the inventory names
@@ -336,9 +340,15 @@
             // Mark this item as bought, increasing the count
             Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
 
-            // If the inventory has run out, reduce rarity total
+            // If the inventory has run out
             if( -1 != llList2Integer( Limit , itemIndex ) && llList2Integer( Bought , itemIndex ) >= llList2Integer( Limit , itemIndex ) ) {
+                Debug( "    Inventory has run out for item!" );
+
+                // Reduce rarity total
                 TotalEffectiveRarity -= llList2Float( Rarity , itemIndex );
+                Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
+
+                // And assume inventory will change
                 InventoryChangeExpected = TRUE;
             }
         }
@@ -390,8 +400,6 @@
         }
 
         // TODO: Send info to registry
-
-        Hover( "" );
     }
 
 #end globalfunctions
@@ -427,6 +435,12 @@
 
         dataserver( key queryId , string data ) {
             Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
+
+            if( queryId != DataServerRequest )
+                return;
+            }
+
+            llSetTimerEvent( 0.0 );
 
             if( EOF == data ) {
                 llOwnerSay( "Previous config loaded. Starting up..." );
@@ -581,9 +595,6 @@
         timer() {
             Debug( "running::timer()" );
 
-            // TODO
-            llSetTimerEvent( 0.0 );
-
             // If we're waiting on a dataserver event
             if( NULL_KEY != DataServerRequest ) {
                 // TODO: llSetTimerEvent( NextPing - llGetUnixTime() );
@@ -664,12 +675,6 @@
         touch_end( integer detected ) {
             Debug( "running::touch_end( " + (string)detected + " )" );
 
-            // If URL not set but URLs available, request one
-            if( "" == BaseUrl && llGetFreeURLs() ) {
-                llOwnerSay( "Trying to get a new URL now..." );
-                RequestUrl();
-            }
-
             // For each person that touched
             while( 0 <= ( detected -= 1 ) ) {
                 key detectedKey = llDetectedKey( detected );
@@ -690,12 +695,20 @@
                 }
             }
 
+            // If URL not set but URLs available, request one
+            if( "" == BaseUrl && llGetFreeURLs() ) {
+                llOwnerSay( "Trying to get a new URL now..." );
+                RequestUrl();
+            }
+
             // Whisper info link
             if( ShortenedInfoUrl ) {
                 llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
             } else {
                 llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
             }
+
+            Update();
 
             DebugGlobals();
         }
