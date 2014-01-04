@@ -88,6 +88,7 @@ Debug( "    InventoryChanged = " + (string)InventoryChanged );
 Debug( "    InventoryChangeExpected = " + (string)InventoryChangeExpected );
 Debug( "    NextPing = " + (string)NextPing );
 Debug( "    TotalPrice = " + (string)TotalPrice );
+Debug( "    Free memory: " + (string)llGetFreeMemory() );
 }
 RequestUrl() {
 Debug( "RequestUrl()" );
@@ -102,7 +103,6 @@ Debug( "Update()" );
 Owner = llGetOwner();
 ScriptName = llGetScriptName();
 HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
-DebugGlobals();
 if( Configured ) {
 llSetPayPrice( PayPrice , PayPriceButtons );
 } else {
@@ -125,8 +125,9 @@ llSetClickAction( CLICK_ACTION_TOUCH );
 if( Configured ) {
 Hover( "" );
 } else {
-Hover( "Configuration Needed / Configuration In Progress / Out of Order" );
+Hover( "Configuration needed, please touch this object" );
 }
+TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
 }
 Shorten( string url ) {
 Debug( "Shorten( \"" + url + "\" )" );
@@ -148,12 +149,70 @@ Debug( "default::state_entry()" );
 if( INVENTORY_NOTECARD != llGetInventoryType( "Easy Gacha Config" ) ) {
 state running;
 }
+if( NULL_KEY == llGetInventoryKey( "Easy Gacha Config" ) ) {
+llOwnerSay( "Config notecard is either not full-perm or is new and empty, skipping: " + "Easy Gacha Config" );
+state running;
+}
+llOwnerSay( "Loading previous config from: " + "Easy Gacha Config" );
+DataServerMode = 0;
+DataServerRequest = llGetNotecardLine( "Easy Gacha Config" , DataServerMode );
+llSetTimerEvent( 5.0 );
+DebugGlobals();
 }
 dataserver( key queryId , string data ) {
 Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
+if( EOF == data ) {
+llOwnerSay( "Previous config loaded. Starting up..." );
+DataServerMode = 0;
+DebugGlobals();
+state running;
+}
+list parts = llParseString2List( data , [ "\t" ] , [ ] );
+if( "inv" == llList2String( parts , 0 ) ) {
+Rarity += [ llList2Float( parts , 1 ) ];
+Limit += [ llList2Integer( parts , 2 ) ];
+Bought += [ llList2Integer( parts , 3 ) ];
+Items += [ llDumpList2String( llList2List( parts , 4 , -1 ) , "\t" ) ];
+}
+if( "payout" == llList2String( parts , 0 ) ) {
+Payouts += [ llList2Key( parts , 1 ) , llList2Integer( parts , 2 ) ];
+}
+if( "configs" == llList2String( parts , 0 ) ) {
+FolderForSingleItem = llList2Integer( parts , 1 );
+RootClickAction = llList2Integer( parts , 2 );
+Group = llList2Integer( parts , 3 );
+AllowWhisper = llList2Integer( parts , 4 );
+AllowHover = llList2Integer( parts , 5 );
+MaxPerPurchase = llList2Integer( parts , 6 );
+MaxBuys = llList2Integer( parts , 7 );
+PayPrice = llList2Integer( parts , 8 );
+PayPriceButtons = [
+llList2Integer( parts , 9 ) ,
+llList2Integer( parts , 10 ) ,
+llList2Integer( parts , 11 ) ,
+llList2Integer( parts , 12 )
+];
+}
+if( "email" == llList2String( parts , 0 ) ) {
+Email = llDumpList2String( llList2List( parts , 1 , -1 ) , "\t" );
+}
+if( "im" == llList2String( parts , 0 ) ) {
+Im = llList2Key( parts , 1 );
+}
+if( "configured" == llList2String( parts , 0 ) ) {
+Configured = llList2Integer( parts , 1 );
+}
+++DataServerMode;
+DataServerRequest = llGetNotecardLine( "Easy Gacha Config" , DataServerMode );
+DebugGlobals();
 }
 timer() {
 Debug( "default::timer()" );
+llSetTimerEvent( 0.0 );
+llOwnerSay( "Timed out while reading notecard. Config has NOT been fully loaded, but proceeding to runtime. The dataserver may be having problems. Please touch this object and check the config." );
+DataServerMode = 0;
+DebugGlobals();
+state running;
 }
 }
 state running {
@@ -161,19 +220,23 @@ state_entry() {
 Debug( "running::state_entry()" );
 Update();
 RequestUrl();
+DebugGlobals();
 }
 attach( key avatarId ) {
 Debug( "running::attach( " + (string)avatarId + " )" );
 Update();
+DebugGlobals();
 }
 on_rez( integer rezParam ) {
 Debug( "running::on_rez( " + (string)rezParam + " )" );
 Update();
 RequestUrl();
+DebugGlobals();
 }
 run_time_permissions( integer permissionMask ) {
 Debug( "running::run_time_permissions( " + (string)permissionMask + " )" );
 Update();
+DebugGlobals();
 }
 changed( integer changeMask ) {
 Debug( "running::changed( " + (string)changeMask + " )" );
@@ -184,6 +247,7 @@ if( ( CHANGED_REGION_START | CHANGED_REGION | CHANGED_TELEPORT ) & changeMask ) 
 RequestUrl();
 }
 Update();
+DebugGlobals();
 }
 dataserver( key queryId , string data ) {
 Debug( "running::dataserver( " + (string)queryId + ", " + data + " )" );
@@ -192,11 +256,13 @@ return;
 llSetTimerEvent( 0.0 );
 DataServerRequest = NULL_KEY;
 DataServerMode = 0;
+DebugGlobals();
 }
 money( key buyerId , integer lindensReceived ) {
 Debug( "running::money( " + (string)buyerId + ", " + (string)lindensReceived + " )" );
 llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
 Update();
+DebugGlobals();
 }
 timer() {
 Debug( "running::timer()" );
@@ -204,8 +270,10 @@ if( NULL_KEY != DataServerRequest ) {
 llSetTimerEvent( NextPing - llGetUnixTime() );
 DataServerRequest = NULL_KEY;
 DataServerMode = 0;
+DebugGlobals();
 return;
 }
+DebugGlobals();
 }
 http_request( key requestId , string httpMethod , string requestBody ) {
 Debug( "running::http_request( " + llList2CSV( [ requestId , httpMethod , requestBody ] )+ " )" );
@@ -215,15 +283,16 @@ if( URL_REQUEST_GRANTED == httpMethod ) {
 BaseUrl = requestBody;
 ShortenedInfoUrl = "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#" + llEscapeURL( BaseUrl );
 ShortenedAdminUrl = "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#" + llEscapeURL( BaseUrl + "/" + (string)AdminKey );
+llOwnerSay( "URL obtained, this Easy Gacha can now be configured. Touch to configure." );
 DataServerMode = 1;
 Shorten( ShortenedInfoUrl );
-DebugGlobals();
 }
 if( URL_REQUEST_DENIED ) {
 }
 if( "post" == llToLower( httpMethod ) ) {
 }
 llHTTPResponse( requestId , responseStatus , responseBody );
+DebugGlobals();
 }
 http_response( key requestId , integer responseStatus , list metadata , string responseBody ) {
 Debug( "running::http_response( " + llList2CSV( [ requestId , responseStatus ] + metadata + [ responseBody ] )+ " )" );
@@ -242,12 +311,32 @@ ShortenedInfoUrl = shortened;
 DataServerMode = 2;
 Shorten( ShortenedAdminUrl );
 }
-DebugGlobals();
 }
+DebugGlobals();
 }
 touch_end( integer detected ) {
 Debug( "running::touch_end( " + (string)detected + " )" );
-while( 0 <= ( detected -= 1 ) ) {
+if( "" == BaseUrl && llGetFreeURLs() ) {
+llOwnerSay( "Trying to get a new URL now..." );
+RequestUrl();
 }
+while( 0 <= ( detected -= 1 ) ) {
+key detectedKey = llDetectedKey( detected );
+string detectedName = llDetectedName( detected );
+Debug( "    Touched by: " + detectedName + " (" + (string)detectedKey + ")" );
+if( detectedKey == Owner ) {
+if( ShortenedAdminUrl ) {
+llOwnerSay( "To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl );
+} else {
+llOwnerSay( "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." );
+}
+}
+}
+if( ShortenedInfoUrl ) {
+llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+} else {
+llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+}
+DebugGlobals();
 }
 }

@@ -277,19 +277,35 @@ anything longer will be truncated to 2048 bytes.
 
 #### Config Notecard Format ####
 
-    inv RARITY LIMIT BOUGHT ITEM
-    payout AGENT MONEY
-    max_per_purchase COUNT
-    pay_price COUNT
-    pay_price_buttons COUNT COUNT COUNT COUNT
-    folder_for_single_item BOOLEAN
-    root_click_action BOOLEAN
-    group BOOLEAN
-    email EMAIL
-    im AGENT
-    whisper BOOLEAN
-    hovertext BOOLEAN
-    max_buys COUNT
+Tab separated fields
+
+    inv
+        rarity
+        limit
+        bought
+        item
+    payout
+        agent
+        money
+    configs
+        folder_for_single_item (boolean)
+        root_click_action (boolean)
+        group (boolean)
+        allow_whisper (boolean)
+        allow_hovertext (boolean)
+        max_per_purchase (count)
+        max_buys (count)
+        pay_price (lindens)
+        pay_price_button_0 (lindens)
+        pay_price_button_1 (lindens)
+        pay_price_button_2 (lindens)
+        pay_price_button_3 (lindens)
+    email
+        email
+    im
+        agent
+    configured
+        boolean
 
 ### Registry ###
 

@@ -43,8 +43,7 @@
 // TODO: #define MAX_FOLDER_NAME_LENGTH 63
 
 // Tweaks
-// TODO: #define ASSET_SERVER_TIMEOUT 5.0
-// TODO: #define INVENTORY_SETTLE_TIME 5.0
+#define ASSET_SERVER_TIMEOUT 5.0
 
 // Inventory
 #define CONFIG_NOTECARD "Easy Gacha Config"
@@ -90,7 +89,7 @@
     integer InventoryChanged; // Indicates the inventory changed since last check
     integer InventoryChangeExpected; // When we give out no-copy items...
     integer NextPing; // UnixTime
-    integer TotalPrice; // Updated when Payouts is updated, sum TODO: (integer)llListStatistics( LIST_STAT_SUM , Payouts )
+    integer TotalPrice; // Updated when Payouts is updated, sum
 
 #end globalvariables
 
@@ -165,6 +164,7 @@
         Debug( "    InventoryChangeExpected = " + (string)InventoryChangeExpected );
         Debug( "    NextPing = " + (string)NextPing );
         Debug( "    TotalPrice = " + (string)TotalPrice );
+        Debug( "    Free memory: " + (string)llGetFreeMemory() );
     }
 
     RequestUrl() {
@@ -184,8 +184,6 @@
         Owner = llGetOwner();
         ScriptName = llGetScriptName();
         HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
-
-        DebugGlobals();
 
         // Default values of these variables are to not show pay buttons.
         // This should prevent any new purchases until a price has been
@@ -221,11 +219,16 @@
             }
         }
 
+        // Far more simplistic config statement
         if( Configured ) {
             Hover( "" );
         } else {
-            Hover( "Configuration Needed / Configuration In Progress / Out of Order" );
+            // TODO: Be more descriptive here
+            Hover( "Configuration needed, please touch this object" );
         }
+
+        // Calculate total price from payouts
+        TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
 
         // TODO
     }
@@ -254,47 +257,128 @@
         state_entry() {
             Debug( "default::state_entry()" );
 
+            // If the notecard isn't there, we'll auto-configure
             if( INVENTORY_NOTECARD != llGetInventoryType( CONFIG_NOTECARD ) ) {
                 state running;
             }
 
-            // TODO: Load notecard if possible
+            // If the notecard is brand new or doesn't have full-perm, we
+            // cannot read it
+            if( NULL_KEY == llGetInventoryKey( CONFIG_NOTECARD ) ) {
+                llOwnerSay( "Config notecard is either not full-perm or is new and empty, skipping: " + CONFIG_NOTECARD );
+
+                state running;
+            }
+
+            llOwnerSay( "Loading previous config from: " + CONFIG_NOTECARD );
+
+            // Co-opt this value for now
+            DataServerMode = 0;
+            DataServerRequest = llGetNotecardLine( CONFIG_NOTECARD , DataServerMode );
+            llSetTimerEvent( ASSET_SERVER_TIMEOUT );
+
+            DebugGlobals();
         }
 
         dataserver( key queryId , string data ) {
             Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
 
-            // TODO: Handle notecard info
+            if( EOF == data ) {
+                llOwnerSay( "Previous config loaded. Starting up..." );
+
+                DataServerMode = 0;
+                DebugGlobals();
+                state running;
+            }
+
+            list parts = llParseString2List( data , [ "\t" ] , [ ] );
+            if( "inv" == llList2String( parts , 0 ) ) {
+                Rarity += [ llList2Float( parts , 1 ) ];
+                Limit += [ llList2Integer( parts , 2 ) ];
+                Bought += [ llList2Integer( parts , 3 ) ];
+                Items += [ llDumpList2String( llList2List( parts , 4 , -1 ) , "\t" ) ];
+            }
+            if( "payout" == llList2String( parts , 0 ) ) {
+                Payouts += [ llList2Key( parts , 1 ) , llList2Integer( parts , 2 ) ];
+            }
+            if( "configs" == llList2String( parts , 0 ) ) {
+                FolderForSingleItem = llList2Integer( parts , 1 );
+                RootClickAction = llList2Integer( parts , 2 );
+                Group = llList2Integer( parts , 3 );
+                AllowWhisper = llList2Integer( parts , 4 );
+                AllowHover = llList2Integer( parts , 5 );
+                MaxPerPurchase = llList2Integer( parts , 6 );
+                MaxBuys = llList2Integer( parts , 7 );
+                PayPrice = llList2Integer( parts , 8 );
+                PayPriceButtons = [
+                    llList2Integer( parts , 9 ) ,
+                    llList2Integer( parts , 10 ) ,
+                    llList2Integer( parts , 11 ) ,
+                    llList2Integer( parts , 12 )
+                ];
+            }
+            if( "email" == llList2String( parts , 0 ) ) {
+                Email = llDumpList2String( llList2List( parts , 1 , -1 ) , "\t" );
+            }
+            if( "im" == llList2String( parts , 0 ) ) {
+                Im = llList2Key( parts , 1 );
+            }
+            if( "configured" == llList2String( parts , 0 ) ) {
+                Configured = llList2Integer( parts , 1 );
+            }
+
+            ++DataServerMode;
+            DataServerRequest = llGetNotecardLine( CONFIG_NOTECARD , DataServerMode );
+
+            DebugGlobals();
         }
 
         timer() {
             Debug( "default::timer()" );
 
-            // TODO: Reset script due to timeout during dataserver load
+            llSetTimerEvent( 0.0 );
+
+            llOwnerSay( "Timed out while reading notecard. Config has NOT been fully loaded, but proceeding to runtime. The dataserver may be having problems. Please touch this object and check the config." );
+
+            DataServerMode = 0;
+            DebugGlobals();
+            state running;
         }
     }
 
     state running {
         state_entry() {
             Debug( "running::state_entry()" );
+
             Update();
             RequestUrl();
+
+            DebugGlobals();
         }
 
         attach( key avatarId ) {
             Debug( "running::attach( " + (string)avatarId + " )" );
+
             Update();
+
+            DebugGlobals();
         }
 
         on_rez( integer rezParam ) {
             Debug( "running::on_rez( " + (string)rezParam + " )" );
+
             Update();
             RequestUrl();
+
+            DebugGlobals();
         }
 
         run_time_permissions( integer permissionMask ) {
             Debug( "running::run_time_permissions( " + (string)permissionMask + " )" );
+
             Update();
+
+            DebugGlobals();
         }
 
         changed( integer changeMask ) {
@@ -309,6 +393,8 @@
             }
 
             Update();
+
+            DebugGlobals();
         }
 
         dataserver( key queryId , string data ) {
@@ -320,6 +406,8 @@
             llSetTimerEvent( 0.0 );
             DataServerRequest = NULL_KEY;
             DataServerMode = 0;
+
+            DebugGlobals();
         }
 
         money( key buyerId , integer lindensReceived ) {
@@ -334,6 +422,8 @@
             // TODO
 
             Update();
+
+            DebugGlobals();
         }
 
         timer() {
@@ -347,10 +437,14 @@
 
                 DataServerRequest = NULL_KEY;
                 DataServerMode = 0;
+
+                DebugGlobals();
                 return;
             }
 
             // TODO
+
+            DebugGlobals();
         }
 
         http_request( key requestId , string httpMethod , string requestBody ) {
@@ -364,10 +458,10 @@
                 ShortenedInfoUrl = DEFAULT_CONFIG_URL_BASE + llEscapeURL( BaseUrl );
                 ShortenedAdminUrl = DEFAULT_CONFIG_URL_BASE + llEscapeURL( BaseUrl + "/" + (string)AdminKey );
 
+                llOwnerSay( "URL obtained, this Easy Gacha can now be configured. Touch to configure." );
+
                 DataServerMode = 1;
                 Shorten( ShortenedInfoUrl );
-
-                DebugGlobals();
             }
 
             if( URL_REQUEST_DENIED ) {
@@ -379,6 +473,8 @@
             }
 
             llHTTPResponse( requestId , responseStatus , responseBody );
+
+            DebugGlobals();
         }
 
         http_response( key requestId , integer responseStatus , list metadata , string responseBody ) {
@@ -404,22 +500,47 @@
                     DataServerMode = 2;
                     Shorten( ShortenedAdminUrl );
                 }
-
-                DebugGlobals();
             }
+
+            DebugGlobals();
         }
 
         touch_end( integer detected ) {
             Debug( "running::touch_end( " + (string)detected + " )" );
 
+            // If URL not set but URLs available, request one
+            if( "" == BaseUrl && llGetFreeURLs() ) {
+                llOwnerSay( "Trying to get a new URL now..." );
+                RequestUrl();
+            }
+
             // For each person that touched
             while( 0 <= ( detected -= 1 ) ) {
-                // TODO: llDetectedKey( detected )
-                // TODO: If admin retry get URL if needed or IM link to admin
+                key detectedKey = llDetectedKey( detected );
+                string detectedName = llDetectedName( detected );
+
+                Debug( "    Touched by: " + detectedName + " (" + (string)detectedKey + ")" );
+
+                // If admin, send IM with link
+                if( detectedKey == Owner ) {
+                    if( ShortenedAdminUrl ) {
+                        llOwnerSay( "To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl );
+                    } else {
+                        llOwnerSay( "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." );
+                    }
+                }
+
                 // TODO: Play if Configured and !price
             }
 
-            // TODO: Whisper info link
+            // Whisper info link
+            if( ShortenedInfoUrl ) {
+                llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+            } else {
+                llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+            }
+
+            DebugGlobals();
         }
     }
 
