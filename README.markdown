@@ -225,6 +225,8 @@ anything longer will be truncated to 2048 bytes.
 * On touch, llLoadURL
 * Report once every 24 hours and on each significant event
 * Memory checks
+* Purchase handling gets priority over all other events
+* Separate states for config and ready
 
     llSetPayPrice( PAY_DEFAULT , [ PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT ] );
     llSetTouchText( "" );
@@ -243,6 +245,13 @@ anything longer will be truncated to 2048 bytes.
         llSetTimerEvent( 0.0 );
     timer() { ... }
 
+    if( Owner != avatar ) {
+        llGiveMoney( avatar , amount );
+
+    random = SumRarity - llFrand( SumRarity ); // Generate a random number which is between [ SumRarity , 0.0 )
+    random -= rarity;
+    if( random < 0.0 ) { return inventory }
+
 ### Configuration Page ###
 
 * Check that we have at least one thing to hand out
@@ -251,7 +260,7 @@ anything longer will be truncated to 2048 bytes.
 * List final rarity of each item
 * Root prim detection
 * If no-copy item is to be handed out
-    * Max per purchase = 1
+    * Max per purchase = 1 (and update buy buttons)
     * Folders turned off
 * Memory checks
 * Progress bars during operations
@@ -261,6 +270,8 @@ anything longer will be truncated to 2048 bytes.
 * Auto-configure new inventory
 * Save data in localStorage, export/import JSON
 * Stats display with auto-reload
+* If price is zero
+    * Max per purchase = 1 (no way to tell how many times to play, update buy buttons)
 
     // We have to build a list in memory of the items to be given in a folder. To
     // prevent out of memory errors and exceedlingly long-running scripts (e.g.
