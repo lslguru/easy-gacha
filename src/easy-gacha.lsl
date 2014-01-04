@@ -37,7 +37,7 @@
 #define DEFAULT_CONFIG_URL_BASE "http://lslguru.github.io/easy-gacha/v5/index.html"
 #define SOURCE_CODE_MESSAGE "This is free open source software. The source can be found at: https:\/\/github.com/lslguru/easy-gacha"
 #define HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
-#define REPORT_TO ""
+#define REGISTRY_URL ""
 #define PERMANENT_KEY ""
 
 // System constraints
@@ -69,6 +69,8 @@
     key Im; // Who to IM after each play
     integer Whisper = TRUE; // Whether or not to allow whisper
     integer Hovertext = TRUE; // Whether or not to allow hovertext output
+    integer Registry = TRUE; // Whether or not to ping the registry
+    integer MaxBuys = -1; // Infinite
 
 #end globalvariables
 
@@ -93,11 +95,11 @@
     }
 
     HttpRequest( list data ) {
-        if( "" == REPORT_TO ) {
+        if( "" == REGISTRY_URL ) {
             return;
         }
 
-        llHTTPRequest( REPORT_TO , HTTP_OPTIONS , llList2Json( JSON_ARRAY , data ) );
+        llHTTPRequest( REGISTRY_URL , HTTP_OPTIONS , llList2Json( JSON_ARRAY , data ) );
 
         llSleep( 1.0 ); // FORCED_DELAY 1.0 seconds
     }

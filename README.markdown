@@ -15,6 +15,29 @@ TODO
 
 --------------------------------------------------------------------------------
 
+# Features #
+
+* Most configuration done automatically
+* Incredibly easy to configure
+* Detects and prevents most mistakes
+* Can set rarity per item
+* Supports 30+ items at a time
+* Can limit sales per item
+* Can limit total number of sales
+* Can payout to multiple people with each sale
+* Only asks for debit permission once if possible
+* Ultra low lag (zero when not in use)
+* All data except Gacha registry stored in-world
+* Configuration can be exported and loaded via notecard
+* Multiple-play option (can buy multiple objects at once)
+* Automatic self memory management
+* Guaranteed to hand out inventory and refund change correctly
+* Can be restricted to group-only play
+* Gives statistics about actual sales versus configured rarity
+* Can handle no-copy items
+
+--------------------------------------------------------------------------------
+
 # Frequently Asked Questions #
 
 ## What happens if someone pays too much? ##
@@ -191,16 +214,17 @@ anything longer will be truncated to 2048 bytes.
 
 ## Work In Progress ##
 
-* On touch, llLoadURL
 * Process everything from "old" directory, removing as I go
-* List final rarity of each item
-* If no-copy item is to be handed out
-    * Max per purchase = 1
-    * Folders turned off
-    * No stats
-* Check that we have at least one thing to hand out
-* Check price == total payouts
-* Check buy button configs
+* New scripting approach
+* Documentation
+* Release
+* Contact those who have already purchased
+
+### SL Script ###
+
+* On touch, llLoadURL
+* Report once every 24 hours and on each significant event
+* Memory checks
 
     llSetPayPrice( PAY_DEFAULT , [ PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT ] );
     llSetTouchText( "" );
@@ -210,11 +234,37 @@ anything longer will be truncated to 2048 bytes.
     !( llGetPermissionsKey() == Owner )
     !( llGetPermissions() & PERMISSION_DEBIT )
 
-* Documentation
-* Release
-* Contact those who have already purchased
+### Configuration Page ###
 
-## Config Notecard Format ##
+* Check that we have at least one thing to hand out
+* Check price == total payouts
+* Check buy button configs
+* List final rarity of each item
+* Root prim detection
+* If no-copy item is to be handed out
+    * Max per purchase = 1
+    * Folders turned off
+* Memory checks
+* Progress bars during operations
+* Serialized background operations
+* Style divs after Firestorm windows
+* Configured inventory not found
+* Auto-configure new inventory
+* Save data in localStorage, export/import JSON
+* Stats display with auto-reload
+
+    // We have to build a list in memory of the items to be given in a folder. To
+    // prevent out of memory errors and exceedlingly long-running scripts (e.g.
+    // price is L$1 and gave it L$10,000), a max is enforced. The owner can choose
+    // a value below this, but not above this.
+    #define MAX_PER_PURCHASE 100
+
+    // When reporting via email, the max email body is effectively 3600 bytes. At
+    // MAX_INVENTORY_NAME_LENGTH times number of purchases with at least two
+    // characters of separation and including the name of the purchaser...
+    #define MAX_PER_PURCHASE_WITH_EMAIL 50
+
+#### Config Notecard Format ####
 
     inv RARITY LIMIT BOUGHT ITEM
     payout AGENT MONEY
@@ -229,3 +279,11 @@ anything longer will be truncated to 2048 bytes.
     im AGENT
     whisper BOOLEAN
     hovertext BOOLEAN
+    registry BOOLEAN
+    max_buys COUNT
+
+### Registry ###
+
+* Record all reports
+* Display paginated sortable list of Gacha boxes
+
