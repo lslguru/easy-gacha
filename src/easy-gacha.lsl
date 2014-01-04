@@ -35,9 +35,9 @@
 
 // Specific to scriptor
 #define DEFAULT_CONFIG_URL_BASE "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#"
-// TODO: #define HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
+#define HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
 #define REGISTRY_URL ""
-// TODO: #define PERMANENT_KEY ""
+#define PERMANENT_KEY ""
 
 // System constraints
 // TODO: #define MAX_FOLDER_NAME_LENGTH 63
@@ -47,7 +47,7 @@
 // TODO: #define INVENTORY_SETTLE_TIME 5.0
 
 // Inventory
-// TODO: #define CONFIG_NOTECARD "Easy Gacha Config"
+#define CONFIG_NOTECARD "Easy Gacha Config"
 #define DEBUG_INVENTORY "easy-gacha-debug"
 
 #start globalvariables
@@ -69,8 +69,8 @@
     integer Group = FALSE; // If group may administer
     string Email; // Who to email after each play
     key Im; // Who to IM after each play
-    integer Whisper = TRUE; // Whether or not to allow whisper
-    integer Hovertext = TRUE; // Whether or not to allow hovertext output
+    integer AllowWhisper = TRUE; // Whether or not to allow whisper
+    integer AllowHover = TRUE; // Whether or not to allow hovertext output
     integer MaxBuys = -1; // Infinite
     integer Configured; // boolean
 
@@ -105,7 +105,7 @@
     Whisper( string msg ) {
         Debug( "Whisper( \"" + msg + "\" );" );
 
-        if( Whisper ) {
+        if( AllowWhisper ) {
             llWhisper( 0 , "/me : " + llGetScriptName() + ": " + msg );
         }
     }
@@ -113,7 +113,7 @@
     Hover( string msg ) {
         Debug( "Hover( \"" + msg + "\" );" );
 
-        if( Hovertext ) {
+        if( AllowHover ) {
             if( msg ) {
                 llSetText( llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
             } else {
@@ -148,8 +148,8 @@
         Debug( "    Group = " + (string)Group );
         Debug( "    Email = " + Email );
         Debug( "    Im = " + (string)Im );
-        Debug( "    Whisper = " + (string)Whisper );
-        Debug( "    Hovertext = " + (string)Hovertext );
+        Debug( "    AllowWhisper = " + (string)AllowWhisper );
+        Debug( "    AllowHover = " + (string)AllowHover );
         Debug( "    MaxBuys = " + (string)MaxBuys );
         Debug( "    Configured = " + (string)Configured );
         Debug( "    AdminKey = " + (string)AdminKey );
@@ -175,7 +175,7 @@
         ShortenedInfoUrl = "";
         ShortenedAdminUrl = "";
 
-        llRequestSecureURL();
+        llRequestURL();
     }
 
     Update() {
@@ -183,7 +183,7 @@
 
         Owner = llGetOwner();
         ScriptName = llGetScriptName();
-        HasPermissions = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
+        HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
 
         DebugGlobals();
 
@@ -231,6 +231,8 @@
     }
 
     Shorten( string url ) {
+        Debug( "Shorten( \"" + url + "\" )" );
+
         DataServerRequest = llHTTPRequest(
             "https:\/\/www.googleapis.com/urlshortener/v1/url" ,
             [
@@ -250,7 +252,9 @@
 
     default {
         state_entry() {
-            if( INVENTORY_NOTECARD != llGetInventoryType( ) ) {
+            Debug( "default::state_entry()" );
+
+            if( INVENTORY_NOTECARD != llGetInventoryType( CONFIG_NOTECARD ) ) {
                 state running;
             }
 
@@ -258,10 +262,14 @@
         }
 
         dataserver( key queryId , string data ) {
+            Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
+
             // TODO: Handle notecard info
         }
 
         timer() {
+            Debug( "default::timer()" );
+
             // TODO: Reset script due to timeout during dataserver load
         }
     }
@@ -354,7 +362,7 @@
             if( URL_REQUEST_GRANTED == httpMethod ) {
                 BaseUrl = requestBody;
                 ShortenedInfoUrl = DEFAULT_CONFIG_URL_BASE + llEscapeURL( BaseUrl );
-                ShortenedAdminUrl = DEFAULT_CONFIG_URL_BASE + llEscapeURL( BaseUrl + '/' + (string)AdminKey );
+                ShortenedAdminUrl = DEFAULT_CONFIG_URL_BASE + llEscapeURL( BaseUrl + "/" + (string)AdminKey );
 
                 DataServerMode = 1;
                 Shorten( ShortenedInfoUrl );
@@ -382,19 +390,19 @@
             }
 
             // goo.gl URL shortener parsing
-            var shortened = llJsonGetValue( body , [ "id" ] );
+            string shortened = llJsonGetValue( responseBody , [ "id" ] );
             if( JSON_INVALID != shortened && JSON_NULL != shortened ) {
-                if( 1 == DataServerMode ) {
-                    ShortenedInfoUrl = shortened;
-
-                    DataServerMode = 2;
-                    Shorten( ShortenedAdminUrl );
-                }
                 if( 2 == DataServerMode ) {
                     ShortenedAdminUrl = shortened;
 
                     DataServerMode = 0;
                     DataServerRequest = NULL_KEY;
+                }
+                if( 1 == DataServerMode ) {
+                    ShortenedInfoUrl = shortened;
+
+                    DataServerMode = 2;
+                    Shorten( ShortenedAdminUrl );
                 }
 
                 DebugGlobals();

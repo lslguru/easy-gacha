@@ -11,8 +11,8 @@ integer RootClickAction = FALSE;
 integer Group = FALSE;
 string Email;
 key Im;
-integer Whisper = TRUE;
-integer Hovertext = TRUE;
+integer AllowWhisper = TRUE;
+integer AllowHover = TRUE;
 integer MaxBuys = -1;
 integer Configured;
 key AdminKey;
@@ -35,13 +35,13 @@ llOwnerSay( "/me : " + llGetScriptName() + ": DEBUG: " + msg );
 }
 Whisper( string msg ) {
 Debug( "Whisper( \"" + msg + "\" );" );
-if( Whisper ) {
+if( AllowWhisper ) {
 llWhisper( 0 , "/me : " + llGetScriptName() + ": " + msg );
 }
 }
 Hover( string msg ) {
 Debug( "Hover( \"" + msg + "\" );" );
-if( Hovertext ) {
+if( AllowHover ) {
 if( msg ) {
 llSetText( llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
 } else {
@@ -54,7 +54,7 @@ Debug( "HttpRequest( [ " + llList2CSV( data ) + " ] );" );
 if( "" == "" ) {
 return;
 }
-llHTTPRequest( "" , HTTP_OPTIONS , llList2Json( JSON_ARRAY , data ) );
+llHTTPRequest( "" , [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ] , llList2Json( JSON_ARRAY , data ) );
 llSleep( 1.0 );
 }
 DebugGlobals() {
@@ -71,8 +71,8 @@ Debug( "    RootClickAction = " + (string)RootClickAction );
 Debug( "    Group = " + (string)Group );
 Debug( "    Email = " + Email );
 Debug( "    Im = " + (string)Im );
-Debug( "    Whisper = " + (string)Whisper );
-Debug( "    Hovertext = " + (string)Hovertext );
+Debug( "    AllowWhisper = " + (string)AllowWhisper );
+Debug( "    AllowHover = " + (string)AllowHover );
 Debug( "    MaxBuys = " + (string)MaxBuys );
 Debug( "    Configured = " + (string)Configured );
 Debug( "    AdminKey = " + (string)AdminKey );
@@ -95,13 +95,13 @@ llReleaseURL( BaseUrl );
 BaseUrl = "";
 ShortenedInfoUrl = "";
 ShortenedAdminUrl = "";
-llRequestSecureURL();
+llRequestURL();
 }
 Update() {
 Debug( "Update()" );
 Owner = llGetOwner();
 ScriptName = llGetScriptName();
-HasPermissions = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
+HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
 DebugGlobals();
 if( Configured ) {
 llSetPayPrice( PayPrice , PayPriceButtons );
@@ -129,6 +129,7 @@ Hover( "Configuration Needed / Configuration In Progress / Out of Order" );
 }
 }
 Shorten( string url ) {
+Debug( "Shorten( \"" + url + "\" )" );
 DataServerRequest = llHTTPRequest(
 "https:\/\/www.googleapis.com/urlshortener/v1/url" ,
 [
@@ -143,13 +144,16 @@ llJsonSetValue( "{}" , [ "longUrl" ] , url )
 }
 default {
 state_entry() {
-if( INVENTORY_NOTECARD != llGetInventoryType( ) ) {
+Debug( "default::state_entry()" );
+if( INVENTORY_NOTECARD != llGetInventoryType( "Easy Gacha Config" ) ) {
 state running;
 }
 }
 dataserver( key queryId , string data ) {
+Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
 }
 timer() {
+Debug( "default::timer()" );
 }
 }
 state running {
@@ -210,7 +214,7 @@ string responseBody = "Bad request";
 if( URL_REQUEST_GRANTED == httpMethod ) {
 BaseUrl = requestBody;
 ShortenedInfoUrl = "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#" + llEscapeURL( BaseUrl );
-ShortenedAdminUrl = "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#" + llEscapeURL( BaseUrl + '/' + (string)AdminKey );
+ShortenedAdminUrl = "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#" + llEscapeURL( BaseUrl + "/" + (string)AdminKey );
 DataServerMode = 1;
 Shorten( ShortenedInfoUrl );
 DebugGlobals();
@@ -226,17 +230,17 @@ Debug( "running::http_response( " + llList2CSV( [ requestId , responseStatus ] +
 if( DataServerRequest != requestId ) {
 return;
 }
-var shortened = llJsonGetValue( body , [ "id" ] );
+string shortened = llJsonGetValue( responseBody , [ "id" ] );
 if( JSON_INVALID != shortened && JSON_NULL != shortened ) {
-if( 1 == DataServerMode ) {
-ShortenedInfoUrl = shortened;
-DataServerMode = 2;
-Shorten( ShortenedAdminUrl );
-}
 if( 2 == DataServerMode ) {
 ShortenedAdminUrl = shortened;
 DataServerMode = 0;
 DataServerRequest = NULL_KEY;
+}
+if( 1 == DataServerMode ) {
+ShortenedInfoUrl = shortened;
+DataServerMode = 2;
+Shorten( ShortenedAdminUrl );
 }
 DebugGlobals();
 }

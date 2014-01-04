@@ -146,7 +146,7 @@ browsers, and not all browsers handle it the same way. Thus the following rules
 have been adopted:
 
 * Blanket approval of all verbs from all hosts
-* Always request/use an SSL URL
+* Always request/use a non-SSL URL (nothing here is truly private/important)
 * Only use the POST verb
 * No custom headers
 * Only use the "text/plain" mime-type
@@ -154,11 +154,6 @@ have been adopted:
 
 See [this](http://blogs.msdn.com/b/ieinternals/archive/2010/05/13/xdomainrequest-restrictions-limitations-and-workarounds.aspx)
 for some more detail on why.
-
-Unfortunately IE prior to version 10 (9 and below) will not support
-cross-protocol requests, so the HTTP-to-HTTPS nature of the requests from
-GitHub's project-pages will not work, but that's a small price to pay to work
-pretty much everywhere else and get free hosting ;-)
 
 ## Structure ##
 
