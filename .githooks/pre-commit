@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+cd src
+./lslpp.js easy-gacha.lsl > easy-gacha-compiled.lsl
+cd ..
+git add src/easy-gacha-compiled.lsl
