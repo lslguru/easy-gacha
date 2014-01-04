@@ -234,6 +234,15 @@ anything longer will be truncated to 2048 bytes.
     !( llGetPermissionsKey() == Owner )
     !( llGetPermissions() & PERMISSION_DEBIT )
 
+    changed( integer changeMask ) {
+        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
+
+    dataserver( key queryId , string data ) {
+        if( queryId != DataServerRequest )
+            return;
+        llSetTimerEvent( 0.0 );
+    timer() { ... }
+
 ### Configuration Page ###
 
 * Check that we have at least one thing to hand out
