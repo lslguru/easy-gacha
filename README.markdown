@@ -1,4 +1,4 @@
-# WARNING #
+# !!! WARNING !!! #
 
 This is a work-in-progress version, and may contain bugs.
 
@@ -234,17 +234,6 @@ anything longer will be truncated to 2048 bytes.
 * Purchase handling gets priority over all other events
 * Separate states for config and ready
 
-    llSetPayPrice( PAY_DEFAULT , [ PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT , PAY_DEFAULT ] );
-    llSetTouchText( "" );
-
-    !( llGetOwner() == Owner )
-    !( llGetScriptName() == ScriptName )
-    !( llGetPermissionsKey() == Owner )
-    !( llGetPermissions() & PERMISSION_DEBIT )
-
-    changed( integer changeMask ) {
-        if( ( CHANGED_INVENTORY | CHANGED_LINK ) & changeMask ) {
-
     dataserver( key queryId , string data ) {
         if( queryId != DataServerRequest )
             return;
@@ -278,6 +267,7 @@ anything longer will be truncated to 2048 bytes.
 * Stats display with auto-reload
 * If price is zero
     * Max per purchase = 1 (no way to tell how many times to play, update buy buttons)
+* Source code message and link in footer
 
     // We have to build a list in memory of the items to be given in a folder. To
     // prevent out of memory errors and exceedlingly long-running scripts (e.g.
@@ -299,13 +289,11 @@ anything longer will be truncated to 2048 bytes.
     pay_price_buttons COUNT COUNT COUNT COUNT
     folder_for_single_item BOOLEAN
     root_click_action BOOLEAN
-    stats BOOLEAN
     group BOOLEAN
     email EMAIL
     im AGENT
     whisper BOOLEAN
     hovertext BOOLEAN
-    registry BOOLEAN
     max_buys COUNT
 
 ### Registry ###
