@@ -2,6 +2,8 @@
 set -e
 
 cd src
-./lslpp.js easy-gacha.lsl > easy-gacha-compiled.lsl
+./lslpp.js easy-gacha.lsl | grep -v -e Debug > easy-gacha-compiled.lsl
+./lslpp.js easy-gacha.lsl > easy-gacha-compiled-debug.lsl
 cd ..
 git add src/easy-gacha-compiled.lsl
+git add src/easy-gacha-compiled-debug.lsl

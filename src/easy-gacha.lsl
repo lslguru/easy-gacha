@@ -95,11 +95,7 @@
 
 #start globalfunctions
 
-    Debug( string msg ) {
-        if( INVENTORY_NONE != llGetInventoryType( DEBUG_INVENTORY ) ) {
-            llOwnerSay( "/me : " + llGetScriptName() + ": DEBUG: " + msg );
-        }
-    }
+    Debug( string msg ) { if( INVENTORY_NONE != llGetInventoryType( DEBUG_INVENTORY ) ) { llOwnerSay( "/me : " + llGetScriptName() + ": DEBUG: " + msg ); } }
 
     Whisper( string msg ) {
         Debug( "Whisper( \"" + msg + "\" );" );
@@ -137,6 +133,7 @@
         Debug( "DebugGlobals()" );
         Debug( "    Items = " + llList2CSV( Items ) );
         Debug( "    Rarity = " + llList2CSV( Rarity ) );
+        Debug( "    Limit = " + llList2CSV( Limit ) );
         Debug( "    Bought = " + llList2CSV( Bought ) );
         Debug( "    Payouts = " + llList2CSV( Payouts ) );
         Debug( "    MaxPerPurchase = " + (string)MaxPerPurchase );
@@ -165,12 +162,13 @@
         Debug( "    NextPing = " + (string)NextPing );
         Debug( "    TotalPrice = " + (string)TotalPrice );
         Debug( "    Free memory: " + (string)llGetFreeMemory() );
-    }
+    "Debug";}
 
     RequestUrl() {
         Debug( "RequestUrl()" );
         llReleaseURL( BaseUrl );
 
+        AdminKey = llGenerateKey();
         BaseUrl = "";
         ShortenedInfoUrl = "";
         ShortenedAdminUrl = "";
@@ -230,7 +228,7 @@
         // Calculate total price from payouts
         TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
 
-        // TODO
+        // TODO: What else needs to be updated?
     }
 
     Shorten( string url ) {
@@ -247,6 +245,12 @@
             ] ,
             llJsonSetValue( "{}" , [ "longUrl" ] , url )
         );
+    }
+
+    Play( key buyerId , integer lindensReceived ) {
+        Debug( "Play( " + (string)buyerId + " , " + (string)lindensReceived + " )" );
+
+        // TODO
     }
 
 #end globalfunctions
@@ -291,12 +295,12 @@
                 state running;
             }
 
-            list parts = llParseString2List( data , [ "\t" ] , [ ] );
+            list parts = llParseString2List( data , [ " " ] , [ ] );
             if( "inv" == llList2String( parts , 0 ) ) {
                 Rarity += [ llList2Float( parts , 1 ) ];
                 Limit += [ llList2Integer( parts , 2 ) ];
                 Bought += [ llList2Integer( parts , 3 ) ];
-                Items += [ llDumpList2String( llList2List( parts , 4 , -1 ) , "\t" ) ];
+                Items += [ llDumpList2String( llList2List( parts , 4 , -1 ) , " " ) ];
             }
             if( "payout" == llList2String( parts , 0 ) ) {
                 Payouts += [ llList2Key( parts , 1 ) , llList2Integer( parts , 2 ) ];
@@ -318,7 +322,7 @@
                 ];
             }
             if( "email" == llList2String( parts , 0 ) ) {
-                Email = llDumpList2String( llList2List( parts , 1 , -1 ) , "\t" );
+                Email = llDumpList2String( llList2List( parts , 1 , -1 ) , " " );
             }
             if( "im" == llList2String( parts , 0 ) ) {
                 Im = llList2Key( parts , 1 );
@@ -385,10 +389,15 @@
             Debug( "running::changed( " + (string)changeMask + " )" );
 
             if( CHANGED_INVENTORY & changeMask ) {
-                InventoryChanged = TRUE;
+                if( InventoryChangeExpected ) {
+                    InventoryChangeExpected = FALSE;
+                } else {
+                    InventoryChanged = TRUE;
+                    Configured = FALSE;
+                }
             }
 
-            if( ( CHANGED_REGION_START | CHANGED_REGION | CHANGED_TELEPORT ) & changeMask ) {
+            if( ( CHANGED_OWNER | CHANGED_REGION_START | CHANGED_REGION | CHANGED_TELEPORT ) & changeMask ) {
                 RequestUrl();
             }
 
@@ -419,7 +428,7 @@
             // purchases while it is processing.
             llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
 
-            // TODO
+            // TODO: Handout code
 
             Update();
 
@@ -431,7 +440,8 @@
 
             // If we're waiting on a dataserver event
             if( NULL_KEY != DataServerRequest ) {
-                llSetTimerEvent( NextPing - llGetUnixTime() );
+                llSetTimerEvent( 0.0 );
+                // TODO: llSetTimerEvent( NextPing - llGetUnixTime() );
 
                 // TODO: Handle dataserver or http_response timeout
 
@@ -441,8 +451,6 @@
                 DebugGlobals();
                 return;
             }
-
-            // TODO
 
             DebugGlobals();
         }
@@ -464,12 +472,15 @@
                 Shorten( ShortenedInfoUrl );
             }
 
-            if( URL_REQUEST_DENIED ) {
-                // TODO
+            if( URL_REQUEST_DENIED == httpMethod ) {
+                llOwnerSay( "Unable to get a URL. This Easy Gacha cannot be configured until one becomes available: " + requestBody );
             }
 
             if( "post" == llToLower( httpMethod ) ) {
-                // TODO: llGetFreeMemory()
+                // TODO: Get values
+                    // TODO: llGetFreeMemory()
+                // TODO: Set values
+                // TODO: Append values
             }
 
             llHTTPResponse( requestId , responseStatus , responseBody );
@@ -517,9 +528,8 @@
             // For each person that touched
             while( 0 <= ( detected -= 1 ) ) {
                 key detectedKey = llDetectedKey( detected );
-                string detectedName = llDetectedName( detected );
 
-                Debug( "    Touched by: " + detectedName + " (" + (string)detectedKey + ")" );
+                Debug( "    Touched by: " + llDetectedName( detected ) + " (" + (string)detectedKey + ")" );
 
                 // If admin, send IM with link
                 if( detectedKey == Owner ) {
@@ -530,7 +540,9 @@
                     }
                 }
 
-                // TODO: Play if Configured and !price
+                if( Configured && !TotalPrice ) {
+                    Play( detectedKey , 0 );
+                }
             }
 
             // Whisper info link
