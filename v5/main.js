@@ -1,6 +1,15 @@
 define( 'main' , [
+    'jquery'
+    , 'text!page-loading.html'
 ] , function(
+    $
+    , pageLoadingTemplate
 ) {
-    alert( 'Here I come to save the day!' );
+    $( 'body' ).html( pageLoadingTemplate );
+} );
+require.config( {
+    text: {
+        useXhr: function() { return true; }
+    }
 } );
 require( [ 'main' ] );

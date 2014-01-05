@@ -39,6 +39,18 @@
     el.setAttribute( 'rel' , 'stylesheet' );
     document.head.appendChild( el );
 
+    // Twitter Bootstrap Asset
+    el = document.createElement( 'link' );
+    el.setAttribute( 'href' , '//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' );
+    el.setAttribute( 'rel' , 'stylesheet' );
+    document.head.appendChild( el );
+
+    // Our styles
+    el = document.createElement( 'link' );
+    el.setAttribute( 'href' , mydir + 'easy-gacha.css' );
+    el.setAttribute( 'rel' , 'stylesheet' );
+    document.head.appendChild( el );
+
     // Use requirejs to load main.js
     el = document.createElement( 'script' );
     el.setAttribute( 'type' , 'text/javascript' );
