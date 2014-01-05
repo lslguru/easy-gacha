@@ -34,7 +34,7 @@
 #define VERSION 5.0
 
 // Specific to scriptor
-#define CONFIG_SCRIPT_URL "http:\/\/lslguru.github.io/easy-gacha/v5/config.js.min"
+#define CONFIG_SCRIPT_URL "http:\/\/lslguru.github.io/easy-gacha/v5/easy-gacha.js"
 #define REGISTRY_URL ""
 #define REGISTRY_HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
 #define PERMANENT_ADMIN_KEY ""
@@ -544,7 +544,7 @@
             if( "get" == llToLower( httpMethod ) ) {
                 if( "/" == llGetHTTPHeader( requestId , "x-path-info" ) ) {
                     responseStatus = 200;
-                    responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\">document.easyGachaVersion = VERSION;</script>\n        <script type=\"text/javascript\" src=\"" + CONFIG_SCRIPT_URL + "\"></script>\n    </head>\n    <body>\n    </body>\n</html>";
+                    responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\">document.easyGachaVersion = VERSION;</script>\n        <script type=\"text/javascript\" src=\"" + CONFIG_SCRIPT_URL + "\"></script>\n        <script type=\"text/javascript\">\n            if( !window.easyGachaLoaded ) {\n                alert( 'Error loading scripts, please refresh page' );\n            }\n        </script>\n    </head>\n    <body>\n    </body>\n</html>";
                     responseContentType = CONTENT_TYPE_XHTML;
                 }
             }
