@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+grunt
+git add v5/easy-gacha.min.js
+git add v5/easy-gacha.min.js.map

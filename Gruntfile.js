@@ -6,10 +6,12 @@ module.exports = function( grunt ) {
         requirejs: {
             v5: {
                 options: {
-                    optimize: 'uglify2' ,
-                    generateSourceMaps: true ,
-                    name: 'easy-gacha' ,
-                    out: 'easy-gacha.min.js' ,
+                    baseUrl: 'v5' , // Script will be loaded directly out of this dir
+                    optimize: 'uglify2' , // Compress the heck out of it
+                    preserveLicenseComments: false , // Disabled so we can use source-maps
+                    generateSourceMaps: true , // But make it possible to debug
+                    name: 'easy-gacha' , // Single-file module
+                    out: 'v5/easy-gacha.min.js' , // Produces a single minified file
                 } ,
             } ,
         } ,
