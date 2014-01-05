@@ -1,0 +1,22 @@
+{
+  "name": "gh-pages",
+  "version": "5.0.0",
+  "homepage": "https://github.com/lslguru/easy-gacha",
+  "authors": [
+    "Zan Lightfoot"
+  ],
+  "license": "unlicense",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "requirejs-plugins": "~1.0.2",
+    "require-css": "~0.1.1"
+  },
+  "directory": "v5/vendor"
+}
