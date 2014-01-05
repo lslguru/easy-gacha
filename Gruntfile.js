@@ -13,11 +13,19 @@ module.exports = function( grunt ) {
                     name: 'easy-gacha' , // Single-file module
                     out: 'v5/easy-gacha.min.js' , // Produces a single minified file
                     paths: {
-                        requireLib: 'require' ,
+                        'requireLib': 'require' ,
+                        'bootstrap': 'bootstrap/js/bootstrap' ,
                     } ,
                     include: [
                         'requireLib' ,
                     ] ,
+                    shim: {
+                        'bootstrap': {
+                            deps: [
+                                'jquery' ,
+                            ] ,
+                        } ,
+                    } ,
                 } ,
             } ,
         } ,

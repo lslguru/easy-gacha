@@ -1,9 +1,13 @@
-window.easyGachaLoaded = true;
 define( 'easy-gacha' , function() {
-    // Switch to HTML5 because SL refuses to serve up content-type text/html
-    document.replaceChild( document.implementation.createDocumentType( 'html' , '' , '' ) , document.doctype );
-    document.documentElement.removeAttribute( 'xmlns' );
+    // Dependencies
+    var Global = require( 'global' );
+    //var _ = require( 'underscore' );
+    //var $ = require( 'jquery' );
+    //var Backbone = require( 'backbone' );
 
-    alert( 'Test' );
+    // TODO: Set up application
+    // TODO: Models
+    // TODO: Interface
+    // TODO: CSS integration
 } );
 require( [ 'easy-gacha' ] );
