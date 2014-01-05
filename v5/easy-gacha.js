@@ -35,10 +35,10 @@
     el.setAttribute( 'content' , 'width=device-width, initial-scale=1.0' );
     document.head.appendChild( el );
 
-    // Use requirejs to load main.js
+    // Use requirejs to load init.js
     el = document.createElement( 'script' );
     el.setAttribute( 'type' , 'text/javascript' );
-    el.setAttribute( 'data-main' , mydir + 'main' + ( dev ? '' : '.min' ) + '.js' );
+    el.setAttribute( 'data-main' , mydir + 'init' + ( dev ? '' : '.min' ) + '.js' );
     el.setAttribute( 'src' , mydir + 'vendor/require.js' );
     document.head.appendChild( el );
 })();

@@ -2,5 +2,5 @@
 set -e
 
 grunt
-git add v5/main.min.js
-git add v5/main.min.js.map
+git add v5/init.min.js
+git add v5/init.min.js.map
