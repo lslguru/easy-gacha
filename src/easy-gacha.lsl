@@ -526,8 +526,8 @@
 
             if( "get" == llToLower( httpMethod ) ) {
                 responseStatus = 200;
-                responseBody = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\" src=\"" + CONFIG_SCRIPT_URL + "\"></script>\n    </head>\n    <body>\n    </body>\n</html>";
-                responseContentType = CONTENT_TYPE_HTML;
+                responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\" src=\"" + CONFIG_SCRIPT_URL + "\"></script>\n    </head>\n    <body>\n    </body>\n</html>";
+                responseContentType = CONTENT_TYPE_XHTML;
             }
 
             if( "post" == llToLower( httpMethod ) ) {

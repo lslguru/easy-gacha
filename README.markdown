@@ -264,13 +264,14 @@ anything longer will be truncated to 2048 bytes.
     // characters of separation and including the name of the purchaser...
     #define MAX_PER_PURCHASE_WITH_EMAIL 50
 
-    // Switch to HTML5
+    // Switch to HTML5 because SL refuses to serve up content-type text/html
     document.replaceChild( document.implementation.createDocumentType( 'html' , '' , '' ) , document.doctype );
+    document.documentElement.removeAttribute( 'xmlns' );
 
 ### Registry ###
 
 * Record all reports
-* Display paginated sortable list of Gacha boxes
+* Display paginated sortable/searchable list of Gacha boxes
 
 --------------------------------------------------------------------------------
 
