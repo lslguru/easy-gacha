@@ -145,15 +145,21 @@ Cross-Origin Resource Sharing has a number of security implications within
 browsers, and not all browsers handle it the same way. Thus the following rules
 have been adopted:
 
-* Blanket approval of all verbs from all hosts
 * Always request/use a non-SSL URL (nothing here is truly private/important)
-* Only use the POST verb
-* No custom headers
-* Only use the "text/plain" mime-type
+* Only use the GET and POST verbs
+* No custom headers (sadly that includes CORS, see LSL HTTP Server docs)
 * Expect no cookies
 
 See [this](http://blogs.msdn.com/b/ieinternals/archive/2010/05/13/xdomainrequest-restrictions-limitations-and-workarounds.aspx)
 for some more detail on why.
+
+See [this](http://wiki.secondlife.com/wiki/LSL_http_server) for a list of
+supported features in LSL, which sadly doesn't include setting the CORS headers
+on responses.
+
+To get around all this, we officially load the initial page via the script, and
+it loads all its libraries, CSS, and images via a single script tag. That way
+all AJAX calls are technically to the same domain of the original page.
 
 ## Structure ##
 
@@ -223,24 +229,7 @@ anything longer will be truncated to 2048 bytes.
 
 ### SL Script ###
 
-* On touch, llLoadURL
 * Report once every 24 hours and on each significant event
-* Memory checks
-* Purchase handling gets priority over all other events
-* Separate states for config and ready
-
-    dataserver( key queryId , string data ) {
-        if( queryId != DataServerRequest )
-            return;
-        llSetTimerEvent( 0.0 );
-    timer() { ... }
-
-    if( Owner != avatar ) {
-        llGiveMoney( avatar , amount );
-
-    random = SumRarity - llFrand( SumRarity ); // Generate a random number which is between [ SumRarity , 0.0 )
-    random -= rarity;
-    if( random < 0.0 ) { return inventory }
 
 ### Configuration Page ###
 
@@ -275,9 +264,19 @@ anything longer will be truncated to 2048 bytes.
     // characters of separation and including the name of the purchaser...
     #define MAX_PER_PURCHASE_WITH_EMAIL 50
 
-#### Config Notecard Format ####
+    // Switch to HTML5
+    document.replaceChild( document.implementation.createDocumentType( 'html' , '' , '' ) , document.doctype );
 
-Tab separated fields
+### Registry ###
+
+* Record all reports
+* Display paginated sortable list of Gacha boxes
+
+--------------------------------------------------------------------------------
+
+# Config Notecard Format #
+
+Space separated fields
 
     inv
         rarity
@@ -306,9 +305,3 @@ Tab separated fields
         agent
     configured
         boolean
-
-### Registry ###
-
-* Record all reports
-* Display paginated sortable list of Gacha boxes
-

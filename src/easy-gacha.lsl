@@ -34,7 +34,7 @@
 #define VERSION 5.0
 
 // Specific to scriptor
-#define DEFAULT_CONFIG_URL_BASE "http:\/\/lslguru.github.io/easy-gacha/v5/index.html#"
+#define CONFIG_SCRIPT_URL "http:\/\/lslguru.github.io/easy-gacha/v5/config.js.min"
 #define HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
 #define REGISTRY_URL ""
 #define PERMANENT_KEY ""
@@ -195,6 +195,10 @@
         ScriptName = llGetScriptName();
         HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
 
+        if( TotalPrice && !HasPermission ) {
+            Configured = FALSE;
+        }
+
         // Default values of these variables are to not show pay buttons.
         // This should prevent any new purchases until a price has been
         // set.
@@ -211,9 +215,9 @@
         if( !Configured ) {
             llSetTouchText( "Config" );
         } else if( TotalPrice ) {
-            llSetTouchText( "Play" );
-        } else {
             llSetTouchText( "Info" );
+        } else {
+            llSetTouchText( "Play" );
         }
 
         // Set object action only if we're not the root prim of a linked set or
@@ -227,14 +231,6 @@
             } else {
                 llSetClickAction( CLICK_ACTION_TOUCH );
             }
-        }
-
-        // Far more simplistic config statement
-        if( Configured ) {
-            Hover( "" );
-        } else {
-            // TODO: Be more descriptive here
-            Hover( "Configuration needed, please touch this object" );
         }
 
         // Calculated values
@@ -251,6 +247,15 @@
             if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
                 TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
             }
+        }
+
+        // Far more simplistic config statement
+        if( Configured ) {
+            Hover( "" );
+        } else if( TotalPrice && !HasPermission ) {
+            Hover( "Need debit permission, please touch this object" );
+        } else {
+            Hover( "Configuration needed, please touch this object" );
         }
     }
 
@@ -410,105 +415,6 @@
         state_entry() {
             Debug( "default::state_entry()" );
 
-            // If the notecard isn't there, we'll auto-configure
-            if( INVENTORY_NOTECARD != llGetInventoryType( CONFIG_NOTECARD ) ) {
-                state running;
-            }
-
-            // If the notecard is brand new or doesn't have full-perm, we
-            // cannot read it
-            if( NULL_KEY == llGetInventoryKey( CONFIG_NOTECARD ) ) {
-                llOwnerSay( "Config notecard is either not full-perm or is new and empty, skipping: " + CONFIG_NOTECARD );
-
-                state running;
-            }
-
-            llOwnerSay( "Loading previous config from: " + CONFIG_NOTECARD );
-
-            // Co-opt this value for now
-            DataServerMode = 0;
-            DataServerRequest = llGetNotecardLine( CONFIG_NOTECARD , DataServerMode );
-            llSetTimerEvent( ASSET_SERVER_TIMEOUT );
-
-            DebugGlobals();
-        }
-
-        dataserver( key queryId , string data ) {
-            Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
-
-            if( queryId != DataServerRequest )
-                return;
-            }
-
-            llSetTimerEvent( 0.0 );
-
-            if( EOF == data ) {
-                llOwnerSay( "Previous config loaded. Starting up..." );
-
-                DataServerMode = 0;
-                DebugGlobals();
-                state running;
-            }
-
-            list parts = llParseString2List( data , [ " " ] , [ ] );
-            if( "inv" == llList2String( parts , 0 ) ) {
-                Rarity += [ llList2Float( parts , 1 ) ];
-                Limit += [ llList2Integer( parts , 2 ) ];
-                Bought += [ llList2Integer( parts , 3 ) ];
-                Items += [ llDumpList2String( llList2List( parts , 4 , -1 ) , " " ) ];
-            }
-            if( "payout" == llList2String( parts , 0 ) ) {
-                Payouts += [ llList2Key( parts , 1 ) , llList2Integer( parts , 2 ) ];
-            }
-            if( "configs" == llList2String( parts , 0 ) ) {
-                FolderForSingleItem = llList2Integer( parts , 1 );
-                RootClickAction = llList2Integer( parts , 2 );
-                Group = llList2Integer( parts , 3 );
-                AllowWhisper = llList2Integer( parts , 4 );
-                AllowHover = llList2Integer( parts , 5 );
-                MaxPerPurchase = llList2Integer( parts , 6 );
-                MaxBuys = llList2Integer( parts , 7 );
-                PayPrice = llList2Integer( parts , 8 );
-                PayPriceButtons = [
-                    llList2Integer( parts , 9 ) ,
-                    llList2Integer( parts , 10 ) ,
-                    llList2Integer( parts , 11 ) ,
-                    llList2Integer( parts , 12 )
-                ];
-            }
-            if( "email" == llList2String( parts , 0 ) ) {
-                Email = llDumpList2String( llList2List( parts , 1 , -1 ) , " " );
-            }
-            if( "im" == llList2String( parts , 0 ) ) {
-                Im = llList2Key( parts , 1 );
-            }
-            if( "configured" == llList2String( parts , 0 ) ) {
-                Configured = llList2Integer( parts , 1 );
-            }
-
-            ++DataServerMode;
-            DataServerRequest = llGetNotecardLine( CONFIG_NOTECARD , DataServerMode );
-
-            DebugGlobals();
-        }
-
-        timer() {
-            Debug( "default::timer()" );
-
-            llSetTimerEvent( 0.0 );
-
-            llOwnerSay( "Timed out while reading notecard. Config has NOT been fully loaded, but proceeding to runtime. The dataserver may be having problems. Please touch this object and check the config." );
-
-            DataServerMode = 0;
-            DebugGlobals();
-            state running;
-        }
-    }
-
-    state running {
-        state_entry() {
-            Debug( "running::state_entry()" );
-
             Update();
             RequestUrl();
 
@@ -516,7 +422,7 @@
         }
 
         attach( key avatarId ) {
-            Debug( "running::attach( " + (string)avatarId + " )" );
+            Debug( "default::attach( " + (string)avatarId + " )" );
 
             Update();
 
@@ -524,7 +430,7 @@
         }
 
         on_rez( integer rezParam ) {
-            Debug( "running::on_rez( " + (string)rezParam + " )" );
+            Debug( "default::on_rez( " + (string)rezParam + " )" );
 
             Update();
             RequestUrl();
@@ -533,7 +439,7 @@
         }
 
         run_time_permissions( integer permissionMask ) {
-            Debug( "running::run_time_permissions( " + (string)permissionMask + " )" );
+            Debug( "default::run_time_permissions( " + (string)permissionMask + " )" );
 
             Update();
 
@@ -541,7 +447,7 @@
         }
 
         changed( integer changeMask ) {
-            Debug( "running::changed( " + (string)changeMask + " )" );
+            Debug( "default::changed( " + (string)changeMask + " )" );
 
             if( CHANGED_INVENTORY & changeMask ) {
                 if( InventoryChangeExpected ) {
@@ -561,23 +467,8 @@
             DebugGlobals();
         }
 
-        dataserver( key queryId , string data ) {
-            Debug( "running::dataserver( " + (string)queryId + ", " + data + " )" );
-
-            if( queryId != DataServerRequest )
-                return;
-
-            // TODO
-
-            llSetTimerEvent( 0.0 );
-            DataServerRequest = NULL_KEY;
-            DataServerMode = 0;
-
-            DebugGlobals();
-        }
-
         money( key buyerId , integer lindensReceived ) {
-            Debug( "running::money( " + (string)buyerId + ", " + (string)lindensReceived + " )" );
+            Debug( "default::money( " + (string)buyerId + ", " + (string)lindensReceived + " )" );
 
             // During handout, there is still a "money" event which can capture
             // any successful transactions (so none are missed), but by setting
@@ -593,7 +484,7 @@
         }
 
         timer() {
-            Debug( "running::timer()" );
+            Debug( "default::timer()" );
 
             // If we're waiting on a dataserver event
             if( NULL_KEY != DataServerRequest ) {
@@ -612,15 +503,16 @@
         }
 
         http_request( key requestId , string httpMethod , string requestBody ) {
-            Debug( "running::http_request( " + llList2CSV( [ requestId , httpMethod , requestBody ] )+ " )" );
+            Debug( "default::http_request( " + llList2CSV( [ requestId , httpMethod , requestBody ] )+ " )" );
 
             integer responseStatus = 400;
-            string responseBody = "Bad request";
+            string responseBody = "";
+            integer responseContentType = CONTENT_TYPE_TEXT;
 
             if( URL_REQUEST_GRANTED == httpMethod ) {
                 BaseUrl = requestBody;
-                ShortenedInfoUrl = DEFAULT_CONFIG_URL_BASE + llEscapeURL( BaseUrl );
-                ShortenedAdminUrl = DEFAULT_CONFIG_URL_BASE + llEscapeURL( BaseUrl + "/" + (string)AdminKey );
+                ShortenedInfoUrl = ( BaseUrl + "/" );
+                ShortenedAdminUrl = ( BaseUrl + "/#" + (string)AdminKey );
 
                 llOwnerSay( "URL obtained, this Easy Gacha can now be configured. Touch to configure." );
 
@@ -632,20 +524,250 @@
                 llOwnerSay( "Unable to get a URL. This Easy Gacha cannot be configured until one becomes available: " + requestBody );
             }
 
-            if( "post" == llToLower( httpMethod ) ) {
-                // TODO: Get values
-                    // TODO: llGetFreeMemory()
-                // TODO: Set values
-                // TODO: Append values
+            if( "get" == llToLower( httpMethod ) ) {
+                responseStatus = 200;
+                responseBody = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\" src=\"" + CONFIG_SCRIPT_URL + "\"></script>\n    </head>\n    <body>\n    </body>\n</html>";
+                responseContentType = CONTENT_TYPE_HTML;
             }
 
+            if( "post" == llToLower( httpMethod ) ) {
+                responseStatus = 200;
+                responseContentType = CONTENT_TYPE_JSON;
+
+                list path = llParseString2List( llGetHTTPHeader( requestId , "x-path-info" ) , [ "/" ] , [ ] );
+
+                // Determine if the user is an admin by the presence of the
+                // key, and strip it off the front
+                integer isAdmin = ( llList2Key( path , 0 ) == AdminKey );
+                if( isAdmin ) {
+                    path = llList2List( path , 1 , -1 );
+                }
+
+                string verb = llList2String( path , 0 );
+                string subject = llList2String( path , 1 );
+                list requestBodyParts = llJson2List( requestBody );
+
+                if( "memory" == subject && "get" == verb ) {
+                    responseBody = (string)llGetFreeMemory();
+                }
+
+                if( "inv" == subject ) {
+                    if( isAdmin ) {
+                        if( "post" == verb ) {
+                            Rarity += [ llList2Float( requestBodyParts , 0 ) ];
+                            Limit += [ llList2Integer( requestBodyParts , 1 ) ];
+                            Bought += [ llList2Integer( requestBodyParts , 2 ) ];
+                            Items += [ llList2String( requestBodyParts , 3 ) ];
+                        }
+
+                        if( "delete" == verb ) {
+                            Rarity = [];
+                            Limit = [];
+                            Bought = [];
+                            Items = [];
+                        }
+                    }
+
+                    if( "head" == verb ) {
+                        responseBody = llList2Json(
+                            JSON_ARRAY ,
+                            [
+                                llGetListLength( Items )
+                            ]
+                        );
+                    } else {
+                        responseBody = llList2Json(
+                            JSON_ARRAY ,
+                            [
+                                llList2Float( Rarity , llList2Integer( requestBodyParts , 0 ) ) ,
+                                llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) ,
+                                llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) ,
+                                llList2String( Items , llList2Integer( requestBodyParts , 0 ) )
+                            ]
+                        );
+                    }
+                }
+
+                if( "payout" == subject ) {
+                    if( isAdmin ) {
+                        if( "post" == verb ) {
+                            Payouts += [
+                                llList2Key( requestBodyParts , 0 ) ,
+                                llList2Integer( requestBodyParts , 1 )
+                            ];
+                        }
+
+                        if( "delete" == verb ) {
+                            Payouts = [];
+                        }
+                    }
+
+                    if( "head" == verb ) {
+                        responseBody = llList2Json(
+                            JSON_ARRAY ,
+                            [
+                                llGetListLength( Payouts ) / 2
+                            ]
+                        );
+                    } else {
+                        responseBody = llList2Json(
+                            JSON_ARRAY ,
+                            llList2List( Payouts , ( llList2Integer( requestBodyParts , 0 ) * 2 ) , ( llList2Integer( requestBodyParts , 0 ) * 2 ) + 1 )
+                        );
+                    }
+                }
+
+                if( "configs" == subject ) {
+                    if( isAdmin ) {
+                        if( "post" == verb ) {
+                            FolderForSingleItem = llList2Integer( requestBodyParts , 0 );
+                            RootClickAction = llList2Integer( requestBodyParts , 1 );
+                            Group = llList2Integer( requestBodyParts , 2 );
+                            AllowWhisper = llList2Integer( requestBodyParts , 3 );
+                            AllowHover = llList2Integer( requestBodyParts , 4 );
+                            MaxPerPurchase  = llList2Integer( requestBodyParts , 5 );
+                            MaxBuys = llList2Integer( requestBodyParts , 6 );
+                            PayPrice = llList2Integer( requestBodyParts , 7 );
+                            PayPriceButtons = llList2List( requestBodyParts , 8 , 11 );
+                        }
+
+                        if( "delete" == verb ) {
+                            FolderForSingleItem = TRUE;
+                            RootClickAction = FALSE;
+                            Group = FALSE;
+                            AllowWhisper = TRUE;
+                            AllowHover = TRUE;
+                            MaxPerPurchase  = 50;
+                            MaxBuys = -1;
+                            PayPrice = PAY_HIDE;
+                            PayPriceButtons = [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ];
+                        }
+                    }
+
+                    responseBody = llList2Json(
+                        JSON_ARRAY ,
+                        [
+                            FolderForSingleItem ,
+                            RootClickAction ,
+                            Group ,
+                            AllowWhisper ,
+                            AllowHover ,
+                            MaxPerPurchase , 
+                            MaxBuys ,
+                            PayPrice
+                        ] + PayPriceButtons
+                    );
+                }
+
+                if( "email" == subject ) {
+                    if( isAdmin ) {
+                        if( "post" == verb ) {
+                            Email = llList2String( requestBodyParts , 0 );
+                        }
+
+                        if( "delete" == verb ) {
+                            Email = "";
+                        }
+                    }
+
+                    responseBody = llList2Json(
+                        JSON_ARRAY ,
+                        [
+                            Email
+                        ]
+                    );
+                }
+
+                if( "im" == subject ) {
+                    if( isAdmin ) {
+                        if( "post" == verb ) {
+                            Im = llList2Key( requestBodyParts , 0 );
+                        }
+
+                        if( "delete" == verb ) {
+                            Im = NULL_KEY;
+                        }
+                    }
+
+                    responseBody = llList2Json(
+                        JSON_ARRAY ,
+                        [
+                            Im
+                        ]
+                    );
+                }
+
+                if( "configured" == subject ) {
+                    if( isAdmin ) {
+                        if( "post" == verb ) {
+                            Configured = llList2Integer( requestBodyParts , 0 );
+                        }
+
+                        if( "delete" == verb ) {
+                            Configured = FALSE;
+                        }
+                    }
+
+                    responseBody = llList2Json(
+                        JSON_ARRAY ,
+                        [
+                            Configured
+                        ]
+                    );
+                }
+
+                if( isAdmin ) {
+                    Update();
+                }
+
+                // key AdminKey; // Used to indicate if person has rights to modify configs
+                // string BaseUrl; // Requested and hopefully received
+                // string ShortenedInfoUrl; // Hand this out instead of the full URL
+                // string ShortenedAdminUrl; // Hand this out instead of the full URL
+                // key Owner; // More memory efficient to only update when it could be changed
+                // string ScriptName; // More memory efficent to only update when it could be changed
+                // integer HasPermission; // More memory efficent to only update when it could be changed
+                // key DataServerRequest; // Should only allow one at a time
+                // integer DataServerMode; // Which kind of request is happening, 0 = none, 1 = goo.gl for info, 2 = goo.gl for admin
+                // integer InventoryChanged; // Indicates the inventory changed since last check
+                // integer InventoryChangeExpected; // When we give out no-copy items...
+                // integer NextPing; // UnixTime
+                // integer TotalPrice; // Updated when Payouts is updated, sum
+                // integer TotalBought;
+                // integer TotalLimit;
+                // integer HasUnlimitedItems;
+                // float TotalEffectiveRarity;
+                // integer CountItems;
+                // integer CountPayouts;
+            }
+
+            Debug( "    responseContentType = " + (string)responseContentType );
+            Debug( "    responseStatus = " + (string)responseStatus );
+            Debug( "    responseBody = " + (string)responseBody );
+
+            llSetContentType( requestId , responseContentType );
             llHTTPResponse( requestId , responseStatus , responseBody );
 
             DebugGlobals();
         }
 
+        dataserver( key queryId , string data ) {
+            Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
+
+            if( queryId != DataServerRequest )
+                return;
+
+            // TODO
+
+            llSetTimerEvent( 0.0 );
+            DataServerRequest = NULL_KEY;
+            DataServerMode = 0;
+
+            DebugGlobals();
+        }
+
         http_response( key requestId , integer responseStatus , list metadata , string responseBody ) {
-            Debug( "running::http_response( " + llList2CSV( [ requestId , responseStatus ] + metadata + [ responseBody ] )+ " )" );
+            Debug( "default::http_response( " + llList2CSV( [ requestId , responseStatus ] + metadata + [ responseBody ] )+ " )" );
 
             // If requestId isn't the one we specified, exit early
             if( DataServerRequest != requestId ) {
@@ -673,7 +795,7 @@
         }
 
         touch_end( integer detected ) {
-            Debug( "running::touch_end( " + (string)detected + " )" );
+            Debug( "default::touch_end( " + (string)detected + " )" );
 
             // For each person that touched
             while( 0 <= ( detected -= 1 ) ) {
@@ -687,6 +809,10 @@
                         llOwnerSay( "To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl );
                     } else {
                         llOwnerSay( "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." );
+                    }
+
+                    if( TotalPrice && !HasPermission ) {
+                        llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
                     }
                 }
 
