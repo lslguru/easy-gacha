@@ -26,7 +26,7 @@ key DataServerRequest;
 integer DataServerMode;
 integer InventoryChanged;
 integer InventoryChangeExpected;
-integer NextPing;
+integer LastPing;
 integer TotalPrice;
 integer TotalBought;
 integer TotalLimit;
@@ -34,6 +34,7 @@ integer HasUnlimitedItems;
 float TotalEffectiveRarity;
 integer CountItems;
 integer CountPayouts;
+integer TestMode;
 Whisper( string msg ) {
 if( AllowWhisper ) {
 llWhisper( 0 , "/me : " + llGetScriptName() + ": " + msg );
@@ -48,7 +49,7 @@ llSetText( "" , ZERO_VECTOR , 1 );
 }
 }
 }
-HttpRequest( list data ) {
+Registry( list data ) {
 if( "" == "" ) {
 return;
 }
@@ -152,6 +153,7 @@ random -= llList2Float( Rarity , itemIndex );
 itemsToSend += [ llList2String( Items , itemIndex ) ];
 ++countItemsToSend;
 Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
+++TotalBought;
 if( -1 != llList2Integer( Limit , itemIndex ) && llList2Integer( Bought , itemIndex ) >= llList2Integer( Limit , itemIndex ) ) {
 TotalEffectiveRarity -= llList2Float( Rarity , itemIndex );
 InventoryChangeExpected = TRUE;
@@ -171,21 +173,33 @@ objectName = ( llGetSubString( objectName , 0 , 63 - llStringLength( folderSuffi
 string change = "";
 lindensReceived -= ( totalItems * TotalPrice );
 if( lindensReceived ) {
+if( TestMode ) {
+llOwnerSay( "Would have given change of L$" + (string)lindensReceived + "." );
+} else {
 llGiveMoney( buyerId , lindensReceived );
+}
 change = " Your change is L$" + (string)lindensReceived;
 }
 integer payoutIndex;
 for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) {
 if( llList2Key( Payouts , payoutIndex ) != Owner ) {
+if( TestMode ) {
+llOwnerSay( "Would have given L$" + (string)( llList2Integer( Payouts , payoutIndex + 1 ) * totalItems ) + " to " + (string)llList2Key( Payouts , payoutIndex ) );
+} else {
 llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
 }
 }
+}
+TestMode = FALSE;
 Whisper( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
 Hover( "Please wait, giving items to: " + displayName );
 if( 1 < countItemsToSend || FolderForSingleItem ) {
 llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend );
 } else {
 llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) );
+}
+if( Im ) {
+llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + (string)buyerId + ") just received " + (string)countItemsToSend + " items. " + ShortenedAdminUrl );
 }
 }
 default {
@@ -231,13 +245,13 @@ return;
 }
 http_request( key requestId , string httpMethod , string requestBody ) {
 integer responseStatus = 400;
-string responseBody = "";
+string responseBody = "Bad request";
 integer responseContentType = CONTENT_TYPE_TEXT;
 if( URL_REQUEST_GRANTED == httpMethod ) {
 BaseUrl = requestBody;
 ShortenedInfoUrl = ( BaseUrl + "/" );
 ShortenedAdminUrl = ( BaseUrl + "/#" + (string)AdminKey );
-llOwnerSay( "URL obtained, this Easy Gacha can now be configured. Touch to configure." );
+llOwnerSay( "URL obtained, this Easy Gacha can now be configured. Touch to configure. Attempting to shorten URL..." );
 DataServerMode = 1;
 Shorten( ShortenedInfoUrl );
 }
@@ -245,25 +259,25 @@ if( URL_REQUEST_DENIED == httpMethod ) {
 llOwnerSay( "Unable to get a URL. This Easy Gacha cannot be configured until one becomes available: " + requestBody );
 }
 if( "get" == llToLower( httpMethod ) ) {
+if( "/" == llGetHTTPHeader( requestId , "x-path-info" ) ) {
 responseStatus = 200;
-responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\" src=\"" + "http:\/\/lslguru.github.io/easy-gacha/v5/config.js.min" + "\"></script>\n    </head>\n    <body>\n    </body>\n</html>";
+responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\">document.easyGachaVersion = 5.0;</script>\n        <script type=\"text/javascript\" src=\"" + "http:\/\/lslguru.github.io/easy-gacha/v5/config.js.min" + "\"></script>\n    </head>\n    <body>\n    </body>\n</html>";
 responseContentType = CONTENT_TYPE_XHTML;
+}
 }
 if( "post" == llToLower( httpMethod ) ) {
 responseStatus = 200;
 responseContentType = CONTENT_TYPE_JSON;
+responseBody = "null";
 list path = llParseString2List( llGetHTTPHeader( requestId , "x-path-info" ) , [ "/" ] , [ ] );
-integer isAdmin = ( llList2Key( path , 0 ) == AdminKey );
+integer isAdmin = ( ( llList2Key( path , 0 ) == AdminKey ) || ( llList2Key( path , 0 ) == "" ) );
 if( isAdmin ) {
 path = llList2List( path , 1 , -1 );
 }
 string verb = llList2String( path , 0 );
 string subject = llList2String( path , 1 );
 list requestBodyParts = llJson2List( requestBody );
-if( "memory" == subject && "get" == verb ) {
-responseBody = (string)llGetFreeMemory();
-}
-if( "inv" == subject ) {
+if( "item" == subject ) {
 if( isAdmin ) {
 if( "post" == verb ) {
 Rarity += [ llList2Float( requestBodyParts , 0 ) ];
@@ -276,16 +290,10 @@ Rarity = [];
 Limit = [];
 Bought = [];
 Items = [];
+CountItems = 0;
 }
 }
-if( "head" == verb ) {
-responseBody = llList2Json(
-JSON_ARRAY ,
-[
-llGetListLength( Items )
-]
-);
-} else {
+if( llList2Integer( requestBodyParts , 0 ) < CountItems ) {
 responseBody = llList2Json(
 JSON_ARRAY ,
 [
@@ -309,14 +317,7 @@ if( "delete" == verb ) {
 Payouts = [];
 }
 }
-if( "head" == verb ) {
-responseBody = llList2Json(
-JSON_ARRAY ,
-[
-llGetListLength( Payouts ) / 2
-]
-);
-} else {
+if( llList2Integer( requestBodyParts , 0 ) < CountPayouts / 2 ) {
 responseBody = llList2Json(
 JSON_ARRAY ,
 llList2List( Payouts , ( llList2Integer( requestBodyParts , 0 ) * 2 ) , ( llList2Integer( requestBodyParts , 0 ) * 2 ) + 1 )
@@ -335,17 +336,6 @@ MaxPerPurchase  = llList2Integer( requestBodyParts , 5 );
 MaxBuys = llList2Integer( requestBodyParts , 6 );
 PayPrice = llList2Integer( requestBodyParts , 7 );
 PayPriceButtons = llList2List( requestBodyParts , 8 , 11 );
-}
-if( "delete" == verb ) {
-FolderForSingleItem = TRUE;
-RootClickAction = FALSE;
-Group = FALSE;
-AllowWhisper = TRUE;
-AllowHover = TRUE;
-MaxPerPurchase  = 50;
-MaxBuys = -1;
-PayPrice = PAY_HIDE;
-PayPriceButtons = [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ];
 }
 }
 responseBody = llList2Json(
@@ -367,9 +357,6 @@ if( isAdmin ) {
 if( "post" == verb ) {
 Email = llList2String( requestBodyParts , 0 );
 }
-if( "delete" == verb ) {
-Email = "";
-}
 }
 responseBody = llList2Json(
 JSON_ARRAY ,
@@ -383,9 +370,6 @@ if( isAdmin ) {
 if( "post" == verb ) {
 Im = llList2Key( requestBodyParts , 0 );
 }
-if( "delete" == verb ) {
-Im = NULL_KEY;
-}
 }
 responseBody = llList2Json(
 JSON_ARRAY ,
@@ -398,15 +382,29 @@ if( "configured" == subject ) {
 if( isAdmin ) {
 if( "post" == verb ) {
 Configured = llList2Integer( requestBodyParts , 0 );
-}
-if( "delete" == verb ) {
-Configured = FALSE;
+InventoryChanged = FALSE;
 }
 }
 responseBody = llList2Json(
 JSON_ARRAY ,
 [
 Configured
+]
+);
+}
+if( "info" == subject ) {
+responseBody = llList2Json(
+JSON_ARRAY ,
+[
+Owner ,
+llGetObjectName() ,
+llGetObjectDesc() ,
+ScriptName ,
+llGetFreeMemory() ,
+HasPermission ,
+InventoryChanged ,
+LastPing ,
+llGetInventoryNumber( INVENTORY_ALL )
 ]
 );
 }
@@ -434,6 +432,7 @@ if( 2 == DataServerMode ) {
 ShortenedAdminUrl = shortened;
 DataServerMode = 0;
 DataServerRequest = NULL_KEY;
+llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl );
 }
 if( 1 == DataServerMode ) {
 ShortenedInfoUrl = shortened;
@@ -443,30 +442,34 @@ Shorten( ShortenedAdminUrl );
 }
 }
 touch_end( integer detected ) {
+integer whisperUrl = FALSE;
 while( 0 <= ( detected -= 1 ) ) {
 key detectedKey = llDetectedKey( detected );
 if( detectedKey == Owner ) {
 if( ShortenedAdminUrl ) {
-llOwnerSay( "To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl );
+llLoadURL( Owner , "To configure and administer this Easy Gacha, please go here" , ShortenedAdminUrl );
+} else if( "" == BaseUrl && llGetFreeURLs() ) {
+llOwnerSay( "Trying to get a new URL now... please wait" );
+RequestUrl();
 } else {
-llOwnerSay( "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." );
+llDialog( Owner , "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." , [ ] , -1 );
 }
 if( TotalPrice && !HasPermission ) {
 llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
 }
+} else {
+whisperUrl = TRUE;
 }
 if( Configured && !TotalPrice ) {
 Play( detectedKey , 0 );
 }
 }
-if( "" == BaseUrl && llGetFreeURLs() ) {
-llOwnerSay( "Trying to get a new URL now..." );
-RequestUrl();
-}
+if( whisperUrl ) {
 if( ShortenedInfoUrl ) {
 llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
 } else {
-llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+lWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+}
 }
 Update();
 }

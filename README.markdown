@@ -268,6 +268,8 @@ anything longer will be truncated to 2048 bytes.
     document.replaceChild( document.implementation.createDocumentType( 'html' , '' , '' ) , document.doctype );
     document.documentElement.removeAttribute( 'xmlns' );
 
+    ~/.nojekyll
+
 ### Registry ###
 
 * Record all reports

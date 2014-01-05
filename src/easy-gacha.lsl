@@ -35,18 +35,18 @@
 
 // Specific to scriptor
 #define CONFIG_SCRIPT_URL "http:\/\/lslguru.github.io/easy-gacha/v5/config.js.min"
-#define HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
 #define REGISTRY_URL ""
-#define PERMANENT_KEY ""
+#define REGISTRY_HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
+#define PERMANENT_ADMIN_KEY ""
 
 // System constraints
 #define MAX_FOLDER_NAME_LENGTH 63
 
 // Tweaks
 #define ASSET_SERVER_TIMEOUT 5.0
+#define PING_INTERVAL 86400
 
 // Inventory
-#define CONFIG_NOTECARD "Easy Gacha Config"
 #define DEBUG_INVENTORY "easy-gacha-debug"
 
 #start globalvariables
@@ -88,14 +88,15 @@
     integer DataServerMode; // Which kind of request is happening, 0 = none, 1 = goo.gl for info, 2 = goo.gl for admin
     integer InventoryChanged; // Indicates the inventory changed since last check
     integer InventoryChangeExpected; // When we give out no-copy items...
-    integer NextPing; // UnixTime
+    integer LastPing; // UnixTime
     integer TotalPrice; // Updated when Payouts is updated, sum
-    integer TotalBought;
-    integer TotalLimit;
-    integer HasUnlimitedItems;
-    float TotalEffectiveRarity;
-    integer CountItems;
-    integer CountPayouts;
+    integer TotalBought; // Updated when Bought is updated
+    integer TotalLimit; // Updated when Limit is updated
+    integer HasUnlimitedItems; // If ANY Limit is -1
+    float TotalEffectiveRarity; // Updated when Rarity or Limit are updated
+    integer CountItems; // Updated when Items is updated
+    integer CountPayouts; // Updated when Payouts is updated - total elements, not stride elements
+    integer TestMode; // Boolean - Used to test execution without accepting or sending money
 
 #end globalvariables
 
@@ -123,14 +124,14 @@
         }
     }
 
-    HttpRequest( list data ) {
-        Debug( "HttpRequest( [ " + llList2CSV( data ) + " ] );" );
+    Registry( list data ) {
+        Debug( "Registry( [ " + llList2CSV( data ) + " ] );" );
 
         if( "" == REGISTRY_URL ) {
             return;
         }
 
-        llHTTPRequest( REGISTRY_URL , HTTP_OPTIONS , llList2Json( JSON_ARRAY , data ) );
+        llHTTPRequest( REGISTRY_URL , REGISTRY_HTTP_OPTIONS , llList2Json( JSON_ARRAY , data ) );
 
         llSleep( 1.0 ); // FORCED_DELAY 1.0 seconds
     }
@@ -165,7 +166,7 @@
         Debug( "    DataServerMode = " + (string)DataServerMode );
         Debug( "    InventoryChanged = " + (string)InventoryChanged );
         Debug( "    InventoryChangeExpected = " + (string)InventoryChangeExpected );
-        Debug( "    NextPing = " + (string)NextPing );
+        Debug( "    LastPing = " + (string)LastPing );
         Debug( "    TotalPrice = " + (string)TotalPrice );
         Debug( "    TotalBought = " + (string)TotalBought );
         Debug( "    TotalLimit = " + (string)TotalLimit );
@@ -173,6 +174,7 @@
         Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
         Debug( "    CountItems = " + (string)CountItems );
         Debug( "    CountPayouts = " + (string)CountPayouts );
+        Debug( "    TestMode = " + (string)TestMode );
         Debug( "    Free memory: " + (string)llGetFreeMemory() );
     "Debug";}
 
@@ -344,6 +346,7 @@
 
             // Mark this item as bought, increasing the count
             Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
+            ++TotalBought;
 
             // If the inventory has run out
             if( -1 != llList2Integer( Limit , itemIndex ) && llList2Integer( Bought , itemIndex ) >= llList2Integer( Limit , itemIndex ) ) {
@@ -380,7 +383,11 @@
         lindensReceived -= ( totalItems * TotalPrice );
         if( lindensReceived ) {
             // Give back the excess
-            llGiveMoney( buyerId , lindensReceived );
+            if( TestMode ) {
+                llOwnerSay( "Would have given change of L$" + (string)lindensReceived + "." );
+            } else {
+                llGiveMoney( buyerId , lindensReceived );
+            }
             change = " Your change is L$" + (string)lindensReceived;
         }
 
@@ -389,9 +396,14 @@
         for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) { // Strided list
             if( llList2Key( Payouts , payoutIndex ) != Owner ) {
                 Debug( "    Giving L$" + (string)(llList2Integer( Payouts , payoutIndex + 1 ) * totalItems) + " to " + llList2String( Payouts , payoutIndex ) );
-                llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
+                if( TestMode ) {
+                    llOwnerSay( "Would have given L$" + (string)( llList2Integer( Payouts , payoutIndex + 1 ) * totalItems ) + " to " + (string)llList2Key( Payouts , payoutIndex ) );
+                } else {
+                    llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
+                }
             }
         }
+        TestMode = FALSE; // This may only exist for one call at a time
 
         // Thank them for their purchase
         Whisper( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
@@ -404,6 +416,11 @@
             llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) ); // FORCED_DELAY 2.0 seconds
         }
 
+        // Reports
+        if( Im ) {
+            llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + (string)buyerId + ") just received " + (string)countItemsToSend + " items. " + ShortenedAdminUrl ); // FORCED_DELAY 2.0 seconds
+        }
+        // TODO: llEmail FORCED_DELAY 20.0 seconds
         // TODO: Send info to registry
     }
 
@@ -488,7 +505,7 @@
 
             // If we're waiting on a dataserver event
             if( NULL_KEY != DataServerRequest ) {
-                // TODO: llSetTimerEvent( NextPing - llGetUnixTime() );
+                // TODO: llSetTimerEvent( LastPing + PING_INTERVAL - llGetUnixTime() );
 
                 // TODO: Handle dataserver or http_response timeout
 
@@ -506,7 +523,7 @@
             Debug( "default::http_request( " + llList2CSV( [ requestId , httpMethod , requestBody ] )+ " )" );
 
             integer responseStatus = 400;
-            string responseBody = "";
+            string responseBody = "Bad request";
             integer responseContentType = CONTENT_TYPE_TEXT;
 
             if( URL_REQUEST_GRANTED == httpMethod ) {
@@ -514,7 +531,7 @@
                 ShortenedInfoUrl = ( BaseUrl + "/" );
                 ShortenedAdminUrl = ( BaseUrl + "/#" + (string)AdminKey );
 
-                llOwnerSay( "URL obtained, this Easy Gacha can now be configured. Touch to configure." );
+                llOwnerSay( "URL obtained, this Easy Gacha can now be configured. Touch to configure. Attempting to shorten URL..." );
 
                 DataServerMode = 1;
                 Shorten( ShortenedInfoUrl );
@@ -525,20 +542,23 @@
             }
 
             if( "get" == llToLower( httpMethod ) ) {
-                responseStatus = 200;
-                responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\" src=\"" + CONFIG_SCRIPT_URL + "\"></script>\n    </head>\n    <body>\n    </body>\n</html>";
-                responseContentType = CONTENT_TYPE_XHTML;
+                if( "/" == llGetHTTPHeader( requestId , "x-path-info" ) ) {
+                    responseStatus = 200;
+                    responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\">document.easyGachaVersion = VERSION;</script>\n        <script type=\"text/javascript\" src=\"" + CONFIG_SCRIPT_URL + "\"></script>\n    </head>\n    <body>\n    </body>\n</html>";
+                    responseContentType = CONTENT_TYPE_XHTML;
+                }
             }
 
             if( "post" == llToLower( httpMethod ) ) {
                 responseStatus = 200;
                 responseContentType = CONTENT_TYPE_JSON;
+                responseBody = "null";
 
                 list path = llParseString2List( llGetHTTPHeader( requestId , "x-path-info" ) , [ "/" ] , [ ] );
 
                 // Determine if the user is an admin by the presence of the
                 // key, and strip it off the front
-                integer isAdmin = ( llList2Key( path , 0 ) == AdminKey );
+                integer isAdmin = ( ( llList2Key( path , 0 ) == AdminKey ) || ( llList2Key( path , 0 ) == PERMANENT_ADMIN_KEY ) );
                 if( isAdmin ) {
                     path = llList2List( path , 1 , -1 );
                 }
@@ -547,11 +567,7 @@
                 string subject = llList2String( path , 1 );
                 list requestBodyParts = llJson2List( requestBody );
 
-                if( "memory" == subject && "get" == verb ) {
-                    responseBody = (string)llGetFreeMemory();
-                }
-
-                if( "inv" == subject ) {
+                if( "item" == subject ) {
                     if( isAdmin ) {
                         if( "post" == verb ) {
                             Rarity += [ llList2Float( requestBodyParts , 0 ) ];
@@ -565,17 +581,11 @@
                             Limit = [];
                             Bought = [];
                             Items = [];
+                            CountItems = 0;
                         }
                     }
 
-                    if( "head" == verb ) {
-                        responseBody = llList2Json(
-                            JSON_ARRAY ,
-                            [
-                                llGetListLength( Items )
-                            ]
-                        );
-                    } else {
+                    if( llList2Integer( requestBodyParts , 0 ) < CountItems ) {
                         responseBody = llList2Json(
                             JSON_ARRAY ,
                             [
@@ -602,14 +612,7 @@
                         }
                     }
 
-                    if( "head" == verb ) {
-                        responseBody = llList2Json(
-                            JSON_ARRAY ,
-                            [
-                                llGetListLength( Payouts ) / 2
-                            ]
-                        );
-                    } else {
+                    if( llList2Integer( requestBodyParts , 0 ) < CountPayouts / 2 ) {
                         responseBody = llList2Json(
                             JSON_ARRAY ,
                             llList2List( Payouts , ( llList2Integer( requestBodyParts , 0 ) * 2 ) , ( llList2Integer( requestBodyParts , 0 ) * 2 ) + 1 )
@@ -629,18 +632,6 @@
                             MaxBuys = llList2Integer( requestBodyParts , 6 );
                             PayPrice = llList2Integer( requestBodyParts , 7 );
                             PayPriceButtons = llList2List( requestBodyParts , 8 , 11 );
-                        }
-
-                        if( "delete" == verb ) {
-                            FolderForSingleItem = TRUE;
-                            RootClickAction = FALSE;
-                            Group = FALSE;
-                            AllowWhisper = TRUE;
-                            AllowHover = TRUE;
-                            MaxPerPurchase  = 50;
-                            MaxBuys = -1;
-                            PayPrice = PAY_HIDE;
-                            PayPriceButtons = [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ];
                         }
                     }
 
@@ -664,10 +655,6 @@
                         if( "post" == verb ) {
                             Email = llList2String( requestBodyParts , 0 );
                         }
-
-                        if( "delete" == verb ) {
-                            Email = "";
-                        }
                     }
 
                     responseBody = llList2Json(
@@ -683,10 +670,6 @@
                         if( "post" == verb ) {
                             Im = llList2Key( requestBodyParts , 0 );
                         }
-
-                        if( "delete" == verb ) {
-                            Im = NULL_KEY;
-                        }
                     }
 
                     responseBody = llList2Json(
@@ -701,10 +684,7 @@
                     if( isAdmin ) {
                         if( "post" == verb ) {
                             Configured = llList2Integer( requestBodyParts , 0 );
-                        }
-
-                        if( "delete" == verb ) {
-                            Configured = FALSE;
+                            InventoryChanged = FALSE;
                         }
                     }
 
@@ -716,29 +696,30 @@
                     );
                 }
 
+                if( "info" == subject ) {
+                    responseBody = llList2Json(
+                        JSON_ARRAY ,
+                        [
+                            Owner ,
+                            llGetObjectName() ,
+                            llGetObjectDesc() ,
+                            ScriptName ,
+                            llGetFreeMemory() ,
+                            HasPermission ,
+                            InventoryChanged ,
+                            LastPing ,
+                            llGetInventoryNumber( INVENTORY_ALL )
+                        ]
+                    );
+                }
+
+                // TODO: Get display name
+                // TODO: Get inventory data
+                // TODO: Play
+
                 if( isAdmin ) {
                     Update();
                 }
-
-                // key AdminKey; // Used to indicate if person has rights to modify configs
-                // string BaseUrl; // Requested and hopefully received
-                // string ShortenedInfoUrl; // Hand this out instead of the full URL
-                // string ShortenedAdminUrl; // Hand this out instead of the full URL
-                // key Owner; // More memory efficient to only update when it could be changed
-                // string ScriptName; // More memory efficent to only update when it could be changed
-                // integer HasPermission; // More memory efficent to only update when it could be changed
-                // key DataServerRequest; // Should only allow one at a time
-                // integer DataServerMode; // Which kind of request is happening, 0 = none, 1 = goo.gl for info, 2 = goo.gl for admin
-                // integer InventoryChanged; // Indicates the inventory changed since last check
-                // integer InventoryChangeExpected; // When we give out no-copy items...
-                // integer NextPing; // UnixTime
-                // integer TotalPrice; // Updated when Payouts is updated, sum
-                // integer TotalBought;
-                // integer TotalLimit;
-                // integer HasUnlimitedItems;
-                // float TotalEffectiveRarity;
-                // integer CountItems;
-                // integer CountPayouts;
             }
 
             Debug( "    responseContentType = " + (string)responseContentType );
@@ -782,6 +763,8 @@
 
                     DataServerMode = 0;
                     DataServerRequest = NULL_KEY;
+
+                    llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl );
                 }
                 if( 1 == DataServerMode ) {
                     ShortenedInfoUrl = shortened;
@@ -797,6 +780,8 @@
         touch_end( integer detected ) {
             Debug( "default::touch_end( " + (string)detected + " )" );
 
+            integer whisperUrl = FALSE;
+
             // For each person that touched
             while( 0 <= ( detected -= 1 ) ) {
                 key detectedKey = llDetectedKey( detected );
@@ -806,14 +791,20 @@
                 // If admin, send IM with link
                 if( detectedKey == Owner ) {
                     if( ShortenedAdminUrl ) {
-                        llOwnerSay( "To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl );
+                        llLoadURL( Owner , "To configure and administer this Easy Gacha, please go here" , ShortenedAdminUrl ); // FORCED_DELAY 10.0 seconds
+                    } else if( "" == BaseUrl && llGetFreeURLs() ) {
+                        // If URL not set but URLs available, request one
+                        llOwnerSay( "Trying to get a new URL now... please wait" );
+                        RequestUrl();
                     } else {
-                        llOwnerSay( "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." );
+                        llDialog( Owner , "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." , [ ] , -1 ); // FORCED_DELAY 1.0 seconds
                     }
 
                     if( TotalPrice && !HasPermission ) {
                         llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
                     }
+                } else {
+                    whisperUrl = TRUE;
                 }
 
                 if( Configured && !TotalPrice ) {
@@ -821,17 +812,14 @@
                 }
             }
 
-            // If URL not set but URLs available, request one
-            if( "" == BaseUrl && llGetFreeURLs() ) {
-                llOwnerSay( "Trying to get a new URL now..." );
-                RequestUrl();
-            }
 
             // Whisper info link
-            if( ShortenedInfoUrl ) {
-                llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
-            } else {
-                llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+            if( whisperUrl ) {
+                if( ShortenedInfoUrl ) {
+                    llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+                } else {
+                    lWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+                }
             }
 
             Update();
