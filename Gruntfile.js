@@ -12,6 +12,12 @@ module.exports = function( grunt ) {
                     generateSourceMaps: true , // But make it possible to debug
                     name: 'easy-gacha' , // Single-file module
                     out: 'v5/easy-gacha.min.js' , // Produces a single minified file
+                    paths: {
+                        requireLib: '../node_modules/requirejs/require' ,
+                    } ,
+                    include: [
+                        'requireLib' ,
+                    ] ,
                 } ,
             } ,
         } ,
