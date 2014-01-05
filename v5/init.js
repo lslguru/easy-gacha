@@ -24,7 +24,6 @@ require( {
 } , [
 
     'backbone'
-    , 'temp'
 
 ] , function(
 

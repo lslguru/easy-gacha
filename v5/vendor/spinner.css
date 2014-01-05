@@ -1,0 +1,33 @@
+/*
+
+Spinner taken from: http://jsfiddle.net/AndrewDryga/GY6LC/
+
+RequireJS:
+
+    'css!vendor/bootstrap/css/bootstrap'
+    'css!//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome'
+    'css!vendor/spinner'
+
+Requires HTML like so:
+
+<div class="active has-spinner">
+    <span class="spinner"><i class="fa fa-refresh fa-spin fa-5x"></i></span>
+</div>
+
+*/
+
+.spinner {
+    display: inline-block;
+    opacity: 0;
+    max-width: 0;
+
+    -webkit-transition: opacity 0.1s, max-width 0.3s;
+    -moz-transition: opacity 0.1s, max-width 0.3s;
+    -o-transition: opacity 0.1s, max-width 0.3s;
+    transition: opacity 0.1s, max-width 0.3s; /* Duration fixed since we animate additional hidden width */
+}
+
+.has-spinner.active .spinner {
+    opacity: 1;
+    max-width: 50px; /* More than it will ever come, notice that this affects on animation duration */
+}
