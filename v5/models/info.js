@@ -28,6 +28,7 @@ define( [
             , payoutCount: null
             , regionName: null
             , position: null
+            , configured: null
         }
 
         , parse: function( data ) {
@@ -56,6 +57,7 @@ define( [
                 , payoutCount: Number(data[10])
                 , regionName: data[11]
                 , position: new Vector( data[12] )
+                , configured: Boolean( data[13] )
             };
         }
     } );

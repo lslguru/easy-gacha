@@ -1,30 +1,65 @@
 <div class="page-header">
-    {{#if isAdmin}}
-        <div id="configure-link">
-            <a href="#config">Configure This Gacha</a>
-        </div>
-    {{/if}}
+    <div class="btn-group nav-links">
+        <a class="btn btn-info" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" title="Go to the Easy Gacha Kit on SecondLife Marketplace">Easy Gacha</a>
+        {{#if isAdmin}}
+            <a class="btn btn-default" href="#config" data-toggle="tooltip" title="You have permission to modify this Easy Gacha. Click here to configure.">Configure This Gacha</a>
+        {{/if}}
+    </div>
     <h1>
-        <a target="_blank" href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object on the map">{{objectName}}</a>
-        <small><a target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" title="Link to Easy Gacha Kit on SecondLife Marketplace">Easy Gacha</a></small>
+        <a target="_blank" href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object's location on the map">{{objectName}}</a>
     </h1>
-    {{#if objectDesc}}
-        <h2>
-            {{objectDesc}}
-        </h2>
-    {{/if}}
+    <div>
+        {{objectDesc}}
+    </div>
 </div>
 <div class="row">
     <div id="status" class="col-lg-4"><dl>
         <dt>Status</dt>
-        <dd>TODO</dd>
+        <dd>
+            {{#if configured}}
+                <div class="alert alert-success" data-toggle="tooltip" title="You may play this Easy Gacha now if you wish!">
+                    <i class="fa fa-check-circle"></i>
+                    Online
+                </div>
+            {{else}}
+                <div class="alert alert-danger" data-toggle="tooltip" title="You cannot currently play this Easy Gacha, sorry.">
+                    <i class="fa fa-exclamation-circle"></i>
+                    Offline
+                </div>
+            {{/if}}
+        </dd>
     </dl></div>
     <div id="owner"  class="col-lg-4"><dl>
         <dt>Owner</dt>
-        <dd><a href="#">TODO</a></dd>
+        <dd>
+            <div class="alert alert-info" data-toggle="tooltip" title="Click this link to view their profile in SecondLife.">
+                <a href="{{ownerUrl}}">TODO: {{ownerDisplayName}}</a>
+            </div>
+        </dd>
     </dl></div>
     <div id="memory" class="col-lg-4"><dl>
         <dt>Free Script Memory</dt>
-        <dd>TODO</dd>
+        <dd>
+            {{#if freeMemory}}
+                {{#if lowMemory}}
+                    <div class="alert alert-danger" data-toggle="tooltip" title="In bytes, out of the maximum for any script 65536. Higher is better.">
+                    <i class="fa fa-exclamation-circle"></i>
+                {{else}}
+                    <div class="alert alert-success" data-toggle="tooltip" title="In bytes, out of the maximum for any script 65536. Higher is better.">
+                    <i class="fa fa-check-circle"></i>
+                {{/if}}
+            {{else}}
+                <div class="alert alert-warning" data-toggle="tooltip" title="Data may not have loaded yet, please be patient.">
+                <i class="fa fa-question-circle"></i>
+            {{/if}}
+            <span>
+                {{#if freeMemory}}
+                    {{freeMemory}}
+                {{else}}
+                    Unknown
+                {{/if}}
+            </span>
+            </div>
+        </dd>
     </dl></div>
 </div>

@@ -2,8 +2,9 @@ define( [
 
     'underscore'
     , 'marionette'
-    , 'hbs!./templates/index'
+    , 'hbs!dashboard/templates/index'
     , './header'
+    , './items'
 
 ] , function(
 
@@ -11,6 +12,7 @@ define( [
     , Marionette
     , template
     , HeaderView
+    , ItemsView
 
 ) {
     'use strict';
@@ -20,7 +22,7 @@ define( [
 
         , regions: {
             'header': '#header'
-            , 'inventory': '#inventory'
+            , 'items': '#items'
         }
 
         , onRender: function() {
@@ -29,6 +31,10 @@ define( [
 
             this.header.show( new HeaderView( _.extend( {} , this.options , {
                 model: info
+            } ) ) );
+
+            this.items.show( new ItemsView( _.extend( {} , this.options , {
+                collection: null
             } ) ) );
         }
     } );

@@ -1,7 +1,7 @@
 define( [
 
     'marionette'
-    , 'hbs!config/templates/index'
+    , 'hbs!dashboard/templates/items'
 
 ] , function(
 
@@ -11,12 +11,9 @@ define( [
 ) {
     'use strict';
 
-    var exports = Marionette.Layout.extend( {
+    // TODO: CompositeView
+    var exports = Marionette.ItemView.extend( {
         template: template
-
-        , regions: {
-            // TODO
-        }
     } );
 
     return exports;
