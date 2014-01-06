@@ -11,6 +11,10 @@ require( {
         , 'normalize': 'vendor/require-css/normalize'
         , 'base64': 'requirejs-plugins/base64'
         , 'image': 'requirejs-plugins/image'
+        , 'backbone.wreqr': 'vendor/backbone.wreqr'
+        , 'backbone.babysitter': 'vendor/backbone.babysitter'
+        , 'marionette': 'vendor/marionette'
+        , 'hbs': 'vendor/require-handlebars-plugin/hbs'
     }
 
     , shim: {
@@ -24,45 +28,41 @@ require( {
 } , [
 
     'backbone'
+    , 'marionette'
+    , 'lib/router'
+    , 'models/info'
+    , 'css!vendor/bootstrap/css/bootstrap'
+    , 'css!vendor/bootstrap/css/bootstrap-theme'
+    , 'css!vendor/tablesorter/themes/blue/style'
+    , 'css!styles/page'
 
 ] , function(
 
     Backbone
+    , Marionette
+    , AppRouter
+    , Info
 
 ) {
     'use strict';
 
-    var adminKey = window.localStorage.getItem( window.location.origin + window.location.pathname );
-    if( adminKey ) {
-        console.log( 'loaded adminKey' , adminKey );
-        window.easyGachaAdminKey = adminKey;
-    }
+    var app = new Marionette.Application();
 
-    var AppRouter = Backbone.Router.extend( {
-        routes: {
-            'admin/:adminKey': 'adminEntryPoint'
-            , 'dashboard': 'dashboard'
-            , 'config': 'config'
-            , '*path': 'dashboard'
-        }
-
-        , adminEntryPoint: function( adminKey ) {
-            window.localStorage.setItem( window.location.origin + window.location.pathname , adminKey );
-            window.easyGachaAdminKey = adminKey;
-            console.log( 'saved adminKey' , adminKey );
-            this.navigate( 'config' , { trigger: true , replace: true } );
-        }
-
-        , dashboard: function() {
-            this.navigate( 'dashboard' , { replace: true } );
-        }
-
-        , config: function() {
-            this.navigate( 'config' , { replace: true } );
-        }
+    app.addInitializer( function( options ) {
+        this.info = new Info();
     } );
 
-    var appRouter = new AppRouter( { } );
-    Backbone.history.start( { } );
+    app.addInitializer( function( options ) {
+        this.router = new AppRouter( options );
+        Backbone.history.start( { } );
+    } );
+
+    app.addRegions( {
+        'body': 'body'
+    } );
+
+    app.start( {
+        app: app
+    } );
 
 } );

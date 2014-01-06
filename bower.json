@@ -15,7 +15,8 @@
     "tests"
   ],
   "dependencies": {
-    "require-css": "~0.1.1"
-  },
-  "directory": "v5/vendor"
+    "require-css": "~0.1.1",
+    "require-handlebars-plugin": "~0.7.0",
+    "moment": "~2.5.0"
+  }
 }

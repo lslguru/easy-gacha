@@ -1,0 +1,30 @@
+<div class="page-header">
+    {{#if isAdmin}}
+        <div id="configure-link">
+            <a href="#config">Configure This Gacha</a>
+        </div>
+    {{/if}}
+    <h1>
+        <a target="_blank" href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object on the map">{{objectName}}</a>
+        <small><a target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" title="Link to Easy Gacha Kit on SecondLife Marketplace">Easy Gacha</a></small>
+    </h1>
+    {{#if objectDesc}}
+        <h2>
+            {{objectDesc}}
+        </h2>
+    {{/if}}
+</div>
+<div class="row">
+    <div id="status" class="col-lg-4"><dl>
+        <dt>Status</dt>
+        <dd>TODO</dd>
+    </dl></div>
+    <div id="owner"  class="col-lg-4"><dl>
+        <dt>Owner</dt>
+        <dd><a href="#">TODO</a></dd>
+    </dl></div>
+    <div id="memory" class="col-lg-4"><dl>
+        <dt>Free Script Memory</dt>
+        <dd>TODO</dd>
+    </dl></div>
+</div>
