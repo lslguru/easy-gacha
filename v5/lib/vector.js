@@ -13,8 +13,14 @@ define( [
         this.z = 0;
     };
 
+    Vector.regexp = /^<\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*>$/;
+
+    Vector.isVector = function( str ) {
+        return Boolean( Vector.regexp.exec( str ) );
+    };
+
     Vector.parse = function( str ) {
-        var parts = /^<\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*>$/.exec( str );
+        var parts = Vector.regexp.exec( str );
         var vec = new Vector();
 
         if( !parts ) {
@@ -28,7 +34,7 @@ define( [
         return vec;
     };
 
-    Vector.toString = function() {
+    Vector.prototype.toString = function() {
         return '<' + this.x + ',' + this.y + ',' + this.z + '>';
     };
 

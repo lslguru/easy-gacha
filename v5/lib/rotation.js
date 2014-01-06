@@ -14,8 +14,14 @@ define( [
         this.s = 1;
     };
 
+    Rotation.regexp = /^<\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*>$/;
+
+    Rotation.isRotation = function( str ) {
+        return Boolean( Rotation.regexp.exec( str ) );
+    };
+
     Rotation.parse = function( str ) {
-        var parts = /^<\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*,\s*([-0-9.]*)\s*>$/.exec( str );
+        var parts = Rotation.regexp.exec( str );
         var rot = new Rotation();
 
         if( !parts ) {
@@ -30,7 +36,7 @@ define( [
         return rot;
     };
 
-    Rotation.toString = function() {
+    Rotation.prototype.toString = function() {
         return '<' + this.x + ',' + this.y + ',' + this.z + ',' + this.s + '>';
     };
 

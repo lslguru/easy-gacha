@@ -3,16 +3,20 @@ define( [
     'underscore'
     , 'marionette'
     , 'hbs!dashboard/templates/index'
+    , './loader'
     , './header'
     , './items'
+    , 'backbone'
 
 ] , function(
 
     _
     , Marionette
     , template
+    , LoaderView
     , HeaderView
     , ItemsView
+    , Backbone
 
 ) {
     'use strict';
@@ -21,21 +25,31 @@ define( [
         template: template
 
         , regions: {
-            'header': '#header'
+            'loader': '#data-loader'
+            , 'header': '#header'
             , 'items': '#items'
         }
 
         , onRender: function() {
-            var info = this.options.app.info;
-            info.fetch();
+            var data = new Backbone.Model();
 
-            this.header.show( new HeaderView( _.extend( {} , this.options , {
-                model: info
+            this.loader.show( new LoaderView( _.extend( {} , this.options , {
+                model: data
             } ) ) );
 
-            this.items.show( new ItemsView( _.extend( {} , this.options , {
-                collection: null
-            } ) ) );
+            data.bind( 'change:percentage' , function( data , percentage , options ) {
+                if( 100 === percentage ) {
+                    this.loader.close();
+
+                    this.header.show( new HeaderView( _.extend( {} , this.options , {
+                        model: data.get( 'info' )
+                    } ) ) );
+
+                    this.items.show( new ItemsView( _.extend( {} , this.options , {
+                        collection: null
+                    } ) ) );
+                }
+            } , this );
         }
     } );
 

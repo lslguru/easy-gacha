@@ -1,12 +1,20 @@
 <div class="page-header">
     <div class="btn-group nav-links">
-        <a class="btn btn-info" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" title="Go to the Easy Gacha Kit on SecondLife Marketplace">Easy Gacha</a>
+        <a class="btn btn-default" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" title="Go to the Easy Gacha Kit on SecondLife Marketplace">Easy Gacha</a>
         {{#if isAdmin}}
             <a class="btn btn-default" href="#config" data-toggle="tooltip" title="You have permission to modify this Easy Gacha. Click here to configure.">Configure This Gacha</a>
         {{/if}}
     </div>
     <h1>
-        <a target="_blank" href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object's location on the map">{{objectName}}</a>
+        <a target="_blank" href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object's last reported location on the map">{{objectName}}</a>
+        <small>
+            <i class="fa fa-money"></i>
+            {{#if price}}
+                {{price}} to play
+            {{else}}
+                FREE to play
+            {{/if}}
+        </small>
     </h1>
     <div>
         {{objectDesc}}
@@ -33,7 +41,7 @@
         <dt>Owner</dt>
         <dd>
             <div class="alert alert-info" data-toggle="tooltip" title="Click this link to view their profile in SecondLife.">
-                <a href="{{ownerUrl}}">TODO: {{ownerDisplayName}}</a>
+                <a href="{{ownerUrl}}">{{ownerDisplayName}} ({{ownerUserName}})</a>
             </div>
         </dd>
     </dl></div>
@@ -41,12 +49,17 @@
         <dt>Free Script Memory</dt>
         <dd>
             {{#if freeMemory}}
-                {{#if lowMemory}}
-                    <div class="alert alert-danger" data-toggle="tooltip" title="In bytes, out of the maximum for any script 65536. Higher is better.">
+                {{#if dangerMemory}}
+                    <div class="alert alert-danger" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
                     <i class="fa fa-exclamation-circle"></i>
                 {{else}}
-                    <div class="alert alert-success" data-toggle="tooltip" title="In bytes, out of the maximum for any script 65536. Higher is better.">
-                    <i class="fa fa-check-circle"></i>
+                    {{#if warnMemory}}
+                        <div class="alert alert-warning" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
+                        <i class="fa fa-info-circle"></i>
+                    {{else}}
+                        <div class="alert alert-success" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
+                        <i class="fa fa-check-circle"></i>
+                    {{/if}}
                 {{/if}}
             {{else}}
                 <div class="alert alert-warning" data-toggle="tooltip" title="Data may not have loaded yet, please be patient.">

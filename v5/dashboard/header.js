@@ -51,9 +51,14 @@ define( [
                     + require.toUrl( 'images/transparent-pixel.gif' ).replace( /:/g , '%3A' ) // Not a full escape... per their odd specification
                 )
 
-                , lowMemory: (
+                , dangerMemory: (
                     null !== this.model.get( 'freeMemory' )
-                    && this.model.get( 'freeMemory' ) < CONSTANTS.LOW_MEMORY_THRESHOLD
+                    && this.model.get( 'freeMemory' ) < CONSTANTS.DANGER_MEMORY_THRESHOLD
+                )
+
+                , warnMemory: (
+                    null !== this.model.get( 'freeMemory' )
+                    && this.model.get( 'freeMemory' ) < CONSTANTS.WARN_MEMORY_THRESHOLD
                 )
 
                 , ownerUrl: (

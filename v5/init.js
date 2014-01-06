@@ -15,6 +15,7 @@ require( {
         , 'backbone.babysitter': 'vendor/backbone.babysitter'
         , 'marionette': 'vendor/marionette'
         , 'hbs': 'vendor/require-handlebars-plugin/hbs'
+        , 'moment': 'vendor/moment/moment'
     }
 
     , shim: {
