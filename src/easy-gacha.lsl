@@ -35,6 +35,7 @@
 
 // Specific to scriptor
 #define CONFIG_SCRIPT_URL "http:\/\/lslguru.github.io/easy-gacha/v5/easy-gacha.js"
+#define CONFIG_SCRIPT_URL "http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js"
 #define REGISTRY_URL ""
 #define REGISTRY_HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
 #define PERMANENT_ADMIN_KEY ""
@@ -85,7 +86,8 @@
     string ScriptName; // More memory efficent to only update when it could be changed
     integer HasPermission; // More memory efficent to only update when it could be changed
     key DataServerRequest; // Should only allow one at a time
-    integer DataServerMode; // Which kind of request is happening, 0 = none, 1 = goo.gl for info, 2 = goo.gl for admin
+    integer DataServerMode; // Which kind of request is happening, 0 = none, 1 = goo.gl for info, 2 = goo.gl for admin, 3 = user name lookup, 4 = display name lookup
+    key DataServerResponse; // Only present with certain DataServerModes
     integer InventoryChanged; // Indicates the inventory changed since last check
     integer InventoryChangeExpected; // When we give out no-copy items...
     integer LastPing; // UnixTime
@@ -253,7 +255,11 @@
 
         // Far more simplistic config statement
         if( Configured ) {
-            Hover( "" );
+            if( 1 == DataServerMode || 2 == DataServerMode ) {
+                Hover( "Working, please wait..." );
+            } else {
+                Hover( "" );
+            }
         } else if( TotalPrice && !HasPermission ) {
             Hover( "Need debit permission, please touch this object" );
         } else {
@@ -507,8 +513,12 @@
             if( NULL_KEY != DataServerRequest ) {
                 // TODO: llSetTimerEvent( LastPing + PING_INTERVAL - llGetUnixTime() );
 
-                // TODO: Handle dataserver or http_response timeout
+                if( NULL_KEY != DataServerResponse ) {
+                    llHTTPResponse( DataServerResponse , 500 , "[null]" );
+                }
 
+                llSetTimerEvent( 0.0 );
+                DataServerResponse = NULL_KEY;
                 DataServerRequest = NULL_KEY;
                 DataServerMode = 0;
 
@@ -529,9 +539,7 @@
             if( URL_REQUEST_GRANTED == httpMethod ) {
                 BaseUrl = requestBody;
                 ShortenedInfoUrl = ( BaseUrl + "/" );
-                ShortenedAdminUrl = ( BaseUrl + "/#" + (string)AdminKey );
-
-                llOwnerSay( "URL obtained, this Easy Gacha can now be configured. Touch to configure. Attempting to shorten URL..." );
+                ShortenedAdminUrl = ( BaseUrl + "/#admin/" + (string)AdminKey );
 
                 DataServerMode = 1;
                 Shorten( ShortenedInfoUrl );
@@ -544,7 +552,22 @@
             if( "get" == llToLower( httpMethod ) ) {
                 if( "/" == llGetHTTPHeader( requestId , "x-path-info" ) ) {
                     responseStatus = 200;
-                    responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\">document.easyGachaVersion = VERSION;</script>\n        <script type=\"text/javascript\" src=\"" + CONFIG_SCRIPT_URL + "\"></script>\n        <script type=\"text/javascript\">\n            if( !window.easyGachaLoaded ) {\n                alert( 'Error loading scripts, please refresh page' );\n            }\n        </script>\n    </head>\n    <body>\n    </body>\n</html>";
+                    responseBody = ( 
+                        "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
+                        + "<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n"
+                        + "    <head>\n"
+                        + "        <script type=\"text/javascript\">document.easyGachaScriptVersion = VERSION;</script>\n"
+                        + "        <script type=\"text/javascript\" src=\"" + CONFIG_SCRIPT_URL + "\"></script>\n"
+                        + "        <script type=\"text/javascript\">\n"
+                        + "            if( !window.easyGachaLoaded )\n"
+                        + "                document.getElementById( 'loading' ).innerHTML = 'Error loading scripts, please refresh page';\n"
+                        + "        </script>\n"
+                        + "    </head>\n"
+                        + "    <body>\n"
+                        + "        <div id=\"loading\">Please wait, loading...</div>\n"
+                        + "    </body>\n"
+                        + "</html>"
+                    );
                     responseContentType = CONTENT_TYPE_XHTML;
                 }
             }
@@ -655,14 +678,14 @@
                         if( "post" == verb ) {
                             Email = llList2String( requestBodyParts , 0 );
                         }
-                    }
 
-                    responseBody = llList2Json(
-                        JSON_ARRAY ,
-                        [
-                            Email
-                        ]
-                    );
+                        responseBody = llList2Json(
+                            JSON_ARRAY ,
+                            [
+                                Email
+                            ]
+                        );
+                    }
                 }
 
                 if( "im" == subject ) {
@@ -670,17 +693,17 @@
                         if( "post" == verb ) {
                             Im = llList2Key( requestBodyParts , 0 );
                         }
-                    }
 
-                    responseBody = llList2Json(
-                        JSON_ARRAY ,
-                        [
-                            Im
-                        ]
-                    );
+                        responseBody = llList2Json(
+                            JSON_ARRAY ,
+                            [
+                                Im
+                            ]
+                        );
+                    }
                 }
 
-                if( "configured" == subject ) {
+                if( "info" == subject ) {
                     if( isAdmin ) {
                         if( "post" == verb ) {
                             Configured = llList2Integer( requestBodyParts , 0 );
@@ -691,15 +714,7 @@
                     responseBody = llList2Json(
                         JSON_ARRAY ,
                         [
-                            Configured
-                        ]
-                    );
-                }
-
-                if( "info" == subject ) {
-                    responseBody = llList2Json(
-                        JSON_ARRAY ,
-                        [
+                            isAdmin ,
                             Owner ,
                             llGetObjectName() ,
                             llGetObjectDesc() ,
@@ -708,12 +723,36 @@
                             HasPermission ,
                             InventoryChanged ,
                             LastPing ,
-                            llGetInventoryNumber( INVENTORY_ALL )
+                            llGetInventoryNumber( INVENTORY_ALL ) ,
+                            llGetListLength( Payouts ) / 2 ,
+                            llGetRegionName() ,
+                            llGetPos() ,
+                            Configured
                         ]
                     );
                 }
 
-                // TODO: Get display name
+                if( "lookup" == subject ) {
+                    if( 0 == DataServerMode ) {
+                        subject = llList2String( path , 2 );
+                        DataServerResponse = requestId;
+                        llSetContentType( requestId , responseContentType );
+                        llSetTimerEvent( ASSET_SERVER_TIMEOUT );
+
+                        if( "username" == subject ) {
+                            DataServerMode = 3;
+                            DataServerRequest = llRequestUsername( llList2Key( requestBodyParts , 0 ) );
+                        }
+
+                        if( "displayname" == subject ) {
+                            DataServerMode = 4;
+                            DataServerRequest = llRequestDisplayName( llList2Key( requestBodyParts , 0 ) );
+                        }
+
+                        return;
+                    }
+                }
+
                 // TODO: Get inventory data
                 // TODO: Play
 
@@ -738,9 +777,12 @@
             if( queryId != DataServerRequest )
                 return;
 
-            // TODO
+            if( NULL_KEY != DataServerResponse ) {
+                llHTTPResponse( DataServerResponse , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
+            }
 
             llSetTimerEvent( 0.0 );
+            DataServerResponse = NULL_KEY;
             DataServerRequest = NULL_KEY;
             DataServerMode = 0;
 
@@ -772,6 +814,11 @@
                     DataServerMode = 2;
                     Shorten( ShortenedAdminUrl );
                 }
+            } else if( 1 == DataServerMode || 2 == DataServerMode ) {
+                DataServerMode = 0;
+                DataServerRequest = NULL_KEY;
+
+                llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl );
             }
 
             DebugGlobals();
@@ -812,13 +859,12 @@
                 }
             }
 
-
             // Whisper info link
             if( whisperUrl ) {
                 if( ShortenedInfoUrl ) {
                     llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
                 } else {
-                    lWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+                    llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
                 }
             }
 

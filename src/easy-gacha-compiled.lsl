@@ -24,6 +24,7 @@ string ScriptName;
 integer HasPermission;
 key DataServerRequest;
 integer DataServerMode;
+key DataServerResponse;
 integer InventoryChanged;
 integer InventoryChangeExpected;
 integer LastPing;
@@ -104,7 +105,11 @@ TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
 }
 }
 if( Configured ) {
+if( 1 == DataServerMode || 2 == DataServerMode ) {
+Hover( "Working, please wait..." );
+} else {
 Hover( "" );
+}
 } else if( TotalPrice && !HasPermission ) {
 Hover( "Need debit permission, please touch this object" );
 } else {
@@ -238,6 +243,11 @@ Update();
 }
 timer() {
 if( NULL_KEY != DataServerRequest ) {
+if( NULL_KEY != DataServerResponse ) {
+llHTTPResponse( DataServerResponse , 500 , "[null]" );
+}
+llSetTimerEvent( 0.0 );
+DataServerResponse = NULL_KEY;
 DataServerRequest = NULL_KEY;
 DataServerMode = 0;
 return;
@@ -250,8 +260,7 @@ integer responseContentType = CONTENT_TYPE_TEXT;
 if( URL_REQUEST_GRANTED == httpMethod ) {
 BaseUrl = requestBody;
 ShortenedInfoUrl = ( BaseUrl + "/" );
-ShortenedAdminUrl = ( BaseUrl + "/#" + (string)AdminKey );
-llOwnerSay( "URL obtained, this Easy Gacha can now be configured. Touch to configure. Attempting to shorten URL..." );
+ShortenedAdminUrl = ( BaseUrl + "/#admin/" + (string)AdminKey );
 DataServerMode = 1;
 Shorten( ShortenedInfoUrl );
 }
@@ -261,7 +270,22 @@ llOwnerSay( "Unable to get a URL. This Easy Gacha cannot be configured until one
 if( "get" == llToLower( httpMethod ) ) {
 if( "/" == llGetHTTPHeader( requestId , "x-path-info" ) ) {
 responseStatus = 200;
-responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n    <head>\n        <script type=\"text/javascript\">document.easyGachaVersion = 5.0;</script>\n        <script type=\"text/javascript\" src=\"" + "http:\/\/lslguru.github.io/easy-gacha/v5/easy-gacha.js" + "\"></script>\n        <script type=\"text/javascript\">\n            if( !window.easyGachaLoaded ) {\n                alert( 'Error loading scripts, please refresh page' );\n            }\n        </script>\n    </head>\n    <body>\n    </body>\n</html>";
+responseBody = (
+"<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
++ "<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n"
++ "    <head>\n"
++ "        <script type=\"text/javascript\">document.easyGachaScriptVersion = 5.0;</script>\n"
++ "        <script type=\"text/javascript\" src=\"" + "http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js" + "\"></script>\n"
++ "        <script type=\"text/javascript\">\n"
++ "            if( !window.easyGachaLoaded )\n"
++ "                document.getElementById( 'loading' ).innerHTML = 'Error loading scripts, please refresh page';\n"
++ "        </script>\n"
++ "    </head>\n"
++ "    <body>\n"
++ "        <div id=\"loading\">Please wait, loading...</div>\n"
++ "    </body>\n"
++ "</html>"
+);
 responseContentType = CONTENT_TYPE_XHTML;
 }
 }
@@ -357,7 +381,6 @@ if( isAdmin ) {
 if( "post" == verb ) {
 Email = llList2String( requestBodyParts , 0 );
 }
-}
 responseBody = llList2Json(
 JSON_ARRAY ,
 [
@@ -365,11 +388,11 @@ Email
 ]
 );
 }
+}
 if( "im" == subject ) {
 if( isAdmin ) {
 if( "post" == verb ) {
 Im = llList2Key( requestBodyParts , 0 );
-}
 }
 responseBody = llList2Json(
 JSON_ARRAY ,
@@ -378,7 +401,8 @@ Im
 ]
 );
 }
-if( "configured" == subject ) {
+}
+if( "info" == subject ) {
 if( isAdmin ) {
 if( "post" == verb ) {
 Configured = llList2Integer( requestBodyParts , 0 );
@@ -388,14 +412,7 @@ InventoryChanged = FALSE;
 responseBody = llList2Json(
 JSON_ARRAY ,
 [
-Configured
-]
-);
-}
-if( "info" == subject ) {
-responseBody = llList2Json(
-JSON_ARRAY ,
-[
+isAdmin ,
 Owner ,
 llGetObjectName() ,
 llGetObjectDesc() ,
@@ -404,9 +421,30 @@ llGetFreeMemory() ,
 HasPermission ,
 InventoryChanged ,
 LastPing ,
-llGetInventoryNumber( INVENTORY_ALL )
+llGetInventoryNumber( INVENTORY_ALL ) ,
+llGetListLength( Payouts ) / 2 ,
+llGetRegionName() ,
+llGetPos() ,
+Configured
 ]
 );
+}
+if( "lookup" == subject ) {
+if( 0 == DataServerMode ) {
+subject = llList2String( path , 2 );
+DataServerResponse = requestId;
+llSetContentType( requestId , responseContentType );
+llSetTimerEvent( 5.0 );
+if( "username" == subject ) {
+DataServerMode = 3;
+DataServerRequest = llRequestUsername( llList2Key( requestBodyParts , 0 ) );
+}
+if( "displayname" == subject ) {
+DataServerMode = 4;
+DataServerRequest = llRequestDisplayName( llList2Key( requestBodyParts , 0 ) );
+}
+return;
+}
 }
 if( isAdmin ) {
 Update();
@@ -418,7 +456,11 @@ llHTTPResponse( requestId , responseStatus , responseBody );
 dataserver( key queryId , string data ) {
 if( queryId != DataServerRequest )
 return;
+if( NULL_KEY != DataServerResponse ) {
+llHTTPResponse( DataServerResponse , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
+}
 llSetTimerEvent( 0.0 );
+DataServerResponse = NULL_KEY;
 DataServerRequest = NULL_KEY;
 DataServerMode = 0;
 }
@@ -439,6 +481,10 @@ ShortenedInfoUrl = shortened;
 DataServerMode = 2;
 Shorten( ShortenedAdminUrl );
 }
+} else if( 1 == DataServerMode || 2 == DataServerMode ) {
+DataServerMode = 0;
+DataServerRequest = NULL_KEY;
+llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl );
 }
 }
 touch_end( integer detected ) {
@@ -468,7 +514,7 @@ if( whisperUrl ) {
 if( ShortenedInfoUrl ) {
 llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
 } else {
-lWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
 }
 }
 Update();
