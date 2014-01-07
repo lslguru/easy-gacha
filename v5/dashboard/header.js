@@ -28,6 +28,10 @@ define( [
             'change': 'render'
         }
 
+        , ui: {
+            'tooltips': '[data-toggle=tooltip]'
+        }
+
         , templateHelpers: function() {
             if( null === this.model.get( 'freeMemory' ) ) {
                 return {};
@@ -70,7 +74,7 @@ define( [
         }
 
         , onRender: function() {
-            this.$( '[data-toggle=tooltip]' ).tooltip( {
+            this.ui.tooltips.tooltip( {
                 html: true
                 , placement: 'auto'
             } );

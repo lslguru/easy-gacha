@@ -1,0 +1,38 @@
+.item-probability-tooltip {
+    max-width: 500px;
+}
+
+.item-name img {
+    vertical-align: top;
+}
+
+.disparity-border-left ,
+.disparity-border-right {
+    position: relative;
+}
+
+.disparity-border-left:before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border: 1px solid rgb(104, 157, 234);
+    background-color: rgb(167, 187, 247);
+    background-image: linear-gradient(to bottom, rgb(167, 187, 247) 0%, rgb(135, 172, 240) 100%);
+    left: -2px;
+}
+
+.disparity-border-right:after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border: 1px solid rgb(104, 157, 234);
+    background-color: rgb(167, 187, 247);
+    background-image: linear-gradient(to bottom, rgb(167, 187, 247) 0%, rgb(135, 172, 240) 100%);
+    right: -2px;
+}

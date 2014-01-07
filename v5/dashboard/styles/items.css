@@ -1,0 +1,16 @@
+.nowrap-this-element {
+    white-space: nowrap;
+}
+
+.nowrap-this-element * {
+    white-space: normal;
+}
+
+[data-column-contents=name] ,
+[data-column-contents=inventory] {
+    padding-right: 2em !important;
+}
+
+[data-column-contents=probability] {
+    width: 100%;
+}

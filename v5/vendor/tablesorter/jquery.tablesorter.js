@@ -1,3 +1,6 @@
+//Wrapped in an outer function to preserve global this
+(function (root) { var amdExports; define(['jquery'], function () { (function () {
+
 /*
  * 
  * TableSorter 2.0 - Client-side table sorting with ease!
@@ -422,8 +425,8 @@
             function computeTableHeaderCellIndexes(t) {
                 var matrix = [];
                 var lookup = {};
-                var thead = t.getElementsByTagName('THEAD')[0];
-                var trs = thead.getElementsByTagName('TR');
+                var thead = t.getElementsByTagName('thead')[0];
+                var trs = thead.getElementsByTagName('tr');
 
                 for (var i = 0; i < trs.length; i++) {
                     var cells = trs[i].cells;
@@ -1029,3 +1032,8 @@
         }
     });
 })(jQuery);
+
+
+}.call(root));
+    return amdExports;
+}); }(this));

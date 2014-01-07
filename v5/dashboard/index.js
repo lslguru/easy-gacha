@@ -46,7 +46,7 @@ define( [
                     } ) ) );
 
                     this.items.show( new ItemsView( _.extend( {} , this.options , {
-                        collection: null
+                        collection: data.get( 'items' )
                     } ) ) );
                 }
             } , this );
