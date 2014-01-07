@@ -1,7 +1,7 @@
-list Items;
-list Rarity;
-list Limit;
-list Bought;
+list Items = ["Test1","Test2","Test3","Test4","Test5"];
+list Rarity = [1,5,5,5,10];
+list Limit = [-1,-1,10,5,-1];
+list Bought = [4,3,2,1,0];
 list Payouts;
 integer MaxPerPurchase = 50;
 integer PayPrice = PAY_HIDE;
@@ -119,6 +119,7 @@ HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PER
 if( TotalPrice && !HasPermission ) {
 Configured = FALSE;
 }
+Configured = TRUE;
 if( Configured ) {
 llSetPayPrice( PayPrice , PayPriceButtons );
 } else {
@@ -393,14 +394,38 @@ CountItems = 0;
 }
 }
 if( llList2Integer( requestBodyParts , 0 ) < CountItems ) {
-responseBody = llList2Json(
-JSON_ARRAY ,
-[
+string inventoryName = llList2String( Items , llList2Integer( requestBodyParts , 0 ) );
+integer inventoryType = llGetInventoryType( inventoryName );
+list values = [
+llList2Integer( requestBodyParts , 0 ) ,
 llList2Float( Rarity , llList2Integer( requestBodyParts , 0 ) ) ,
 llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) ,
 llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) ,
-llList2String( Items , llList2Integer( requestBodyParts , 0 ) )
-]
+inventoryName ,
+inventoryType
+];
+if( INVENTORY_NONE != inventoryType ) {
+values += [
+llGetInventoryCreator( inventoryName ) ,
+llGetInventoryKey( inventoryName ) != NULL_KEY ,
+llGetInventoryPermMask( inventoryName , MASK_OWNER ) ,
+llGetInventoryPermMask( inventoryName , MASK_GROUP ) ,
+llGetInventoryPermMask( inventoryName , MASK_EVERYONE ) ,
+llGetInventoryPermMask( inventoryName , MASK_NEXT )
+];
+} else {
+values += [
+NULL_KEY ,
+FALSE ,
+0 ,
+0 ,
+0 ,
+0
+];
+}
+responseBody = llList2Json(
+JSON_ARRAY ,
+values
 );
 }
 }
@@ -497,10 +522,12 @@ HasPermission ,
 InventoryChanged ,
 LastPing ,
 llGetInventoryNumber( INVENTORY_ALL ) ,
+llGetListLength( Items ) ,
 llGetListLength( Payouts ) / 2 ,
 llGetRegionName() ,
 llGetPos() ,
-Configured
+Configured ,
+TotalPrice
 ]
 );
 }

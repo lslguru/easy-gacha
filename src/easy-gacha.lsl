@@ -609,14 +609,40 @@
                     }
 
                     if( llList2Integer( requestBodyParts , 0 ) < CountItems ) {
+                        string inventoryName = llList2String( Items , llList2Integer( requestBodyParts , 0 ) );
+                        integer inventoryType = llGetInventoryType( inventoryName );
+                        list values = [
+                            llList2Integer( requestBodyParts , 0 ) , // index
+                            llList2Float( Rarity , llList2Integer( requestBodyParts , 0 ) ) , // rarity
+                            llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) , // limit
+                            llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) , // count bought
+                            inventoryName , // name
+                            inventoryType // type
+                        ];
+
+                        if( INVENTORY_NONE != inventoryType ) {
+                            values += [
+                                llGetInventoryCreator( inventoryName ) , // creator
+                                llGetInventoryKey( inventoryName ) != NULL_KEY , // can get key (key not passed for security)
+                                llGetInventoryPermMask( inventoryName , MASK_OWNER ) , // owner permissions mask
+                                llGetInventoryPermMask( inventoryName , MASK_GROUP ) , // group permissions mask
+                                llGetInventoryPermMask( inventoryName , MASK_EVERYONE ) , // public permissions mask
+                                llGetInventoryPermMask( inventoryName , MASK_NEXT ) // next permissions mask
+                            ];
+                        } else {
+                            values += [
+                                NULL_KEY , // creator
+                                FALSE , // can get key (key not passed for security)
+                                0 , // owner permissions mask
+                                0 , // group permissions mask
+                                0 , // public permissions mask
+                                0 // next permissions mask
+                            ];
+                        }
+
                         responseBody = llList2Json(
                             JSON_ARRAY ,
-                            [
-                                llList2Float( Rarity , llList2Integer( requestBodyParts , 0 ) ) ,
-                                llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) ,
-                                llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) ,
-                                llList2String( Items , llList2Integer( requestBodyParts , 0 ) )
-                            ]
+                            values
                         );
                     }
                 }
@@ -724,10 +750,12 @@
                             InventoryChanged ,
                             LastPing ,
                             llGetInventoryNumber( INVENTORY_ALL ) ,
+                            llGetListLength( Items ) ,
                             llGetListLength( Payouts ) / 2 ,
                             llGetRegionName() ,
                             llGetPos() ,
-                            Configured
+                            Configured ,
+                            TotalPrice
                         ]
                     );
                 }
