@@ -125,10 +125,6 @@ define( [
                 } );
             } );
         }
-
-        , onRender: function() {
-            console.log( this.$el.html() );
-        }
     } );
 
     return exports;
