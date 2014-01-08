@@ -51,8 +51,8 @@ define( [
             }
 
             // Initialize probability numbers
-            var rarityPercentage = ( rarity * 100 / totalRarity );
-            var boughtPercentage = ( bought * 100 / totalBought );
+            var rarityPercentage = ( totalRarity ? ( rarity * 100 / totalRarity ) : 0 );
+            var boughtPercentage = ( totalBought ? ( bought * 100 / totalBought ) : 0 );
             var successBarPercentage = 0;
             var dangerBarPercentage = 0;
             var rarityDisparityTargetSide = '';

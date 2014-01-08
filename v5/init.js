@@ -16,12 +16,20 @@ require( {
         , 'marionette': 'vendor/marionette'
         , 'hbs': 'vendor/require-handlebars-plugin/hbs'
         , 'moment': 'vendor/moment/moment'
+        , 'tablesorter': 'vendor/tablesorter/jquery.tablesorter'
     }
 
     , shim: {
         'bootstrap': {
             deps: [
                 'jquery'
+                , 'css!vendor/bootstrap/css/bootstrap'
+                , 'css!vendor/bootstrap/css/bootstrap-theme'
+            ]
+        }
+        , 'tablesorter': {
+            deps: [
+                'css!vendor/tablesorter/themes/blue/style'
             ]
         }
     }
@@ -32,9 +40,6 @@ require( {
     , 'marionette'
     , 'lib/router'
     , 'models/info'
-    , 'css!vendor/bootstrap/css/bootstrap'
-    , 'css!vendor/bootstrap/css/bootstrap-theme'
-    , 'css!vendor/tablesorter/themes/blue/style'
     , 'css!styles/page'
 
 ] , function(
@@ -43,6 +48,7 @@ require( {
     , Marionette
     , AppRouter
     , Info
+    , pageStyles
 
 ) {
     'use strict';

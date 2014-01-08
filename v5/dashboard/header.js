@@ -76,6 +76,7 @@ define( [
         , onRender: function() {
             this.ui.tooltips.tooltip( {
                 html: true
+                , container: 'body'
                 , placement: 'auto'
             } );
         }

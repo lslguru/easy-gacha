@@ -67,7 +67,7 @@ define( [
 
     , INVENTORY_TYPE_ICON: {
         'INVENTORY_UNKNOWN': item_lostandfound
-        , 'INVENTORY_NONE': folder_trash
+        , 'INVENTORY_NONE': item_lostandfound
         , 'INVENTORY_TEXTURE': item_texture
         , 'INVENTORY_SOUND': item_sound
         , 'INVENTORY_LANDMARK': item_landmark
@@ -82,7 +82,7 @@ define( [
 
     , INVENTORY_TYPE_NAME: {
         'INVENTORY_UNKNOWN': 'The inventory type of the item was not understood'
-        , 'INVENTORY_NONE': 'This inventory item is currently unavailable'
+        , 'INVENTORY_NONE': 'This inventory item is currently unavailable (not present in this Gacha)'
         , 'INVENTORY_TEXTURE': 'Texture'
         , 'INVENTORY_SOUND': 'Sound'
         , 'INVENTORY_LANDMARK': 'Landmark'

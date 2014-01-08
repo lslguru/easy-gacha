@@ -1,9 +1,9 @@
 <td class="nowrap-this-element item-name" data-column-contents="name" data-inventory-type="{{type}}" data-toggle="tooltip" title="{{typeName}}{{#if creatorUserName}}&lt;br /&gt;Created by: {{creatorDisplayName}} ({{creatorUserName}}){{/if}}">
     {{name}}
 </td>
-<td data-column-contents="probability" data-raw-value="{{rarity}}" data-toggle="tooltip" title="Probability: {{rarityPercentage}}% (weight: {{rarity}})&lt;br /&gt;Handed out: {{boughtPercentage}}% ({{bought}} items given so far)">
-    <span class="sr-only">{{rarityPercentage}}% chance of getting this item, {{boughtPercentage}}% of winnings have been this item</span>
-    <div class="progress progress-striped">
+<td data-column-contents="probability" data-raw-value="{{rarity}}" data-toggle="tooltip" title="There is a {{rarityPercentage}}% chance of getting this item. Its weight is {{rarity}}.">
+    <span class="sr-only">There is a {{rarityPercentage}}% chance of getting this item. Its weight is {{rarity}}.</span>
+    <div class="progress">
         <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{successBarPercentage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{successBarPercentage}}%"></div>
         <div class="progress-bar progress-bar-danger disparity-border-{{rarityDisparityTargetSide}}" role="progressbar" aria-valuenow="{{dangerBarPercentage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{dangerBarPercentage}}%"></div>
     </div>

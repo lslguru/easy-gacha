@@ -4,7 +4,7 @@ define( [
     , 'hbs!dashboard/templates/items'
     , 'css!dashboard/styles/items'
     , 'dashboard/item'
-    , 'vendor/tablesorter/jquery.tablesorter'
+    , 'tablesorter'
 
 ] , function(
 
@@ -37,6 +37,7 @@ define( [
 
             this.ui.tooltips.tooltip( {
                 html: true
+                , container: 'body'
                 , placement: function( tip , el ) {
                     return $(el).data('tooltip-placement') || 'auto';
                 }

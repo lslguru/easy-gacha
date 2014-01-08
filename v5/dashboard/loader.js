@@ -3,8 +3,8 @@ define( [
     'marionette'
     , 'hbs!dashboard/templates/loader'
     , 'css!dashboard/styles/loader'
-    , 'css!vendor/absolute-center'
     , 'bootstrap'
+    , 'css!vendor/bootstrap/css/bootstrap'
     , 'models/info'
     , 'models/username'
     , 'models/displayname'
@@ -16,8 +16,8 @@ define( [
     Marionette
     , template
     , styles
-    , absoluteCenterStyles
     , bootstrap
+    , bootstrapStyles
     , Info
     , UserName
     , DisplayName
@@ -37,7 +37,19 @@ define( [
         template: template
 
         , modelEvents: {
-            'change': 'render'
+            'change:percentage': 'updateProgress'
+        }
+
+        , ui: {
+            'progressBar': '.progress-bar'
+            , 'srValue': '.sr-only .value'
+        }
+
+        , updateProgress: function() {
+            var percentage = this.model.get( 'percentage' );
+            this.ui.progressBar.attr( 'aria-valuenow' , percentage );
+            this.ui.progressBar.css( 'width' , percentage + '%' );
+            this.ui.srValue.text( percentage );
         }
 
         , onShowCalled: function() {
@@ -98,7 +110,8 @@ define( [
                     success: next
                 } );
                 items.bind( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
-                    model.set( 'percentage' , model.get( 'percentage' ) + ( 85 / model.get( 'info' ).get( 'itemCount' ) ) );
+                    var itemCount = model.get( 'info' ).get( 'itemCount' ) + 1;
+                    model.set( 'percentage' , Math.round( model.get( 'percentage' ) + ( 85 / itemCount ) ) );
                 } , this );
             }
 
@@ -111,6 +124,10 @@ define( [
                     } );
                 } );
             } );
+        }
+
+        , onRender: function() {
+            console.log( this.$el.html() );
         }
     } );
 
