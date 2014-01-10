@@ -42,6 +42,7 @@
 
 // System constraints
 #define MAX_FOLDER_NAME_LENGTH 63
+#define GREY_GOO_HANDOUT_LIMIT 50
 
 // Tweaks
 #define ASSET_SERVER_TIMEOUT 5.0
@@ -61,23 +62,28 @@
     list Limit; // integer, -1 == infinite
     list Bought; // stats counter
     list Payouts; // strided: [ avatar key , lindens ]
-    integer MaxPerPurchase = 50;
+    integer MaxPerPurchase = GREY_GOO_HANDOUT_LIMIT;
     integer PayPrice = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (should be sum of Payouts)
-    list PayPriceButtons = [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ]; // [ 4x ( Price || PAY_HIDE || PAY_DEFAULT ) ]
+    integer PayPriceButton0 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
+    integer PayPriceButton1 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
+    integer PayPriceButton2 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
+    integer PayPriceButton3 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
     integer FolderForSingleItem = TRUE;
-    integer RootClickAction = FALSE;
+    integer RootClickAction = -1; // -1 = user not asked, FALSE, TRUE
     integer Group = FALSE; // If group may administer
     string Email; // Who to email after each play
     key Im; // Who to IM after each play
     integer AllowWhisper = TRUE; // Whether or not to allow whisper
     integer AllowHover = TRUE; // Whether or not to allow hovertext output
     integer MaxBuys = -1; // Infinite
-    integer Configured; // boolean
+    integer Configured; // boolean - web checks only
+    string Extra; // extra data that the UI wants to store
 
     ////////////////////////////////////////////////////////////////////////////
     // Runtime Values
     ////////////////////////////////////////////////////////////////////////////
 
+    integer Ready; // Passes internal checks as well as web checks
     key AdminKey; // Used to indicate if person has rights to modify configs
     string BaseUrl; // Requested and hopefully received
     string ShortenedInfoUrl; // Hand this out instead of the full URL
@@ -98,7 +104,6 @@
     float TotalEffectiveRarity; // Updated when Rarity or Limit are updated
     integer CountItems; // Updated when Items is updated
     integer CountPayouts; // Updated when Payouts is updated - total elements, not stride elements
-    integer TestMode; // Boolean - Used to test execution without accepting or sending money
 
 #end globalvariables
 
@@ -147,7 +152,10 @@
         Debug( "    Payouts = " + llList2CSV( Payouts ) );
         Debug( "    MaxPerPurchase = " + (string)MaxPerPurchase );
         Debug( "    PayPrice = " + (string)PayPrice );
-        Debug( "    PayPriceButtons = " + llList2CSV( PayPriceButtons ) );
+        Debug( "    PayPriceButton0 = " + (string)PayPriceButton0 );
+        Debug( "    PayPriceButton1 = " + (string)PayPriceButton1 );
+        Debug( "    PayPriceButton2 = " + (string)PayPriceButton2 );
+        Debug( "    PayPriceButton3 = " + (string)PayPriceButton3 );
         Debug( "    FolderForSingleItem = " + (string)FolderForSingleItem );
         Debug( "    RootClickAction = " + (string)RootClickAction );
         Debug( "    Group = " + (string)Group );
@@ -157,6 +165,8 @@
         Debug( "    AllowHover = " + (string)AllowHover );
         Debug( "    MaxBuys = " + (string)MaxBuys );
         Debug( "    Configured = " + (string)Configured );
+        Debug( "    Extra = " + Extra );
+        Debug( "    Ready = " + (string)Ready );
         Debug( "    AdminKey = " + (string)AdminKey );
         Debug( "    BaseUrl = " + BaseUrl );
         Debug( "    ShortenedInfoUrl = " + ShortenedInfoUrl );
@@ -176,7 +186,6 @@
         Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
         Debug( "    CountItems = " + (string)CountItems );
         Debug( "    CountPayouts = " + (string)CountPayouts );
-        Debug( "    TestMode = " + (string)TestMode );
         Debug( "    Free memory: " + (string)llGetFreeMemory() );
     "Debug";}
 
@@ -199,44 +208,6 @@
         ScriptName = llGetScriptName();
         HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
 
-        if( TotalPrice && !HasPermission ) {
-            Configured = FALSE;
-        }
-
-        // Default values of these variables are to not show pay buttons.
-        // This should prevent any new purchases until a price has been
-        // set.
-        if( Configured ) {
-            llSetPayPrice( PayPrice , PayPriceButtons );
-        } else {
-            llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
-        }
-
-        // Set touch text:
-        // If needs config, label "Config"
-        // If price is zero and Configured, "Play"
-        // If price is !zero, "Info" because Pay button plays
-        if( !Configured ) {
-            llSetTouchText( "Config" );
-        } else if( TotalPrice ) {
-            llSetTouchText( "Info" );
-        } else {
-            llSetTouchText( "Play" );
-        }
-
-        // Set object action only if we're not the root prim of a linked set or
-        // they've explicitly allowed it
-        if( RootClickAction || LINK_ROOT != llGetLinkNumber() ) {
-            // If we're ready to go and price is not zero, then pay is the
-            // default action, otherwise touch will always be the default (for
-            // play or info or config)
-            if( Configured && TotalPrice ) {
-                llSetClickAction( CLICK_ACTION_PAY );
-            } else {
-                llSetClickAction( CLICK_ACTION_TOUCH );
-            }
-        }
-
         // Calculated values
         TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
         TotalBought = (integer)llListStatistics( LIST_STAT_SUM , Bought );
@@ -253,15 +224,82 @@
             }
         }
 
-        // Far more simplistic config statement
+        // Default to false
+        Ready = FALSE;
+
+        // If UI thinks we're ready
         if( Configured ) {
+            // Default to true
+            Ready = TRUE;
+
+            // Conditions which make it go offline. If any of these fail, fall
+            // back to false
+            if( TotalPrice && !HasPermission ) {
+                Ready = FALSE;
+            }
+            if( TotalBought >= MaxBuys ) {
+                Ready = FALSE;
+            }
+            if( 0 == CountItems ) {
+                Ready = FALSE;
+            }
+            if( 0 == CountPayouts ) {
+                Ready = FALSE;
+            }
+            if( 0.0 == TotalEffectiveRarity ) {
+                Ready = FALSE;
+            }
+            if( !HasUnlimitedItems && TotalBought >= TotalLimit ) {
+                Ready = FALSE;
+            }
+        }
+
+        // Default values of these variables are to not show pay buttons.
+        // This should prevent any new purchases until a price has been
+        // set.
+        if( Ready && TotalPrice ) {
+            llSetPayPrice( PayPrice , [ PayPriceButton0 , PayPriceButton1 , PayPriceButton2 , PayPriceButton3 ] );
+        } else {
+            llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
+        }
+
+        // Set touch text:
+        // If needs config, label "Config"
+        // If price is zero and Ready, "Play"
+        // If price is !zero, "Info" because Pay button plays
+        if( !Ready ) {
+            llSetTouchText( "Config" );
+        } else if( TotalPrice ) {
+            llSetTouchText( "Info" );
+        } else {
+            llSetTouchText( "Play" );
+        }
+
+        // Set object action only if we're not the root prim of a linked set or
+        // they've explicitly allowed it
+        if( TRUE == RootClickAction || LINK_ROOT != llGetLinkNumber() ) {
+            // If we're ready to go and price is not zero, then pay is the
+            // default action, otherwise touch will always be the default (for
+            // play or info or config)
+            if( Ready && TotalPrice ) {
+                llSetClickAction( CLICK_ACTION_PAY );
+            } else {
+                llSetClickAction( CLICK_ACTION_TOUCH );
+            }
+        }
+
+        // Far more simplistic config statement
+        if( Ready ) {
             if( 1 == DataServerMode || 2 == DataServerMode ) {
                 Hover( "Working, please wait..." );
             } else {
                 Hover( "" );
             }
+        } else if( TotalBought >= MaxBuys ) {
+            Hover( "All items have been given" );
         } else if( TotalPrice && !HasPermission ) {
             Hover( "Need debit permission, please touch this object" );
+            llRequestPermissions( Owner , PERMISSION_DEBIT );
         } else {
             Hover( "Configuration needed, please touch this object" );
         }
@@ -388,12 +426,7 @@
         string change = "";
         lindensReceived -= ( totalItems * TotalPrice );
         if( lindensReceived ) {
-            // Give back the excess
-            if( TestMode ) {
-                llOwnerSay( "Would have given change of L$" + (string)lindensReceived + "." );
-            } else {
-                llGiveMoney( buyerId , lindensReceived );
-            }
+            llGiveMoney( buyerId , lindensReceived );
             change = " Your change is L$" + (string)lindensReceived;
         }
 
@@ -402,14 +435,9 @@
         for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) { // Strided list
             if( llList2Key( Payouts , payoutIndex ) != Owner ) {
                 Debug( "    Giving L$" + (string)(llList2Integer( Payouts , payoutIndex + 1 ) * totalItems) + " to " + llList2String( Payouts , payoutIndex ) );
-                if( TestMode ) {
-                    llOwnerSay( "Would have given L$" + (string)( llList2Integer( Payouts , payoutIndex + 1 ) * totalItems ) + " to " + (string)llList2Key( Payouts , payoutIndex ) );
-                } else {
-                    llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
-                }
+                llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
             }
         }
-        TestMode = FALSE; // This may only exist for one call at a time
 
         // Thank them for their purchase
         Whisper( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
@@ -424,10 +452,10 @@
 
         // Reports
         if( Im ) {
-            llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + (string)buyerId + ") just received " + (string)countItemsToSend + " items. " + ShortenedAdminUrl ); // FORCED_DELAY 2.0 seconds
+            llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + (string)buyerId + ") just received " + (string)countItemsToSend + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
         }
-        // TODO: llEmail FORCED_DELAY 20.0 seconds
-        // TODO: Send info to registry
+        // TODO: llEmail Email FORCED_DELAY 20.0 seconds
+        // TODO: Ping registry
     }
 
 #end globalfunctions
@@ -680,7 +708,14 @@
                             MaxPerPurchase  = llList2Integer( requestBodyParts , 5 );
                             MaxBuys = llList2Integer( requestBodyParts , 6 );
                             PayPrice = llList2Integer( requestBodyParts , 7 );
-                            PayPriceButtons = llList2List( requestBodyParts , 8 , 11 );
+                            PayPriceButton0 = llList2Integer( requestBodyParts , 8 );
+                            PayPriceButton1 = llList2Integer( requestBodyParts , 9 );
+                            PayPriceButton2 = llList2Integer( requestBodyParts , 10 );
+                            PayPriceButton3 = llList2Integer( requestBodyParts , 11 );
+
+                            if( GREY_GOO_HANDOUT_LIMIT < MaxPerPurchase ) {
+                                MaxPerPurchase = GREY_GOO_HANDOUT_LIMIT;
+                            }
                         }
                     }
 
@@ -694,8 +729,13 @@
                             AllowHover ,
                             MaxPerPurchase , 
                             MaxBuys ,
-                            PayPrice
-                        ] + PayPriceButtons
+                            PayPrice ,
+                            PayPriceButton0 ,
+                            PayPriceButton1 ,
+                            PayPriceButton2 ,
+                            PayPriceButton3 ,
+                            LINK_ROOT == llGetLinkNumber() // if is root prim
+                        ]
                     );
                 }
 
@@ -733,6 +773,7 @@
                     if( isAdmin ) {
                         if( "post" == verb ) {
                             Configured = llList2Integer( requestBodyParts , 0 );
+                            Extra = llList2String( requestBodyParts , 1 );
                             InventoryChanged = FALSE;
                         }
                     }
@@ -755,7 +796,8 @@
                             llGetRegionName() ,
                             llGetPos() ,
                             Configured ,
-                            TotalPrice
+                            TotalPrice ,
+                            Extra
                         ]
                     );
                 }
@@ -781,8 +823,27 @@
                     }
                 }
 
-                // TODO: Get inventory data
-                // TODO: Play
+                if( "inv" == subject && isAdmin ) {
+                    if( llList2Integer( requestBodyParts , 0 ) < llGetInventoryNumber( INVENTORY_ALL ) ) {
+                        string inventoryName = llGetInventoryName( INVENTORY_ALL , llList2Integer( requestBodyParts , 0 ) );
+                        list values = [
+                            llList2Integer( requestBodyParts , 0 ) , // index
+                            inventoryName , // name
+                            llGetInventoryType( inventoryName ) , // type
+                            llGetInventoryCreator( inventoryName ) , // creator
+                            llGetInventoryKey( inventoryName ) , // key
+                            llGetInventoryPermMask( inventoryName , MASK_OWNER ) , // owner permissions mask
+                            llGetInventoryPermMask( inventoryName , MASK_GROUP ) , // group permissions mask
+                            llGetInventoryPermMask( inventoryName , MASK_EVERYONE ) , // public permissions mask
+                            llGetInventoryPermMask( inventoryName , MASK_NEXT ) // next permissions mask
+                        ];
+
+                        responseBody = llList2Json(
+                            JSON_ARRAY ,
+                            values
+                        );
+                    }
+                }
 
                 if( isAdmin ) {
                     Update();
@@ -834,7 +895,8 @@
                     DataServerMode = 0;
                     DataServerRequest = NULL_KEY;
 
-                    llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl );
+                    llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
+                    // TODO: Ping registry
                 }
                 if( 1 == DataServerMode ) {
                     ShortenedInfoUrl = shortened;
@@ -846,7 +908,8 @@
                 DataServerMode = 0;
                 DataServerRequest = NULL_KEY;
 
-                llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl );
+                llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
+                // TODO: Ping registry
             }
 
             DebugGlobals();
@@ -866,7 +929,7 @@
                 // If admin, send IM with link
                 if( detectedKey == Owner ) {
                     if( ShortenedAdminUrl ) {
-                        llLoadURL( Owner , "To configure and administer this Easy Gacha, please go here" , ShortenedAdminUrl ); // FORCED_DELAY 10.0 seconds
+                        llLoadURL( Owner , "To configure and administer this Easy Gacha, please go here. DO NOT GIVE THIS LINK TO ANYONE ELSE." , ShortenedAdminUrl ); // FORCED_DELAY 10.0 seconds
                     } else if( "" == BaseUrl && llGetFreeURLs() ) {
                         // If URL not set but URLs available, request one
                         llOwnerSay( "Trying to get a new URL now... please wait" );
@@ -882,7 +945,7 @@
                     whisperUrl = TRUE;
                 }
 
-                if( Configured && !TotalPrice ) {
+                if( Ready && !TotalPrice ) {
                     Play( detectedKey , 0 );
                 }
             }

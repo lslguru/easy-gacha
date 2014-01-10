@@ -1,13 +1,16 @@
-list Items = ["Test1","Test2","Test3","Test4","Test5"];
-list Rarity = [1,5,5,5,10];
-list Limit = [-1,-1,10,5,-1];
-list Bought = [4,3,2,1,0];
+list Items;
+list Rarity;
+list Limit;
+list Bought;
 list Payouts;
 integer MaxPerPurchase = 50;
 integer PayPrice = PAY_HIDE;
-list PayPriceButtons = [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ];
+integer PayPriceButton0 = PAY_HIDE;
+integer PayPriceButton1 = PAY_HIDE;
+integer PayPriceButton2 = PAY_HIDE;
+integer PayPriceButton3 = PAY_HIDE;
 integer FolderForSingleItem = TRUE;
-integer RootClickAction = FALSE;
+integer RootClickAction = -1;
 integer Group = FALSE;
 string Email;
 key Im;
@@ -15,6 +18,8 @@ integer AllowWhisper = TRUE;
 integer AllowHover = TRUE;
 integer MaxBuys = -1;
 integer Configured;
+string Extra;
+integer Ready;
 key AdminKey;
 string BaseUrl;
 string ShortenedInfoUrl;
@@ -35,7 +40,6 @@ integer HasUnlimitedItems;
 float TotalEffectiveRarity;
 integer CountItems;
 integer CountPayouts;
-integer TestMode;
 Debug( string msg ) { if( INVENTORY_NONE != llGetInventoryType( "easy-gacha-debug" ) ) { llOwnerSay( "/me : " + llGetScriptName() + ": DEBUG: " + msg ); } }
 Whisper( string msg ) {
 Debug( "Whisper( \"" + msg + "\" );" );
@@ -70,7 +74,10 @@ Debug( "    Bought = " + llList2CSV( Bought ) );
 Debug( "    Payouts = " + llList2CSV( Payouts ) );
 Debug( "    MaxPerPurchase = " + (string)MaxPerPurchase );
 Debug( "    PayPrice = " + (string)PayPrice );
-Debug( "    PayPriceButtons = " + llList2CSV( PayPriceButtons ) );
+Debug( "    PayPriceButton0 = " + (string)PayPriceButton0 );
+Debug( "    PayPriceButton1 = " + (string)PayPriceButton1 );
+Debug( "    PayPriceButton2 = " + (string)PayPriceButton2 );
+Debug( "    PayPriceButton3 = " + (string)PayPriceButton3 );
 Debug( "    FolderForSingleItem = " + (string)FolderForSingleItem );
 Debug( "    RootClickAction = " + (string)RootClickAction );
 Debug( "    Group = " + (string)Group );
@@ -80,6 +87,8 @@ Debug( "    AllowWhisper = " + (string)AllowWhisper );
 Debug( "    AllowHover = " + (string)AllowHover );
 Debug( "    MaxBuys = " + (string)MaxBuys );
 Debug( "    Configured = " + (string)Configured );
+Debug( "    Extra = " + Extra );
+Debug( "    Ready = " + (string)Ready );
 Debug( "    AdminKey = " + (string)AdminKey );
 Debug( "    BaseUrl = " + BaseUrl );
 Debug( "    ShortenedInfoUrl = " + ShortenedInfoUrl );
@@ -99,7 +108,6 @@ Debug( "    HasUnlimitedItems = " + (string)HasUnlimitedItems );
 Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
 Debug( "    CountItems = " + (string)CountItems );
 Debug( "    CountPayouts = " + (string)CountPayouts );
-Debug( "    TestMode = " + (string)TestMode );
 Debug( "    Free memory: " + (string)llGetFreeMemory() );
 "Debug";}
 RequestUrl() {
@@ -116,29 +124,6 @@ Debug( "Update()" );
 Owner = llGetOwner();
 ScriptName = llGetScriptName();
 HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
-if( TotalPrice && !HasPermission ) {
-Configured = FALSE;
-}
-Configured = TRUE;
-if( Configured ) {
-llSetPayPrice( PayPrice , PayPriceButtons );
-} else {
-llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
-}
-if( !Configured ) {
-llSetTouchText( "Config" );
-} else if( TotalPrice ) {
-llSetTouchText( "Info" );
-} else {
-llSetTouchText( "Play" );
-}
-if( RootClickAction || LINK_ROOT != llGetLinkNumber() ) {
-if( Configured && TotalPrice ) {
-llSetClickAction( CLICK_ACTION_PAY );
-} else {
-llSetClickAction( CLICK_ACTION_TOUCH );
-}
-}
 TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
 TotalBought = (integer)llListStatistics( LIST_STAT_SUM , Bought );
 TotalLimit = (integer)llListStatistics( LIST_STAT_SUM , Limit );
@@ -152,14 +137,58 @@ if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIn
 TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
 }
 }
+Ready = FALSE;
 if( Configured ) {
+Ready = TRUE;
+if( TotalPrice && !HasPermission ) {
+Ready = FALSE;
+}
+if( TotalBought >= MaxBuys ) {
+Ready = FALSE;
+}
+if( 0 == CountItems ) {
+Ready = FALSE;
+}
+if( 0 == CountPayouts ) {
+Ready = FALSE;
+}
+if( 0.0 == TotalEffectiveRarity ) {
+Ready = FALSE;
+}
+if( !HasUnlimitedItems && TotalBought >= TotalLimit ) {
+Ready = FALSE;
+}
+}
+if( Ready && TotalPrice ) {
+llSetPayPrice( PayPrice , [ PayPriceButton0 , PayPriceButton1 , PayPriceButton2 , PayPriceButton3 ] );
+} else {
+llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
+}
+if( !Ready ) {
+llSetTouchText( "Config" );
+} else if( TotalPrice ) {
+llSetTouchText( "Info" );
+} else {
+llSetTouchText( "Play" );
+}
+if( TRUE == RootClickAction || LINK_ROOT != llGetLinkNumber() ) {
+if( Ready && TotalPrice ) {
+llSetClickAction( CLICK_ACTION_PAY );
+} else {
+llSetClickAction( CLICK_ACTION_TOUCH );
+}
+}
+if( Ready ) {
 if( 1 == DataServerMode || 2 == DataServerMode ) {
 Hover( "Working, please wait..." );
 } else {
 Hover( "" );
 }
+} else if( TotalBought >= MaxBuys ) {
+Hover( "All items have been given" );
 } else if( TotalPrice && !HasPermission ) {
 Hover( "Need debit permission, please touch this object" );
+llRequestPermissions( Owner , PERMISSION_DEBIT );
 } else {
 Hover( "Configuration needed, please touch this object" );
 }
@@ -237,25 +266,16 @@ Debug( "    Truncated object name: " + objectName );
 string change = "";
 lindensReceived -= ( totalItems * TotalPrice );
 if( lindensReceived ) {
-if( TestMode ) {
-llOwnerSay( "Would have given change of L$" + (string)lindensReceived + "." );
-} else {
 llGiveMoney( buyerId , lindensReceived );
-}
 change = " Your change is L$" + (string)lindensReceived;
 }
 integer payoutIndex;
 for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) {
 if( llList2Key( Payouts , payoutIndex ) != Owner ) {
 Debug( "    Giving L$" + (string)(llList2Integer( Payouts , payoutIndex + 1 ) * totalItems) + " to " + llList2String( Payouts , payoutIndex ) );
-if( TestMode ) {
-llOwnerSay( "Would have given L$" + (string)( llList2Integer( Payouts , payoutIndex + 1 ) * totalItems ) + " to " + (string)llList2Key( Payouts , payoutIndex ) );
-} else {
 llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
 }
 }
-}
-TestMode = FALSE;
 Whisper( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
 Hover( "Please wait, giving items to: " + displayName );
 if( 1 < countItemsToSend || FolderForSingleItem ) {
@@ -264,7 +284,7 @@ llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend );
 llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) );
 }
 if( Im ) {
-llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + (string)buyerId + ") just received " + (string)countItemsToSend + " items. " + ShortenedAdminUrl );
+llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + (string)buyerId + ") just received " + (string)countItemsToSend + " items. " + ShortenedInfoUrl );
 }
 }
 default {
@@ -459,7 +479,13 @@ AllowHover = llList2Integer( requestBodyParts , 4 );
 MaxPerPurchase  = llList2Integer( requestBodyParts , 5 );
 MaxBuys = llList2Integer( requestBodyParts , 6 );
 PayPrice = llList2Integer( requestBodyParts , 7 );
-PayPriceButtons = llList2List( requestBodyParts , 8 , 11 );
+PayPriceButton0 = llList2Integer( requestBodyParts , 8 );
+PayPriceButton1 = llList2Integer( requestBodyParts , 9 );
+PayPriceButton2 = llList2Integer( requestBodyParts , 10 );
+PayPriceButton3 = llList2Integer( requestBodyParts , 11 );
+if( 50 < MaxPerPurchase ) {
+MaxPerPurchase = 50;
+}
 }
 }
 responseBody = llList2Json(
@@ -472,8 +498,13 @@ AllowWhisper ,
 AllowHover ,
 MaxPerPurchase ,
 MaxBuys ,
-PayPrice
-] + PayPriceButtons
+PayPrice ,
+PayPriceButton0 ,
+PayPriceButton1 ,
+PayPriceButton2 ,
+PayPriceButton3 ,
+LINK_ROOT == llGetLinkNumber()
+]
 );
 }
 if( "email" == subject ) {
@@ -506,6 +537,7 @@ if( "info" == subject ) {
 if( isAdmin ) {
 if( "post" == verb ) {
 Configured = llList2Integer( requestBodyParts , 0 );
+Extra = llList2String( requestBodyParts , 1 );
 InventoryChanged = FALSE;
 }
 }
@@ -527,7 +559,8 @@ llGetListLength( Payouts ) / 2 ,
 llGetRegionName() ,
 llGetPos() ,
 Configured ,
-TotalPrice
+TotalPrice ,
+Extra
 ]
 );
 }
@@ -546,6 +579,26 @@ DataServerMode = 4;
 DataServerRequest = llRequestDisplayName( llList2Key( requestBodyParts , 0 ) );
 }
 return;
+}
+}
+if( "inv" == subject && isAdmin ) {
+if( llList2Integer( requestBodyParts , 0 ) < llGetInventoryNumber( INVENTORY_ALL ) ) {
+string inventoryName = llGetInventoryName( INVENTORY_ALL , llList2Integer( requestBodyParts , 0 ) );
+list values = [
+llList2Integer( requestBodyParts , 0 ) ,
+inventoryName ,
+llGetInventoryType( inventoryName ) ,
+llGetInventoryCreator( inventoryName ) ,
+llGetInventoryKey( inventoryName ) ,
+llGetInventoryPermMask( inventoryName , MASK_OWNER ) ,
+llGetInventoryPermMask( inventoryName , MASK_GROUP ) ,
+llGetInventoryPermMask( inventoryName , MASK_EVERYONE ) ,
+llGetInventoryPermMask( inventoryName , MASK_NEXT )
+];
+responseBody = llList2Json(
+JSON_ARRAY ,
+values
+);
 }
 }
 if( isAdmin ) {
@@ -583,7 +636,7 @@ if( 2 == DataServerMode ) {
 ShortenedAdminUrl = shortened;
 DataServerMode = 0;
 DataServerRequest = NULL_KEY;
-llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl );
+llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
 }
 if( 1 == DataServerMode ) {
 ShortenedInfoUrl = shortened;
@@ -593,7 +646,7 @@ Shorten( ShortenedAdminUrl );
 } else if( 1 == DataServerMode || 2 == DataServerMode ) {
 DataServerMode = 0;
 DataServerRequest = NULL_KEY;
-llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl );
+llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
 }
 DebugGlobals();
 }
@@ -605,7 +658,7 @@ key detectedKey = llDetectedKey( detected );
 Debug( "    Touched by: " + llDetectedName( detected ) + " (" + (string)detectedKey + ")" );
 if( detectedKey == Owner ) {
 if( ShortenedAdminUrl ) {
-llLoadURL( Owner , "To configure and administer this Easy Gacha, please go here" , ShortenedAdminUrl );
+llLoadURL( Owner , "To configure and administer this Easy Gacha, please go here. DO NOT GIVE THIS LINK TO ANYONE ELSE." , ShortenedAdminUrl );
 } else if( "" == BaseUrl && llGetFreeURLs() ) {
 llOwnerSay( "Trying to get a new URL now... please wait" );
 RequestUrl();
@@ -618,7 +671,7 @@ llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
 } else {
 whisperUrl = TRUE;
 }
-if( Configured && !TotalPrice ) {
+if( Ready && !TotalPrice ) {
 Play( detectedKey , 0 );
 }
 }
