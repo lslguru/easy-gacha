@@ -104,6 +104,7 @@
     float TotalEffectiveRarity; // Updated when Rarity or Limit are updated
     integer CountItems; // Updated when Items is updated
     integer CountPayouts; // Updated when Payouts is updated - total elements, not stride elements
+    integer LastWhisperedUrl; // When were we last touched
 
 #end globalvariables
 
@@ -124,7 +125,7 @@
 
         if( AllowHover ) {
             if( msg ) {
-                llSetText( llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+                llSetText( llGetObjectName() + ": " + llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
             } else {
                 llSetText( "" , ZERO_VECTOR , 1 );
             }
@@ -186,6 +187,7 @@
         Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
         Debug( "    CountItems = " + (string)CountItems );
         Debug( "    CountPayouts = " + (string)CountPayouts );
+        Debug( "    Last whispered URL unixtime: " + (string)LastWhisperedUrl );
         Debug( "    Free memory: " + (string)llGetFreeMemory() );
     "Debug";}
 
@@ -295,7 +297,7 @@
             } else {
                 Hover( "" );
             }
-        } else if( TotalBought >= MaxBuys ) {
+        } else if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
             Hover( "All items have been given" );
         } else if( TotalPrice && !HasPermission ) {
             Hover( "Need debit permission, please touch this object" );
@@ -333,7 +335,12 @@
         Hover( "Please wait, getting random items for: " + displayName );
 
         // Figure out how many objects we need to give
-        integer totalItems = lindensReceived / TotalPrice;
+        integer totalItems;
+        if( TotalPrice ) {
+            totalItems = lindensReceived / TotalPrice;
+        } else {
+            totalItems = 1;
+        }
 
         // If their order would exceed the hard-coded limit
         if( totalItems > MaxPerPurchase ) {
@@ -942,7 +949,11 @@
                         llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
                     }
                 } else {
-                    whisperUrl = TRUE;
+                    if( AllowWhisper ) {
+                        whisperUrl = TRUE;
+                    } else {
+                        llLoadURL( detectedKey , "For help, information, and statistics about this Easy Gacha, please go here" , ShortenedInfoUrl ); // FORCED_DELAY 10.0 seconds
+                    }
                 }
 
                 if( Ready && !TotalPrice ) {
@@ -952,10 +963,14 @@
 
             // Whisper info link
             if( whisperUrl ) {
-                if( ShortenedInfoUrl ) {
-                    llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
-                } else {
-                    llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+                if( llGetUnixTime() != LastWhisperedUrl ) {
+                    if( ShortenedInfoUrl ) {
+                        Whisper( "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+                    } else {
+                        Whisper( "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+                    }
+
+                    LastWhisperedUrl = llGetUnixTime();
                 }
             }
 

@@ -40,6 +40,7 @@ integer HasUnlimitedItems;
 float TotalEffectiveRarity;
 integer CountItems;
 integer CountPayouts;
+integer LastWhisperedUrl;
 Whisper( string msg ) {
 if( AllowWhisper ) {
 llWhisper( 0 , "/me : " + llGetScriptName() + ": " + msg );
@@ -48,7 +49,7 @@ llWhisper( 0 , "/me : " + llGetScriptName() + ": " + msg );
 Hover( string msg ) {
 if( AllowHover ) {
 if( msg ) {
-llSetText( llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n|\n|" , <1,0,0>, 1 );
+llSetText( llGetObjectName() + ": " + llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
 } else {
 llSetText( "" , ZERO_VECTOR , 1 );
 }
@@ -133,7 +134,7 @@ Hover( "Working, please wait..." );
 } else {
 Hover( "" );
 }
-} else if( TotalBought >= MaxBuys ) {
+} else if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
 Hover( "All items have been given" );
 } else if( TotalPrice && !HasPermission ) {
 Hover( "Need debit permission, please touch this object" );
@@ -158,7 +159,12 @@ llJsonSetValue( "{}" , [ "longUrl" ] , url )
 Play( key buyerId , integer lindensReceived ) {
 string displayName = llGetDisplayName( buyerId );
 Hover( "Please wait, getting random items for: " + displayName );
-integer totalItems = lindensReceived / TotalPrice;
+integer totalItems;
+if( TotalPrice ) {
+totalItems = lindensReceived / TotalPrice;
+} else {
+totalItems = 1;
+}
 if( totalItems > MaxPerPurchase ) {
 totalItems = MaxPerPurchase;
 }
@@ -580,17 +586,24 @@ if( TotalPrice && !HasPermission ) {
 llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
 }
 } else {
+if( AllowWhisper ) {
 whisperUrl = TRUE;
+} else {
+llLoadURL( detectedKey , "For help, information, and statistics about this Easy Gacha, please go here" , ShortenedInfoUrl );
+}
 }
 if( Ready && !TotalPrice ) {
 Play( detectedKey , 0 );
 }
 }
 if( whisperUrl ) {
+if( llGetUnixTime() != LastWhisperedUrl ) {
 if( ShortenedInfoUrl ) {
-llWhisper( 0 , "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+Whisper( "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
 } else {
-llWhisper( 0 , "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+Whisper( "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+}
+LastWhisperedUrl = llGetUnixTime();
 }
 }
 Update();
