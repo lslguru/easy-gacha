@@ -1,3 +1,7 @@
+#page-config .page-header {
+    border-bottom: 0;
+}
+
 #page-config .page-header .nav-links {
     float: right;
     margin-right: 1em;

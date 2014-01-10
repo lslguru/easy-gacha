@@ -3,14 +3,14 @@ define( [
     'underscore'
     , 'models/base-sl-model'
     , 'lib/constants'
-    , 'lib/fetch-agent-names'
+    , 'models/agents-cache'
 
 ] , function(
 
     _
     , BaseModel
     , CONSTANTS
-    , fetchAgentNames
+    , agentsCache
 
 ) {
     'use strict';
@@ -77,16 +77,20 @@ define( [
                     return;
                 }
 
-                fetchAgentNames( model.get( 'creator' ) , fetchOptions , function( agentNames ) {
-                    this.set( {
-                        creatorUserName: agentNames.user
-                        , creatorDisplayName: agentNames.display
-                    } );
+                agentsCache.fetch( {
+                    id: model.get( 'creator' )
+                    , context: this
+                    , success: function( agent ) {
+                        this.set( {
+                            creatorUserName: agent.get( 'username' )
+                            , creatorDisplayName: agent.get( 'displayname' )
+                        } );
 
-                    if( success ) {
-                        options.success.call( this , model , resp , options );
+                        if( success ) {
+                            options.success.call( this , model , resp , options );
+                        }
                     }
-                } , this );
+                } );
             } , this );
 
             BaseModel.prototype.fetch.call( this , fetchOptions );

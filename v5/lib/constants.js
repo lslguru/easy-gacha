@@ -80,12 +80,13 @@ define( [
         , 'INVENTORY_GESTURE': 'Gesture'
     }
 
-    , PERMISSIONS: {
-        ALL: 0x7FFFFFFF
-        , COPY: 0x00008000
-        , MODIFY: 0x00004000
-        , MOVE: 0x00080000
-        , TRANSFER: 0x00002000
-    }
+    , PERM_ALL: 0x7FFFFFFF
+    , PERM_COPY: 0x00008000
+    , PERM_MODIFY: 0x00004000
+    , PERM_MOVE: 0x00080000
+    , PERM_TRANSFER: 0x00002000
+
+    , PAY_HIDE: -1
+    , PAY_DEFAULT: -2
 
 } ; } );

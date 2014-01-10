@@ -21,14 +21,6 @@
     // into the script)
     var el;
 
-    // TODO: Move to modules
-    // Throw a title in there. We can change this on the fly but worth doing
-    // up-front
-    el = document.createElement( 'title' );
-    el.innerHTML = 'Easy Gacha';
-    document.head.appendChild( el );
-
-    // TODO: Move to modules
     // Twitter Bootstrap Asset
     el = document.createElement( 'meta' );
     el.setAttribute( 'name' , 'viewport' );

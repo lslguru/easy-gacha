@@ -67,7 +67,7 @@ define( [
                 items.fetch( {
                     success: next
                 } );
-                items.bind( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
+                items.on( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
                     var itemCount = model.get( 'info' ).get( 'itemCount' ) + 1;
                     model.set( 'percentage' , ( model.get( 'percentage' ) + ( 85 / itemCount ) ) );
                 } , this );

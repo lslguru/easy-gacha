@@ -89,7 +89,7 @@ define( [
                 payouts.fetch( {
                     success: next
                 } );
-                payouts.bind( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
+                payouts.on( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
                     var payoutCount = model.get( 'info' ).get( 'payoutCount' ) + 1;
                     model.set( 'percentage' , ( model.get( 'percentage' ) + ( 20 / payoutCount ) ) );
                 } , this );
@@ -102,7 +102,7 @@ define( [
                 items.fetch( {
                     success: next
                 } );
-                items.bind( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
+                items.on( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
                     var itemCount = model.get( 'info' ).get( 'itemCount' ) + 1;
                     model.set( 'percentage' , ( model.get( 'percentage' ) + ( 30 / itemCount ) ) );
                 } , this );
@@ -115,7 +115,7 @@ define( [
                 invs.fetch( {
                     success: next
                 } );
-                invs.bind( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
+                invs.on( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
                     var invCount = model.get( 'info' ).get( 'inventoryCount' ) + 1;
                     model.set( 'percentage' , ( model.get( 'percentage' ) + ( 30 / invCount ) ) );
                 } , this );

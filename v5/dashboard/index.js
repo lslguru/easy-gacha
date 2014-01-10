@@ -39,7 +39,7 @@ define( [
                 model: data
             } ) ) );
 
-            data.bind( 'change:percentage' , function( data , percentage , options ) {
+            data.on( 'change:percentage' , function( data , percentage , options ) {
                 if( 100 === percentage ) {
                     this.loader.close();
 
@@ -52,6 +52,30 @@ define( [
                     } ) ) );
                 }
             } , this );
+
+            function updatePageTitle() {
+                if( data.get( 'info' ) && data.get( 'info' ).get( 'objectName' ) ) {
+                    document.title = data.get( 'info' ).get( 'objectName' ) + ' - Easy Gacha Dashboard';
+                } else {
+                    document.title = 'Easy Gacha Dashboard';
+                }
+            }
+
+            function setupListener() {
+                data.get( 'info' ).on( 'change:objectName' , updatePageTitle , this );
+            }
+
+            data.on( 'change:info' , function() {
+                if( data.previous( 'info' ) ) {
+                    data.previous( 'info' ).off( null , null , this );
+                }
+
+                setupListener();
+                updatePageTitle();
+            } , this );
+
+            setupListener();
+            updatePageTitle();
         }
     } );
 

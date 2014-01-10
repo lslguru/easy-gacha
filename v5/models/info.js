@@ -4,7 +4,7 @@ define( [
     , 'lib/vector'
     , 'moment'
     , 'lib/constants'
-    , 'lib/fetch-agent-names'
+    , 'models/agents-cache'
 
 ] , function(
 
@@ -12,7 +12,7 @@ define( [
     , Vector
     , moment
     , CONSTANTS
-    , fetchAgentNames
+    , agentsCache
 
 ) {
     'use strict';
@@ -98,16 +98,20 @@ define( [
                     return;
                 }
 
-                fetchAgentNames( model.get( 'ownerKey' ) , fetchOptions , function( agentNames ) {
-                    this.set( {
-                        ownerUserName: agentNames.user
-                        , ownerDisplayName: agentNames.display
-                    } );
+                agentsCache.fetch( {
+                    id: model.get( 'ownerKey' )
+                    , context: this
+                    , success: function( agent ) {
+                        this.set( {
+                            ownerUserName: agent.get( 'username' )
+                            , ownerDisplayName: agent.get( 'displayname' )
+                        } );
 
-                    if( success ) {
-                        options.success.call( this , model , resp , options );
+                        if( success ) {
+                            options.success.call( this , model , resp , options );
+                        }
                     }
-                } , this );
+                } );
             } , this );
 
             BaseModel.prototype.fetch.call( this , fetchOptions );
