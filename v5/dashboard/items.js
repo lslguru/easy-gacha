@@ -1,26 +1,35 @@
 define( [
 
-    'marionette'
+    'underscore'
+    , 'marionette'
     , 'hbs!dashboard/templates/items'
     , 'css!dashboard/styles/items'
     , 'dashboard/item'
+    , 'dashboard/items-empty'
     , 'tablesorter'
+    , 'lib/tooltip-placement'
+    , 'bootstrap'
 
 ] , function(
 
-    Marionette
+    _
+    , Marionette
     , template
     , styles
     , ItemView
+    , EmptyView
     , tablesorter
+    , tooltipPlacement
+    , bootstrap
 
 ) {
     'use strict';
 
-    var exports = Marionette.CompositeView.extend( {
+    var exports = Marionette.CollectionView.extend( {
         template: template
         , itemView: ItemView
         , itemViewContainer: 'tbody'
+        , emptyView: EmptyView
 
         , ui: {
             'table': 'table'
@@ -28,20 +37,22 @@ define( [
         }
 
         , onRender: function() {
-            this.ui.table.tablesorter( {
-                sortList: [[0,0]]
-                , textExtraction: function( node ) {
-                    return $( node ).data( 'raw-value' ) || $( node ).text();
+            if( !_.isString( this.ui.table ) ) {
+                if( this.ui.table.length ) {
+                    this.ui.table.tablesorter( {
+                        sortList: [[0,0]]
+                        , textExtraction: function( node ) {
+                            return $( node ).data( 'raw-value' ) || $( node ).text();
+                        }
+                    } );
                 }
-            } );
 
-            this.ui.tooltips.tooltip( {
-                html: true
-                , container: 'body'
-                , placement: function( tip , el ) {
-                    return $(el).data('tooltip-placement') || 'auto';
-                }
-            } );
+                this.ui.tooltips.tooltip( {
+                    html: true
+                    , container: 'body'
+                    , placement: tooltipPlacement
+                } );
+            }
         }
     } );
 

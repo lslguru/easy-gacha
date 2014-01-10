@@ -1,15 +1,11 @@
 define( [
 
     'marionette'
-    , 'hbs!dashboard/templates/loader'
-    , 'css!dashboard/styles/loader'
+    , 'hbs!templates/loader'
+    , 'css!styles/loader'
     , 'bootstrap'
-    , 'css!vendor/bootstrap/css/bootstrap'
     , 'models/info'
-    , 'models/username'
-    , 'models/displayname'
     , 'models/items'
-    , 'backbone'
 
 ] , function(
 
@@ -17,20 +13,14 @@ define( [
     , template
     , styles
     , bootstrap
-    , bootstrapStyles
     , Info
-    , UserName
-    , DisplayName
     , Items
-    , Backbone
 
 ) {
     'use strict';
 
     // Things to load:
-    // 5% Info
-    // 5% Owner UserName
-    // 5% Owner DisplayName
+    // 15% Info
     // 85% Items
 
     var exports = Marionette.ItemView.extend( {
@@ -63,39 +53,7 @@ define( [
 
                 info.fetch( {
                     success: function() {
-                        model.set( 'percentage' , model.get( 'percentage' ) + 5 );
-
-                        next();
-                    }
-                } );
-            }
-
-            function getUserName( next ) {
-                var ownerUserName = new UserName( {
-                    lookup: model.get( 'info' ).get( 'ownerKey' )
-                } );
-                model.set( 'ownerUserName' , ownerUserName );
-
-                ownerUserName.fetch( {
-                    success: function() {
-                        model.set( 'percentage' , model.get( 'percentage' ) + 5 );
-                        model.get( 'info' ).set( 'ownerUserName' , ownerUserName.get( 'result' ) );
-
-                        next();
-                    }
-                } );
-            }
-
-            function getDisplayName( next ) {
-                var ownerDisplayName = new DisplayName( {
-                    lookup: model.get( 'info' ).get( 'ownerKey' )
-                } );
-                model.set( 'ownerDisplayName' , ownerDisplayName );
-
-                ownerDisplayName.fetch( {
-                    success: function() {
-                        model.set( 'percentage' , model.get( 'percentage' ) + 5 );
-                        model.get( 'info' ).set( 'ownerDisplayName' , ownerDisplayName.get( 'result' ) );
+                        model.set( 'percentage' , model.get( 'percentage' ) + 15 );
 
                         next();
                     }
@@ -111,17 +69,13 @@ define( [
                 } );
                 items.bind( 'add' , function( modelAdded , collectionAddedTo , addOptions ) {
                     var itemCount = model.get( 'info' ).get( 'itemCount' ) + 1;
-                    model.set( 'percentage' , Math.round( model.get( 'percentage' ) + ( 85 / itemCount ) ) );
+                    model.set( 'percentage' , ( model.get( 'percentage' ) + ( 85 / itemCount ) ) );
                 } , this );
             }
 
             getInfo( function() {
-                getUserName( function() { 
-                    getDisplayName( function() { 
-                        getAllItems( function() { 
-                            model.set( 'percentage' , 100 );
-                        } );
-                    } );
+                getAllItems( function() {
+                    model.set( 'percentage' , 100 );
                 } );
             } );
         }

@@ -50,21 +50,6 @@ define( [
         , '21': 'INVENTORY_GESTURE'
     }
 
-    , INVENTORY_TYPE_TO_NUMBER: {
-        'INVENTORY_UNKNOWN': ''
-        , 'INVENTORY_NONE': '-1'
-        , 'INVENTORY_TEXTURE': '0'
-        , 'INVENTORY_SOUND': '1'
-        , 'INVENTORY_LANDMARK': '3'
-        , 'INVENTORY_CLOTHING': '5'
-        , 'INVENTORY_OBJECT': '6'
-        , 'INVENTORY_NOTECARD': '7'
-        , 'INVENTORY_SCRIPT': '10'
-        , 'INVENTORY_BODYPART': '13'
-        , 'INVENTORY_ANIMATION': '20'
-        , 'INVENTORY_GESTURE': '21'
-    }
-
     , INVENTORY_TYPE_ICON: {
         'INVENTORY_UNKNOWN': item_lostandfound
         , 'INVENTORY_NONE': item_lostandfound
@@ -93,6 +78,14 @@ define( [
         , 'INVENTORY_BODYPART': 'Body Part'
         , 'INVENTORY_ANIMATION': 'Animation'
         , 'INVENTORY_GESTURE': 'Gesture'
+    }
+
+    , PERMISSIONS: {
+        ALL: 0x7FFFFFFF
+        , COPY: 0x00008000
+        , MODIFY: 0x00004000
+        , MOVE: 0x00080000
+        , TRANSFER: 0x00002000
     }
 
 } ; } );

@@ -1,0 +1,54 @@
+<div class="page-header">
+    <div class="nav-links well well-sm">
+        <label>Easy Gacha</label>
+        <div class="btn-group">
+            <a class="btn btn-default" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha Kit on SecondLife Marketplace">Marketplace</a>
+            <a class="btn btn-default" target="_blank" href="https://github.com/lslguru/easy-gacha" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha code repository">GitHub</a>
+            <a class="btn btn-default" target="_blank" href="https://lslguru.com/easy-gacha/registry.php" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Gacha Registry which lists all official Easy Gachas">Registry</a>
+        </div>
+    </div>
+    <div class="nav-links well well-sm">
+        <label>This Gacha</label>
+        <div class="btn-group">
+            <button class="btn btn-primary" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and reload">Save</button>
+            <button class="btn btn-default" data-toggle="tooltip" data-tooltip-placement="bottom" title="Discard all changes and reload">Cancel</button>
+        </div>
+    </div>
+    <div id="memory" class="nav-links">
+        {{#if freeMemory}}
+            {{#if dangerMemory}}
+                <div class="alert alert-danger" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
+                <label>Free Memory</label>
+                <i class="fa fa-exclamation-circle"></i>
+            {{else}}
+                {{#if warnMemory}}
+                    <div class="alert alert-warning" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
+                    <label>Free Memory</label>
+                    <i class="fa fa-info-circle"></i>
+                {{else}}
+                    <div class="alert alert-success" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
+                    <label>Free Memory</label>
+                    <i class="fa fa-check-circle"></i>
+                {{/if}}
+            {{/if}}
+        {{else}}
+            <div class="alert alert-warning" data-toggle="tooltip" title="Data may not have loaded yet, please be patient.">
+            <label>Free Memory</label>
+            <i class="fa fa-question-circle"></i>
+        {{/if}}
+        <span>
+            {{#if freeMemory}}
+                {{freeMemory}}
+            {{else}}
+                Unknown
+            {{/if}}
+        </span>
+        </div>
+    </div>
+    <h1>
+        <a href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object's last reported location on the map">{{objectName}}</a>
+    </h1>
+    <div>
+        {{objectDesc}}
+    </div>
+</div>

@@ -3,12 +3,16 @@ define( [
     'models/base-sl-model'
     , 'lib/vector'
     , 'moment'
+    , 'lib/constants'
+    , 'lib/fetch-agent-names'
 
 ] , function(
 
     BaseModel
     , Vector
     , moment
+    , CONSTANTS
+    , fetchAgentNames
 
 ) {
     'use strict';
@@ -19,6 +23,8 @@ define( [
         , defaults: {
             isAdmin: null
             , ownerKey: null
+            , ownerUserName: null
+            , ownerDisplayName: null
             , objectName: null
             , objectDesc: null
             , scriptName: null
@@ -33,6 +39,14 @@ define( [
             , position: null
             , configured: null
             , price: null
+            , extra: null
+        }
+
+        , toPostJSON: function() {
+            return [
+                this.get( 'configured' )
+                , JSON.stringify( this.get( 'extra' ) )
+            ];
         }
 
         , parse: function( data ) {
@@ -42,6 +56,12 @@ define( [
 
             if( '(No Description)' === data[3] ) {
                 data[3] = '';
+            }
+
+            try {
+                data[16] = JSON.parse( data[16] );
+            } catch( e ) {
+                data[16] = {};
             }
 
             return {
@@ -61,7 +81,36 @@ define( [
                 , position: new Vector( data[13] )
                 , configured: Boolean( parseInt( data[14] , 10 ) )
                 , price: parseInt( data[15] , 10 )
+                , extra: data[16]
             };
+        }
+
+        , fetch: function( options ) {
+            var success = options.success;
+            var fetchOptions = _.clone( options );
+
+            fetchOptions.success = _.bind( function( model , resp ) {
+                if( !model.get( 'ownerKey' ) || CONSTANTS.NULL_KEY == model.get( 'ownerKey' ) ) {
+                    if( success ) {
+                        success.call( this , model , resp , options );
+                    }
+
+                    return;
+                }
+
+                fetchAgentNames( model.get( 'ownerKey' ) , fetchOptions , function( agentNames ) {
+                    this.set( {
+                        ownerUserName: agentNames.user
+                        , ownerDisplayName: agentNames.display
+                    } );
+
+                    if( success ) {
+                        options.success.call( this , model , resp , options );
+                    }
+                } , this );
+            } , this );
+
+            BaseModel.prototype.fetch.call( this , fetchOptions );
         }
     } );
 

@@ -1,0 +1,12 @@
+#page-config .page-header .nav-links {
+    float: right;
+    margin-right: 1em;
+}
+
+#page-config .page-header .nav-links label {
+    margin-right: 1em;
+}
+
+#page-config #memory .alert {
+    padding: 13px;
+}

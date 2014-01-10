@@ -6,6 +6,8 @@ define( [
     , 'hbs!dashboard/templates/item'
     , 'css!dashboard/styles/item'
     , 'lib/constants'
+    , 'lib/tooltip-placement'
+    , 'bootstrap'
 
 ] , function(
 
@@ -15,6 +17,8 @@ define( [
     , template
     , styles
     , CONSTANTS
+    , tooltipPlacement
+    , bootstrap
 
 ) {
     'use strict';
@@ -86,15 +90,15 @@ define( [
         , onRender: function() {
             this.ui.nameTooltips.tooltip( {
                 html: true
-                , placement: 'right'
                 , container: 'body'
+                , placement: tooltipPlacement
             } );
 
             this.ui.probabilityTooltips.tooltip( {
                 html: true
-                , placement: 'top'
                 , container: 'body'
                 , template: '<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner item-probability-tooltip"></div></div>'
+                , placement: tooltipPlacement
             } );
 
             this.ui.nameFields.each( function( item ) {

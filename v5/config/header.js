@@ -1,9 +1,8 @@
 define( [
 
-    'require'
-    , 'marionette'
-    , 'hbs!dashboard/templates/header'
-    , 'css!dashboard/styles/header'
+    'marionette'
+    , 'hbs!config/templates/header'
+    , 'css!config/styles/header'
     , 'bootstrap'
     , 'css!//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome'
     , 'lib/constants'
@@ -11,8 +10,7 @@ define( [
 
 ] , function(
 
-    require
-    , Marionette
+    Marionette
     , template
     , headerStyles
     , bootstrap

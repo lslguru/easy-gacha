@@ -7,6 +7,7 @@ define( [
     , './header'
     , './items'
     , 'backbone'
+    , 'bootstrap'
 
 ] , function(
 
@@ -17,6 +18,7 @@ define( [
     , HeaderView
     , ItemsView
     , Backbone
+    , bootstrap
 
 ) {
     'use strict';
@@ -25,7 +27,7 @@ define( [
         template: template
 
         , regions: {
-            'loader': '#data-loader'
+            'loader': '#loader'
             , 'header': '#header'
             , 'items': '#items'
         }

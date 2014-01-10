@@ -1,19 +1,19 @@
 <div class="page-header">
-    <div class="btn-group nav-links">
-        <a class="btn btn-default" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" title="Go to the Easy Gacha Kit on SecondLife Marketplace">Easy Gacha</a>
-        {{#if isAdmin}}
-            <a class="btn btn-default" href="#config" data-toggle="tooltip" title="You have permission to modify this Easy Gacha. Click here to configure.">Configure This Gacha</a>
-        {{/if}}
+    <div class="nav-links well well-sm">
+        <label>Easy Gacha</label>
+        <div class="btn-group">
+            <a class="btn btn-default" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha Kit on SecondLife Marketplace">Marketplace</a>
+            <a class="btn btn-default" target="_blank" href="https://github.com/lslguru/easy-gacha" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha code repository">GitHub</a>
+            <a class="btn btn-default" target="_blank" href="https://lslguru.com/easy-gacha/registry.php" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Gacha Registry which lists all official Easy Gachas">Registry</a>
+            {{#if isAdmin}}
+                <a class="btn btn-primary" href="#config" data-toggle="tooltip" data-tooltip-placement="bottom" title="You have permission to modify this Easy Gacha. Click here to configure.">Configure This Gacha</a>
+            {{/if}}
+        </div>
     </div>
     <h1>
-        <a target="_blank" href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object's last reported location on the map">{{objectName}}</a>
+        <a href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object's last reported location on the map">{{objectName}}</a>
         <small>
-            <i class="fa fa-money"></i>
-            {{#if price}}
-                L${{price}} to play
-            {{else}}
-                FREE to play
-            {{/if}}
+            <i class="fa fa-money"></i> {{#if price}}{{price}}{{else}}FREE{{/if}} to play
         </small>
     </h1>
     <div>
