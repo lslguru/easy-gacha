@@ -7,6 +7,7 @@ define( [
     , 'css!//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome'
     , 'lib/constants'
     , 'lib/tooltip-placement'
+    , 'lib/map-uri'
 
 ] , function(
 
@@ -17,6 +18,7 @@ define( [
     , fontawesomeStyles
     , CONSTANTS
     , tooltipPlacement
+    , mapUri
 
 ) {
     'use strict';
@@ -34,15 +36,11 @@ define( [
             }
 
             return {
-                mapUrl: (
-                    'secondlife:///worldmap/'
-                    + encodeURIComponent( this.model.get( 'regionName' ) )
-                    + '/'
-                    + Math.round( this.model.get( 'position' ).x )
-                    + '/'
-                    + Math.round( this.model.get( 'position' ).y )
-                    + '/'
-                    + Math.round( this.model.get( 'position' ).z )
+                mapUrl: mapUri(
+                    this.model.get( 'regionName' )
+                    , this.model.get( 'position' ).x
+                    , this.model.get( 'position' ).y
+                    , this.model.get( 'position' ).z
                 )
 
                 , dangerMemory: (
