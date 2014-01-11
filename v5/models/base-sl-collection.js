@@ -26,8 +26,14 @@ define( [
                 model.fetch( {
                     success: function() {
                         collection.add( model );
+
+                        if( _.isFunction( options.progress ) ) {
+                            options.progress( model );
+                        }
+
                         fetchNext( index + 1 );
                     }
+
                     , error: function() {
                         if( options.success ) {
                             options.success( collection , null , options );

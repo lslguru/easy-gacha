@@ -30,7 +30,6 @@ define( [
             , scriptName: null
             , freeMemory: null
             , debitPermission: null
-            , inventoryChanged: null
             , lastPing: null
             , inventoryCount: null
             , itemCount: null
@@ -40,6 +39,8 @@ define( [
             , configured: null
             , price: null
             , extra: null
+            , primName: null
+            , primDesc: null
         }
 
         , toPostJSON: function() {
@@ -54,35 +55,41 @@ define( [
                 return {};
             }
 
-            if( '(No Description)' === data[3] ) {
-                data[3] = '';
+            var i = 0;
+            var ret = {};
+
+            ret.isAdmin = Boolean( parseInt( data[i++] , 10 ) );
+            ret.ownerKey = data[i++];
+            ret.objectName = data[i++];
+
+            if( '(No Description)' === data[i] ) {
+                data[i] = '';
             }
+            ret.objectDesc = data[i++];
+
+            ret.scriptName = data[i++];
+            ret.freeMemory = parseInt( data[i++] , 10 );
+            ret.debitPermission = Boolean( parseInt( data[i++] , 10 ) );
+            ret.lastPing = moment( parseInt( data[i++] , 10 ) , 'X' );
+            ret.inventoryCount = parseInt( data[i++] , 10 );
+            ret.itemCount = parseInt( data[i++] , 10 );
+            ret.payoutCount = parseInt( data[i++] , 10 );
+            ret.regionName = data[i++];
+            ret.position = new Vector( data[i++] );
+            ret.configured = Boolean( parseInt( data[i++] , 10 ) );
+            ret.price = parseInt( data[i++] , 10 );
 
             try {
-                data[16] = JSON.parse( data[16] );
+                data[i] = JSON.parse( data[i] );
             } catch( e ) {
-                data[16] = {};
+                data[i] = {};
             }
+            ret.extra = data[i++];
 
-            return {
-                isAdmin: Boolean( parseInt( data[0] , 10 ) )
-                , ownerKey: data[1]
-                , objectName: data[2]
-                , objectDesc: data[3]
-                , scriptName: data[4]
-                , freeMemory: parseInt( data[5] , 10 )
-                , debitPermission: Boolean( parseInt( data[6] , 10 ) )
-                , inventoryChanged: Boolean( parseInt( data[7] , 10 ) )
-                , lastPing: moment( parseInt( data[8] , 10 ) , 'X' )
-                , inventoryCount: parseInt( data[9] , 10 )
-                , itemCount: parseInt( data[10] , 10 )
-                , payoutCount: parseInt( data[11] , 10 )
-                , regionName: data[12]
-                , position: new Vector( data[13] )
-                , configured: Boolean( parseInt( data[14] , 10 ) )
-                , price: parseInt( data[15] , 10 )
-                , extra: data[16]
-            };
+            ret.primName = data[i++];
+            ret.primDesc = data[i++];
+
+            return ret;
         }
 
         , fetch: function( options ) {

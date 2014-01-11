@@ -26,6 +26,10 @@ define( [
                 options.success = _.bind( options.success , options.context );
             }
 
+            if( options.error && options.context ) {
+                options.error = _.bind( options.error , options.context );
+            }
+
             if( this.get( options.id ) ) {
                 // Keep it async, just in case
                 _.defer( options.success , this.get( options.id ) );

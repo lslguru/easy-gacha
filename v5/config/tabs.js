@@ -1,16 +1,24 @@
 define( [
 
-    'marionette'
-    , 'hbs!config/templates/tabs'
-    , 'bootstrap'
+    'underscore'
     , 'jquery'
+    , 'marionette'
+    , 'hbs!config/templates/tabs'
+    , 'css!config/styles/tabs'
+    , 'bootstrap'
+    , 'config/comms'
+    , 'config/advanced'
 
 ] , function(
 
-    Marionette
-    , template
-    , bootstrap
+    _
     , $
+    , Marionette
+    , template
+    , styles
+    , bootstrap
+    , CommsView
+    , AdvancedView
 
 ) {
     'use strict';
@@ -27,12 +35,20 @@ define( [
             'inv': '#tab-inv'
             , 'pay': '#tab-pay'
             , 'comms': '#tab-comms'
-            , 'adv': '#tab-advanced'
+            , 'advanced': '#tab-advanced'
             , 'imp': '#tab-import'
             , 'exp': '#tab-export'
         }
 
         , onRender: function() {
+            this.comms.show( new CommsView( _.extend( {} , this.options , {
+                model: this.options.model.get( 'config' )
+            } ) ) );
+
+            this.advanced.show( new AdvancedView( _.extend( {} , this.options , {
+                model: this.options.model.get( 'config' )
+            } ) ) );
+
             this.ui.tabLinks.click( function( e ) {
                 e.preventDefault();
                 $( this ).tab( 'show' );

@@ -4,7 +4,6 @@ define( [
     , 'hbs!dashboard/templates/header'
     , 'css!dashboard/styles/header'
     , 'bootstrap'
-    , 'css!//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome'
     , 'lib/constants'
     , 'lib/tooltip-placement'
     , 'lib/map-uri'
@@ -15,7 +14,6 @@ define( [
     , template
     , headerStyles
     , bootstrap
-    , fontawesomeStyles
     , CONSTANTS
     , tooltipPlacement
     , mapUri

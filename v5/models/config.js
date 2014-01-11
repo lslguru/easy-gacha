@@ -4,6 +4,8 @@ define( [
     , 'models/base-sl-model'
     , 'models/email'
     , 'models/im'
+    , 'models/agents-cache'
+    , 'lib/constants'
 
 ] , function(
 
@@ -11,6 +13,8 @@ define( [
     , BaseModel
     , Email
     , Im
+    , agentsCache
+    , CONSTANTS
 
 ) {
     'use strict';
@@ -22,7 +26,6 @@ define( [
             folderForSingleItem: null
             , rootClickAction: null
             , group: null
-            , allowWhisper: null
             , allowHover: null
             , maxPerPurchase: null
             , maxBuys: null
@@ -33,6 +36,8 @@ define( [
             , payPriceButton3: null
             , email: null
             , im: null
+            , imUserName: null
+            , imDisplayName: null
             , isRootPrim: null
         }
 
@@ -53,16 +58,15 @@ define( [
                 folderForSingleItem: Boolean( parseInt( data[0] , 10 ) )
                 , rootClickAction: Boolean( parseInt( data[1] , 10 ) )
                 , group: Boolean( parseInt( data[2] , 10 ) )
-                , allowWhisper: Boolean( parseInt( data[3] , 10 ) )
-                , allowHover: Boolean( parseInt( data[4] , 10 ) )
-                , maxPerPurchase: parseInt( data[5] , 10 )
-                , maxBuys: parseInt( data[6] , 10 )
-                , payPrice: parseInt( data[7] , 10 )
-                , payPriceButton0: parseInt( data[8] , 10 )
-                , payPriceButton1: parseInt( data[9] , 10 )
-                , payPriceButton2: parseInt( data[10] , 10 )
-                , payPriceButton3: parseInt( data[11] , 10 )
-                , isRootPrim: Boolean( parseInt( data[12] , 10 ) )
+                , allowHover: Boolean( parseInt( data[3] , 10 ) )
+                , maxPerPurchase: parseInt( data[4] , 10 )
+                , maxBuys: parseInt( data[5] , 10 )
+                , payPrice: parseInt( data[6] , 10 )
+                , payPriceButton0: parseInt( data[7] , 10 )
+                , payPriceButton1: parseInt( data[8] , 10 )
+                , payPriceButton2: parseInt( data[9] , 10 )
+                , payPriceButton3: parseInt( data[10] , 10 )
+                , isRootPrim: Boolean( parseInt( data[11] , 10 ) )
             };
         }
 
@@ -87,9 +91,28 @@ define( [
                     imOptions.success = function( im_model , im_resp , im_options ) {
                         model.set( 'im' , im.get( 'key' ) );
 
-                        if( success ) {
-                            success( model , resp , options );
+                        if( !model.get( 'im' ) || CONSTANTS.NULL_KEY === model.get( 'im' ) ) {
+                            if( success ) {
+                                success( model , resp , options );
+                            }
+
+                            return;
                         }
+
+                        agentsCache.fetch( {
+                            id: model.get( 'im' )
+                            , context: this
+                            , success: function( agent ) {
+                                this.set( {
+                                    imUserName: agent.get( 'username' )
+                                    , imDisplayName: agent.get( 'displayname' )
+                                } );
+
+                                if( success ) {
+                                    success( model , resp , options );
+                                }
+                            }
+                        } );
                     };
 
                     im.fetch( imOptions );

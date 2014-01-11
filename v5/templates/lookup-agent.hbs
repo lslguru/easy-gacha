@@ -1,0 +1,25 @@
+<div class="modal fade" id="lookup-agent" tabindex="-1" role="dialog" aria-labelledby="lookup-agent-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                <h4 class="modal-title" id="lookup-agent-label">Find Someone</h4>
+            </div>
+            <div class="modal-body">
+                <div class="header">Are these the droids you're looking for?</div>
+                <ul>
+                    {{#each agentsCache}}
+                        <li><a href="javascript:;" data-agent-id="{{id}}">{{displayname}} ({{username}})</a></li>
+                    {{/each}}
+                </ul>
+                <br />
+                <div id="lookup-agent-key-input-group" class="input-group">
+                    <input type="text" class="form-control" id="lookup-agent-key" placeholder="Lookup Agent UUID" />
+                    <span class="input-group-btn">
+                        <button type="button" id="lookup-agent-btn" class="btn btn-primary" data-loading-text="Searching...">Search</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

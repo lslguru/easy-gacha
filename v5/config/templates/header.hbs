@@ -10,8 +10,27 @@
     <div class="nav-links well well-sm">
         <label>This Gacha</label>
         <div class="btn-group">
-            <button class="btn btn-primary" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and reload">Save</button>
-            <button class="btn btn-default" data-toggle="tooltip" data-tooltip-placement="bottom" title="Discard all changes and reload">Cancel</button>
+            <button id="save" class="btn btn-primary" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and reload">Saved</button>
+            <button id="dashboard" class="btn btn-default" data-toggle="tooltip" data-tooltip-placement="bottom" title="Discard all changes and reload">Dashboard</button>
+            <!-- Begin Confirmation modal -->
+                <div class="modal fade" id="dashboard-confirmation" tabindex="-1" role="dialog" aria-labelledby="dashboard-confirmation-label" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content alert-warning">
+                            <div class="modal-header">
+                                <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                                <h4 class="modal-title" id="dashboard-confirmation-label"><i class="fa fa-exclamation-triangle"></i> Discard Changes</h4>
+                            </div>
+                            <div class="modal-body">
+                                You have unsaved changes. Going back to the dashboard will discard your changes. Are you sure you want to go to the dashboard?
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button id="dashboard-confirm" class="btn btn-primary">Dashboard</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <!-- End Confirmation modal -->
         </div>
     </div>
     <div id="memory" class="nav-links">

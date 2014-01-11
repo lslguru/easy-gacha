@@ -1,28 +1,181 @@
 define( [
 
-    'backbone'
+    'underscore'
+    , 'backbone'
+    , 'models/info'
+    , 'models/config'
+    , 'models/items'
+    , 'models/payouts'
+    , 'models/invs'
+    , 'lib/admin-key'
+    , 'models/agents-cache'
 
 ] , function(
 
-    Backbone
+    _
+    , Backbone
+    , Info
+    , Config
+    , Items
+    , Payouts
+    , Invs
+    , adminKey
+    , agentsCache
 
 ) {
     'use strict';
 
+    var submodelProgress = function( gachaProgressProperty , gachaInfoProperty , gacha , submodel ) {
+        var submodelExpectedCount = ( gacha.get( 'info' ).get( gachaInfoProperty ) + 1 );
+        var submodelProgressPercentage = ( submodel.length / submodelExpectedCount * 100 );
+        gacha.set( gachaProgressProperty , submodelProgressPercentage );
+    };
+
     var exports = Backbone.Model.extend( {
         defaults: {
-            percentageLoaded: 0
-            , info: null
-            , config: null
-            , payouts: null
-            , items: null
-            , invs: null
-            , isValid: false
+            isValid: false
+            , progressPercentage: 0
+            , agentsCache: agentsCache
         }
 
-        // TODO: Fetch (move out from loaders)
-        // TODO: Validity checks
-        // TODO: Save
+        , fetchedJSON: null
+
+        , submodels: {
+
+            info: {
+                model: Info
+                , weight: 10
+                , adminOnly: false
+            }
+
+            , config: {
+                model: Config
+                , weight: 10
+                , adminOnly: true
+            }
+
+            , payouts: {
+                model: Payouts
+                , weight: 20
+                , adminOnly: true
+                , progress: _.partial( submodelProgress , 'payoutsProgressPercentage' , 'payoutCount' )
+            }
+
+            , items: {
+                model: Items
+                , weight: 30
+                , adminOnly: false
+                , progress: _.partial( submodelProgress , 'itemsProgressPercentage' , 'itemCount' )
+            }
+
+            , invs: {
+                model: Invs
+                , weight: 30
+                , adminOnly: true
+                , progress: _.partial( submodelProgress , 'invsProgressPercentage' , 'inventoryCount' )
+            }
+
+        }
+
+        , initialize: function() {
+            this.on( 'change' , this.updateProgress , this );
+
+            _.each( this.submodels , function( submodelConfig , name ) {
+                this.set( name , new submodelConfig.model() , { silent: true } );
+                this.set( name + 'ProgressPercentage' , 0 , { silent: true } );
+
+                // Echo all sub-model events as native on this model
+                this.get( name ).on( 'all' , function() {
+                    this.trigger.apply( this , arguments );
+                } , this );
+            } , this );
+        }
+
+        , updateProgress: function() {
+            var progressPercentage = 0;
+
+            _.each( this.submodels , function( submodelConfig , key ) {
+                progressPercentage += ( this.get( key + 'ProgressPercentage' ) / 100 * submodelConfig.weight );
+            } , this );
+
+            this.set( 'progressPercentage' , progressPercentage );
+        }
+
+        , fetch: function( options ) {
+            // Input normalization
+            options = options || {};
+
+            // Get list of submodels to fetch
+            var submodels = _.keys( this.submodels );
+            var success = options.success;
+
+            var next = _.bind( function() {
+                // Get next submodelName or we're done
+                var submodelName = submodels.shift();
+                if( ! submodelName ) {
+                    this.set( 'progressPercentage' , 100 );
+
+                    this.fetchedJSON = this.toJSON();
+
+                    if( success ) {
+                        success();
+                    }
+
+                    return;
+                }
+
+                // Cache
+                var submodelConfig = this.submodels[ submodelName ];
+                var submodel = this.get( submodelName );
+
+                // Skip admin-only if we're not admin
+                if(
+                    ( !options.loadAdmin && submodelConfig.adminOnly )
+                    || ( ! adminKey.load() && submodelConfig.adminOnly )
+                ) {
+                    this.set( submodelName + 'ProgressPercentage' , 100 );
+                    next();
+                    return;
+                }
+
+                // Override success with next callback
+                var fetchOptions = _.clone( options );
+                fetchOptions.success = _.bind( function() {
+                    this.set( submodelName + 'ProgressPercentage' , 100 );
+                    next();
+                } , this );
+                if( submodelConfig.progress ) {
+                    fetchOptions.progress = _.partial( submodelConfig.progress , this , submodel );
+                }
+
+                // And start the fetch
+                submodel.fetch( fetchOptions );
+            } , this );
+
+            next();
+        }
+
+        , validate: function() {
+            console.log( 'TODO' );
+            this.set( 'isValid' , false );
+        }
+
+        , save: function() {
+            console.log( 'TODO' );
+        }
+
+        , toJSON: function() {
+            var json = this.constructor.__super__.toJSON.apply( this , arguments );
+
+            _.each( json , function( value , key ) {
+                // If the value has a toJSON method
+                if( _.isObject( value ) && _.isFunction( value.toJSON ) ) {
+                    json[ key ] = value.toJSON();
+                }
+            } , this );
+
+            return json;
+        }
     } );
 
     return exports;
