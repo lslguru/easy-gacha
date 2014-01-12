@@ -5,6 +5,7 @@ define( [
     , 'moment'
     , 'lib/constants'
     , 'models/agents-cache'
+    , 'models/prim'
 
 ] , function(
 
@@ -13,6 +14,7 @@ define( [
     , moment
     , CONSTANTS
     , agentsCache
+    , Prim
 
 ) {
     'use strict';
@@ -39,9 +41,20 @@ define( [
             , configured: null
             , price: null
             , extra: null
-            , primName: null
-            , primDesc: null
+            , numberOfPrims: null
+            , scriptLinkNumber: null
+            , creatorKey: null
+            , creatorUserName: null
+            , creatorDisplayname: null
+            , groupKey: null
+            , scriptCount: null
+            , scriptTime: null
+            , prim: null
         }
+
+        , includeInNotecard: [
+            'extra'
+        ]
 
         , toPostJSON: function() {
             return [
@@ -56,70 +69,108 @@ define( [
             }
 
             var i = 0;
-            var ret = {};
+            var parsed = {};
 
-            ret.isAdmin = Boolean( parseInt( data[i++] , 10 ) );
-            ret.ownerKey = data[i++];
-            ret.objectName = data[i++];
+            parsed.isAdmin = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.ownerKey = data[i++] || CONSTANTS.NULL_KEY;
+            parsed.objectName = data[i++];
 
             if( '(No Description)' === data[i] ) {
                 data[i] = '';
             }
-            ret.objectDesc = data[i++];
+            parsed.objectDesc = data[i++];
 
-            ret.scriptName = data[i++];
-            ret.freeMemory = parseInt( data[i++] , 10 );
-            ret.debitPermission = Boolean( parseInt( data[i++] , 10 ) );
-            ret.lastPing = moment( parseInt( data[i++] , 10 ) , 'X' );
-            ret.inventoryCount = parseInt( data[i++] , 10 );
-            ret.itemCount = parseInt( data[i++] , 10 );
-            ret.payoutCount = parseInt( data[i++] , 10 );
-            ret.regionName = data[i++];
-            ret.position = new Vector( data[i++] );
-            ret.configured = Boolean( parseInt( data[i++] , 10 ) );
-            ret.price = parseInt( data[i++] , 10 );
+            parsed.scriptName = data[i++];
+            parsed.freeMemory = parseInt( data[i++] , 10 );
+            parsed.debitPermission = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.lastPing = moment( parseInt( data[i++] , 10 ) , 'X' );
+            parsed.inventoryCount = parseInt( data[i++] , 10 );
+            parsed.itemCount = parseInt( data[i++] , 10 );
+            parsed.payoutCount = parseInt( data[i++] , 10 );
+            parsed.regionName = data[i++];
+            parsed.position = new Vector( data[i++] );
+            parsed.configured = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.price = parseInt( data[i++] , 10 );
 
             try {
                 data[i] = JSON.parse( data[i] );
             } catch( e ) {
                 data[i] = {};
             }
-            ret.extra = data[i++];
+            parsed.extra = data[i++];
 
-            ret.primName = data[i++];
-            ret.primDesc = data[i++];
+            parsed.numberOfPrims = parseInt( data[i++] , 10 );
+            parsed.scriptLinkNumber = parseInt( data[i++] , 10 );
+            parsed.creatorKey = data[i++] || CONSTANTS.NULL_KEY;
+            parsed.groupKey = data[i++] || CONSTANTS.NULL_KEY;
+            parsed.scriptCount = parseInt( data[i++] , 10 ); // if not 1, next number is meaningless
+            parsed.scriptTime = parseFloat( data[i++] , 10 );
 
-            return ret;
+            return parsed;
         }
 
         , fetch: function( options ) {
             var success = options.success;
             var fetchOptions = _.clone( options );
 
-            fetchOptions.success = _.bind( function( model , resp ) {
-                if( !model.get( 'ownerKey' ) || CONSTANTS.NULL_KEY == model.get( 'ownerKey' ) ) {
-                    if( success ) {
-                        success.call( this , model , resp , options );
-                    }
+            fetchOptions.success = function( model , resp ) {
+                var prim = new Prim();
+                var topFetchContext = this;
 
-                    return;
+                prim.fetch( {
+                    success: primFetchComplete
+                    , error: primFetchComplete
+                } );
+
+                function primFetchComplete() {
+                    model.set( prim.attributes );
+                    fetchOwnerKey( topFetchContext );
                 }
 
-                agentsCache.fetch( {
-                    id: model.get( 'ownerKey' )
-                    , context: this
-                    , success: function( agent ) {
-                        this.set( {
-                            ownerUserName: agent.get( 'username' )
-                            , ownerDisplayName: agent.get( 'displayname' )
-                        } );
-
-                        if( success ) {
-                            options.success.call( this , model , resp , options );
-                        }
+                function fetchOwnerKey() {
+                    if( CONSTANTS.NULL_KEY == model.get( 'ownerKey' ) ) {
+                        fetchCreatorKey();
+                        return;
                     }
-                } );
-            } , this );
+
+                    agentsCache.fetch( {
+                        id: model.get( 'ownerKey' )
+                        , success: function( agent ) {
+                            model.set( {
+                                ownerUserName: agent.get( 'username' )
+                                , ownerDisplayName: agent.get( 'displayname' )
+                            } );
+
+                            fetchCreatorKey();
+                        }
+                    } );
+                }
+
+                function fetchCreatorKey() {
+                    if( CONSTANTS.NULL_KEY == model.get( 'creatorKey' ) ) {
+                        done();
+                        return;
+                    }
+
+                    agentsCache.fetch( {
+                        id: model.get( 'creatorKey' )
+                        , success: function( agent ) {
+                            model.set( {
+                                creatorUserName: agent.get( 'username' )
+                                , creatorDisplayName: agent.get( 'displayname' )
+                            } );
+
+                            done();
+                        }
+                    } );
+                }
+
+                function done() {
+                    if( success ) {
+                        success.call( topFetchContext , model , resp , options );
+                    }
+                }
+            };
 
             BaseModel.prototype.fetch.call( this , fetchOptions );
         }

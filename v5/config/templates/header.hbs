@@ -1,71 +1,71 @@
-<div class="page-header">
-    <div class="nav-links well well-sm">
-        <label>Easy Gacha</label>
-        <div class="btn-group">
-            <a class="btn btn-default" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha Kit on SecondLife Marketplace">Marketplace</a>
-            <a class="btn btn-default" target="_blank" href="https://github.com/lslguru/easy-gacha" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha code repository">GitHub</a>
-            <a class="btn btn-default" target="_blank" href="https://lslguru.com/easy-gacha-v5/registry.php" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Gacha Registry which lists all official Easy Gachas">Registry</a>
-        </div>
+<div id="header" class="page-header clearfix">
+    <div class="btn-group dropdown nav-links">
+        <button id="save" class="btn btn-primary" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and reload">
+            <span class="if-enabled"><i class="fa fa-floppy-o"></i> Save Changes</span>
+            <span class="if-disabled"><i class="fa fa-check-circle"></i> No Changes to Save</span>
+        </button>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="header-menu-button">
+            <li role="presentation" class="dropdown-header">This Gacha</li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" id="reload" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Discard all changes and reload"><i class="fa fa-refresh"></i> Reload</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" id="dashboard" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Discard all changes and go to dashboard"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+            <li role="presentation" class="divider"></li>
+            <li role="presentation" class="dropdown-header">Easy Gacha</li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha Kit on SecondLife Marketplace"><i class="fa fa-shopping-cart"></i> Marketplace</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://github.com/lslguru/easy-gacha" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha code repository"><i class="fa fa-github"></i> GitHub</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://lslguru.com/easy-gacha-v5/registry.php" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> Registry</a></li>
+            <li role="presentation" class="divider"></li>
+            <li role="presentation" class="dropdown-header">Status</li>
+            <li role="presentation">
+                <a class="alert-{{memoryState}}" data-toggle="tooltip" data-tooltip-placement="left" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
+                    <i class="fa {{memoryIcon}}"></i> Free Memory: {{freeMemory}}
+                </a>
+            </li>
+            <li role="presentation">
+                <a class="alert-{{lagState}}" data-toggle="tooltip" data-tooltip-placement="left" title="This is how much lag the scripts in this OBJECT are generating. Lower numbers are better. If there are scripts other than Easy Gacha, we cannot determine the lag of Easy Gacha specifically.">
+                    <i class="fa {{lagIcon}}"></i> Object Lag: {{scriptTime}}
+                </a>
+            </li>
+        </ul>
+        <button class="btn btn-default" data-toggle="dropdown" role="button" id="header-menu-button">
+            Menu <span class="caret"></span>
+        </button>
     </div>
-    <div class="nav-links well well-sm">
-        <label>This Gacha</label>
-        <div class="btn-group">
-            <button id="save" class="btn btn-primary" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and reload">Saved</button>
-            <button id="dashboard" class="btn btn-default" data-toggle="tooltip" data-tooltip-placement="bottom" title="Discard all changes and reload">Dashboard</button>
-            <!-- Begin Confirmation modal -->
-                <div class="modal fade" id="dashboard-confirmation" tabindex="-1" role="dialog" aria-labelledby="dashboard-confirmation-label" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content alert-warning">
-                            <div class="modal-header">
-                                <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
-                                <h4 class="modal-title" id="dashboard-confirmation-label"><i class="fa fa-exclamation-triangle"></i> Discard Changes</h4>
-                            </div>
-                            <div class="modal-body">
-                                You have unsaved changes. Going back to the dashboard will discard your changes. Are you sure you want to go to the dashboard?
-                            </div>
-                            <div class="modal-footer">
-                                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button id="dashboard-confirm" class="btn btn-primary">Dashboard</button>
-                            </div>
-                        </div>
-                    </div>
+    <div class="modal fade" id="reload-confirmation" tabindex="-1" role="dialog" aria-labelledby="reload-confirmation-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content alert-warning">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                    <h4 class="modal-title" id="reload-confirmation-label"><i class="fa fa-exclamation-triangle"></i> Discard Changes</h4>
                 </div>
-            <!-- End Confirmation modal -->
+                <div class="modal-body">
+                    You have unsaved changes. Reloading will discard them. Are you sure you want to go to the reload?
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="reload-confirm" class="btn btn-primary">Reload</button>
+                </div>
+            </div>
         </div>
     </div>
-    <div id="memory" class="nav-links">
-        {{#if freeMemory}}
-            {{#if dangerMemory}}
-                <div class="alert alert-danger" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
-                <label>Free Memory</label>
-                <i class="fa fa-exclamation-circle"></i>
-            {{else}}
-                {{#if warnMemory}}
-                    <div class="alert alert-warning" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
-                    <label>Free Memory</label>
-                    <i class="fa fa-info-circle"></i>
-                {{else}}
-                    <div class="alert alert-success" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
-                    <label>Free Memory</label>
-                    <i class="fa fa-check-circle"></i>
-                {{/if}}
-            {{/if}}
-        {{else}}
-            <div class="alert alert-warning" data-toggle="tooltip" title="Data may not have loaded yet, please be patient.">
-            <label>Free Memory</label>
-            <i class="fa fa-question-circle"></i>
-        {{/if}}
-        <span>
-            {{#if freeMemory}}
-                {{freeMemory}}
-            {{else}}
-                Unknown
-            {{/if}}
-        </span>
+    <div class="modal fade" id="dashboard-confirmation" tabindex="-1" role="dialog" aria-labelledby="dashboard-confirmation-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content alert-warning">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                    <h4 class="modal-title" id="dashboard-confirmation-label"><i class="fa fa-exclamation-triangle"></i> Discard Changes</h4>
+                </div>
+                <div class="modal-body">
+                    You have unsaved changes. Going back to the dashboard will discard your changes. Are you sure you want to go to the dashboard?
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="dashboard-confirm" class="btn btn-primary">Dashboard</button>
+                </div>
+            </div>
         </div>
     </div>
     <h1>
-        <a href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object's last reported location on the map">{{objectName}}</a>
+        <a href="{{mapUrl}}" data-toggle="tooltip" data-tooltip-placement="bottom" title="Click to see the object's last reported location on the map">{{objectName}}</a>
     </h1>
     <div>
         {{objectDesc}}

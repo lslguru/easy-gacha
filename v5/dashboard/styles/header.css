@@ -1,5 +1,6 @@
-#page-dashboard .page-header .nav-links {
+#page-dashboard #header .nav-links {
     float: right;
+    margin-left: 1em;
 }
 
 #page-dashboard .page-header .nav-links label {

@@ -41,11 +41,14 @@ define( [
                 return {};
             }
 
-            return {
-                index: parseInt( data[0] , 10 )
-                , agentKey: data[1]
-                , amount: parseInt( data[2] , 10 )
-            };
+            var i = 0;
+            var parsed = {};
+
+            parsed.index = parseInt( data[i++] , 10 );
+            parsed.agentKey = data[i++] || CONSTANTS.NULL_KEY;
+            parsed.amount = parseInt( data[i++] , 10 );
+
+            return parsed;
         }
 
         , fetch: function( options ) {
@@ -53,7 +56,7 @@ define( [
             var fetchOptions = _.clone( options );
 
             fetchOptions.success = function( model , resp ) {
-                if( !model.get( 'agentKey' ) || CONSTANTS.NULL_KEY == model.get( 'agentKey' ) ) {
+                if( CONSTANTS.NULL_KEY == model.get( 'agentKey' ) ) {
                     if( success ) {
                         success.call( this , model , resp , options );
                     }

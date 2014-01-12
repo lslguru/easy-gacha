@@ -9,6 +9,7 @@ define( [
     , 'models/invs'
     , 'lib/admin-key'
     , 'models/agents-cache'
+    , 'models/base-sl-model'
 
 ] , function(
 
@@ -21,6 +22,7 @@ define( [
     , Invs
     , adminKey
     , agentsCache
+    , BaseSlModel
 
 ) {
     'use strict';
@@ -109,6 +111,10 @@ define( [
             var submodels = _.keys( this.submodels );
             var success = options.success;
 
+            // Set my initial progress
+            this.set( 'progressPercentage' , 0 );
+
+            // Method to process one submodel
             var next = _.bind( function() {
                 // Get next submodelName or we're done
                 var submodelName = submodels.shift();
@@ -171,6 +177,23 @@ define( [
                 // If the value has a toJSON method
                 if( _.isObject( value ) && _.isFunction( value.toJSON ) ) {
                     json[ key ] = value.toJSON();
+                }
+            } , this );
+
+            return json;
+        }
+
+        , fromNotecardJSON: BaseSlModel.prototype.fromNotecardJSON
+
+        , toNotecardJSON: function() {
+            var json = this.constructor.__super__.toJSON.apply( this , arguments );
+
+            _.each( json , function( value , key ) {
+                // Only keep if the value has a toNotecardJSON method
+                if( _.isObject( value ) && _.isFunction( value.toNotecardJSON ) ) {
+                    json[ key ] = value.toNotecardJSON();
+                } else {
+                    delete json[ key ];
                 }
             } , this );
 

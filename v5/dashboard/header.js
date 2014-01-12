@@ -26,6 +26,7 @@ define( [
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
+            , 'dropdowns': '[data-toggle=dropdown]'
         }
 
         , templateHelpers: function() {
@@ -41,14 +42,52 @@ define( [
                     , this.model.get( 'position' ).z
                 )
 
-                , dangerMemory: (
+                , memoryState: (
                     null !== this.model.get( 'freeMemory' )
                     && this.model.get( 'freeMemory' ) < CONSTANTS.DANGER_MEMORY_THRESHOLD
+                    ? 'danger'
+                    : (
+                        null !== this.model.get( 'freeMemory' )
+                        && this.model.get( 'freeMemory' ) < CONSTANTS.WARN_MEMORY_THRESHOLD
+                        ? 'warning'
+                        : 'success'
+                    )
                 )
 
-                , warnMemory: (
+                , memoryIcon: (
                     null !== this.model.get( 'freeMemory' )
-                    && this.model.get( 'freeMemory' ) < CONSTANTS.WARN_MEMORY_THRESHOLD
+                    && this.model.get( 'freeMemory' ) < CONSTANTS.DANGER_MEMORY_THRESHOLD
+                    ? 'fa-exclamation-circle'
+                    : (
+                        null !== this.model.get( 'freeMemory' )
+                        && this.model.get( 'freeMemory' ) < CONSTANTS.WARN_MEMORY_THRESHOLD
+                        ? 'fa-info-circle'
+                        : 'fa-check-circle'
+                    )
+                )
+
+                , lagState: (
+                    1 !== this.model.get( 'scriptCount' )
+                    ? 'info'
+                    : (
+                        CONSTANTS.WARN_SCRIPT_TIME < this.model.get( 'scriptTime' )
+                        ? 'warning'
+                        : 'success'
+                    )
+                )
+
+                , lagIcon: (
+                    1 !== this.model.get( 'scriptCount' )
+                    ? 'fa-info-circle'
+                    : (
+                        CONSTANTS.WARN_SCRIPT_TIME < this.model.get( 'scriptTime' )
+                        ? 'fa-exclamation-circle'
+                        : (
+                            this.model.get( 'scriptTime' )
+                            ? 'fa-check-circle'
+                            : 'fa-smile-o'
+                        )
+                    )
                 )
 
                 , ownerUrl: (
@@ -65,6 +104,8 @@ define( [
                 , container: 'body'
                 , placement: tooltipPlacement
             } );
+
+            this.ui.dropdowns.dropdown();
         }
     } );
 

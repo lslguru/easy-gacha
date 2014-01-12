@@ -45,7 +45,7 @@ define( [
             );
 
             this.options.lookupAgentDialog = this.lookupAgentDialog;
-            this.options.model = this.options.gacha = new Gacha();
+            this.options.model = this.options.gacha = window.gacha = new Gacha();
         }
 
         , onRender: function() {

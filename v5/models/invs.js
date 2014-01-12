@@ -13,6 +13,9 @@ define( [
 
     var exports = BaseCollection.extend( {
         model: Inv
+
+        , fromNotecardJSON: null
+        , toNotecardJSON: null
     } );
 
     return exports;

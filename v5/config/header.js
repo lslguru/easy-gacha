@@ -27,12 +27,16 @@ define( [
         , events: {
             'click #dashboard': 'clickDashboard'
             , 'click #dashboard-confirm': 'confirmDashboard'
+            , 'click #reload': 'clickReload'
+            , 'click #reload-confirm': 'confirmReload'
             , 'click #save': 'clickSave'
         }
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
+            , 'dropdowns': '[data-toggle=dropdown]'
             , 'dashboardConfirmation': '#dashboard-confirmation'
+            , 'reloadConfirmation': '#reload-confirmation'
             , 'saveBtn': '#save'
         }
 
@@ -58,14 +62,52 @@ define( [
                     , this.model.get( 'position' ).z
                 )
 
-                , dangerMemory: (
+                , memoryState: (
                     null !== this.model.get( 'freeMemory' )
                     && this.model.get( 'freeMemory' ) < CONSTANTS.DANGER_MEMORY_THRESHOLD
+                    ? 'danger'
+                    : (
+                        null !== this.model.get( 'freeMemory' )
+                        && this.model.get( 'freeMemory' ) < CONSTANTS.WARN_MEMORY_THRESHOLD
+                        ? 'warning'
+                        : 'success'
+                    )
                 )
 
-                , warnMemory: (
+                , memoryIcon: (
                     null !== this.model.get( 'freeMemory' )
-                    && this.model.get( 'freeMemory' ) < CONSTANTS.WARN_MEMORY_THRESHOLD
+                    && this.model.get( 'freeMemory' ) < CONSTANTS.DANGER_MEMORY_THRESHOLD
+                    ? 'fa-exclamation-circle'
+                    : (
+                        null !== this.model.get( 'freeMemory' )
+                        && this.model.get( 'freeMemory' ) < CONSTANTS.WARN_MEMORY_THRESHOLD
+                        ? 'fa-info-circle'
+                        : 'fa-check-circle'
+                    )
+                )
+
+                , lagState: (
+                    1 !== this.model.get( 'scriptCount' )
+                    ? 'info'
+                    : (
+                        CONSTANTS.WARN_SCRIPT_TIME < this.model.get( 'scriptTime' )
+                        ? 'warning'
+                        : 'success'
+                    )
+                )
+
+                , lagIcon: (
+                    1 !== this.model.get( 'scriptCount' )
+                    ? 'fa-info-circle'
+                    : (
+                        CONSTANTS.WARN_SCRIPT_TIME < this.model.get( 'scriptTime' )
+                        ? 'fa-exclamation-circle'
+                        : (
+                            this.model.get( 'scriptTime' )
+                            ? 'fa-check-circle'
+                            : 'fa-smile-o'
+                        )
+                    )
                 )
 
                 , ownerUrl: (
@@ -83,7 +125,15 @@ define( [
                 , placement: tooltipPlacement
             } );
 
+            this.ui.dropdowns.dropdown();
+
             this.ui.dashboardConfirmation.modal( {
+                backdrop: true
+                , keyboard: true
+                , show: false
+            } );
+
+            this.ui.reloadConfirmation.modal( {
                 backdrop: true
                 , keyboard: true
                 , show: false
@@ -92,12 +142,26 @@ define( [
             this.updateSaveBtn();
         }
 
+        , confirmReload: function() {
+            this.options.app.router.navigate( 'temp' , { replace: true } );
+            this.options.app.router.navigate( 'config' , { trigger: true , replace: true } );
+        }
+
         , confirmDashboard: function() {
             this.options.app.router.navigate( 'dashboard' , { trigger: true } );
         }
 
         , hasChanges: function() {
             return Boolean( this.options.gacha.fetchedJSON && ! _.isEqual( this.options.gacha.toJSON() , this.options.gacha.fetchedJSON ) );
+        }
+
+        , clickReload: function() {
+            if( ! this.hasChanges() ) {
+                this.confirmReload();
+                return;
+            }
+
+            this.ui.reloadConfirmation.modal( 'show' );
         }
 
         , clickDashboard: function() {
@@ -118,12 +182,8 @@ define( [
         , updateSaveBtn: function() {
             if( this.hasChanges() ) {
                 this.ui.saveBtn.removeClass( 'disabled' );
-                this.ui.saveBtn.addClass( 'btn-primary' );
-                this.ui.saveBtn.text( 'Save' );
             } else {
-                this.ui.saveBtn.removeClass( 'btn-primary' );
                 this.ui.saveBtn.addClass( 'disabled' );
-                this.ui.saveBtn.text( 'Saved' );
             }
         }
     } );

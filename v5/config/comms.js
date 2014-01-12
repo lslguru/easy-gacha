@@ -87,7 +87,7 @@ define( [
             this.ui.imOwner.removeClass( 'active' );
             this.ui.imSelected.removeClass( 'active' ).hide();
 
-            if( ! this.model.get( 'im' ) || CONSTANTS.NULL_KEY === this.model.get( 'im' ) ) {
+            if( CONSTANTS.NULL_KEY === this.model.get( 'im' ) ) {
                 this.ui.imOff.addClass( 'active' );
             } else if( this.options.gacha.get( 'info' ).get( 'ownerKey' ) === this.model.get( 'im' ) ) {
                 this.ui.imOwner.addClass( 'active' );
@@ -101,7 +101,7 @@ define( [
 
             if( this.ui.imOff.is( target ) ) {
                 this.model.set( {
-                    im: ''
+                    im: CONSTANTS.NULL_KEY
                     , imUserName: null
                     , imDisplayName: null
                 } );

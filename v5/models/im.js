@@ -30,7 +30,7 @@ define( [
             }
 
             return {
-                key: data[0]
+                key: data[0] || CONSTANTS.NULL_KEY
             };
         }
     } );

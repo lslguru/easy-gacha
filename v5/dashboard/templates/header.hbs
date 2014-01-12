@@ -1,12 +1,12 @@
-<div class="page-header">
+<div class="page-header clearfix">
     <div class="nav-links well well-sm">
         <label>Easy Gacha</label>
         <div class="btn-group">
-            <a class="btn btn-default" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha Kit on SecondLife Marketplace">Marketplace</a>
-            <a class="btn btn-default" target="_blank" href="https://github.com/lslguru/easy-gacha" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha code repository">GitHub</a>
-            <a class="btn btn-default" target="_blank" href="https://lslguru.com/easy-gacha-v5/registry.php" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Gacha Registry which lists all official Easy Gachas">Registry</a>
+            <a class="btn btn-default" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha Kit on SecondLife Marketplace"><i class="fa fa-shopping-cart"></i> Marketplace</a>
+            <a class="btn btn-default" target="_blank" href="https://github.com/lslguru/easy-gacha" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha code repository"><i class="fa fa-github"></i> GitHub</a>
+            <a class="btn btn-default" target="_blank" href="https://lslguru.com/easy-gacha-v5/registry.php" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> Registry</a>
             {{#if isAdmin}}
-                <a class="btn btn-primary" href="#config" data-toggle="tooltip" data-tooltip-placement="bottom" title="You have permission to modify this Easy Gacha. Click here to configure.">Configure This Gacha</a>
+                <a class="btn btn-primary" href="#config" data-toggle="tooltip" data-tooltip-placement="bottom" title="You have permission to modify this Easy Gacha. Click here to configure."><i class="fa fa-pencil-square-o"></i> Configure This Gacha</a>
             {{/if}}
         </div>
     </div>
@@ -21,7 +21,7 @@
     </div>
 </div>
 <div class="row">
-    <div id="status" class="col-sm-4"><dl>
+    <div id="status" class="col-sm-3"><dl>
         <dt>Status</dt>
         <dd>
             {{#if configured}}
@@ -37,37 +37,23 @@
             {{/if}}
         </dd>
     </dl></div>
-    <div id="memory" class="col-sm-4"><dl>
+    <div class="col-sm-3"><dl>
         <dt>Free Script Memory</dt>
         <dd>
-            {{#if freeMemory}}
-                {{#if dangerMemory}}
-                    <div class="alert alert-danger" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
-                    <i class="fa fa-exclamation-circle"></i>
-                {{else}}
-                    {{#if warnMemory}}
-                        <div class="alert alert-warning" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
-                        <i class="fa fa-info-circle"></i>
-                    {{else}}
-                        <div class="alert alert-success" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
-                        <i class="fa fa-check-circle"></i>
-                    {{/if}}
-                {{/if}}
-            {{else}}
-                <div class="alert alert-warning" data-toggle="tooltip" title="Data may not have loaded yet, please be patient.">
-                <i class="fa fa-question-circle"></i>
-            {{/if}}
-            <span>
-                {{#if freeMemory}}
-                    {{freeMemory}}
-                {{else}}
-                    Unknown
-                {{/if}}
-            </span>
+            <div class="alert alert-{{memoryState}}" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
+                <i class="fa {{memoryIcon}}"></i> {{freeMemory}}
             </div>
         </dd>
     </dl></div>
-    <div id="owner"  class="col-sm-4"><dl>
+    <div class="col-sm-3"><dl>
+        <dt>Object Lag</dt>
+        <dd>
+            <div class="alert alert-{{lagState}}" data-toggle="tooltip" title="This is how much lag the scripts in this OBJECT are generating. Lower numbers are better. If there are scripts other than Easy Gacha, we cannot determine the lag of Easy Gacha specifically.">
+                <i class="fa {{lagIcon}}"></i> Object Lag: {{scriptTime}}
+            </div>
+        </dd>
+    </dl></div>
+    <div id="owner"  class="col-sm-3"><dl>
         <dt>Owner</dt>
         <dd>
             <div class="alert alert-info" data-toggle="tooltip" title="Click this link to view their profile in SecondLife.">

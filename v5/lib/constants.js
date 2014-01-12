@@ -37,6 +37,8 @@ define( [
     , DANGER_MEMORY_THRESHOLD: 10000
     , WARN_MEMORY_THRESHOLD: 15000
 
+    , WARN_SCRIPT_TIME: 0.005
+
     , INVENTORY_NUMBER_TO_TYPE: {
         '': 'INVENTORY_UNKNOWN'
         , '-1': 'INVENTORY_NONE'
@@ -90,5 +92,24 @@ define( [
 
     , PAY_HIDE: -1
     , PAY_DEFAULT: -2
+
+    , PRIM_TYPE_BOX: 0
+    , PRIM_TYPE_CYLINDER: 1
+    , PRIM_TYPE_PRISM: 2
+    , PRIM_TYPE_SPHERE: 3
+    , PRIM_TYPE_TORUS: 4
+    , PRIM_TYPE_TUBE: 5
+    , PRIM_TYPE_RING: 6
+    , PRIM_TYPE_SCULPT: 7
+
+    , LINK_ALL_CHILDREN: -3
+    , LINK_ALL_OTHERS: -2
+    , LINK_ROOT: 1
+    , LINK_SET: -1
+    , LINK_THIS: -4
+
+    , MAX_PER_PURCHASE: 50
+
+    , MAX_NOTECARD_LINE_LENGTH: 255
 
 } ; } );

@@ -17,6 +17,7 @@ define( [
 
     var exports = BaseModel.extend( {
         url: 'item'
+        , idAttribute: 'name'
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
             // TODO: Save
@@ -48,20 +49,23 @@ define( [
                 return {};
             }
 
-            return {
-                index: parseInt( data[0] , 10 )
-                , rarity: parseFloat( data[1] , 10 )
-                , limit: parseInt( data[2] , 10 )
-                , bought: parseInt( data[3] , 10 )
-                , name: data[4]
-                , type: CONSTANTS.INVENTORY_NUMBER_TO_TYPE[ parseInt( data[5] , 10 ) ] || 'INVENTORY_UNKNOWN'
-                , creator: data[6]
-                , keyAvailable: Boolean( parseInt( data[7] , 10 ) )
-                , ownerPermissions: parseInt( data[8] , 10 )
-                , groupPermissions: parseInt( data[9] , 10 )
-                , publicPermissions: parseInt( data[10] , 10 )
-                , nextPermissions: parseInt( data[11] , 10 )
-            };
+            var i = 0;
+            var parsed = {};
+
+            parsed.index = parseInt( data[i++] , 10 );
+            parsed.rarity = parseFloat( data[i++] , 10 );
+            parsed.limit = parseInt( data[i++] , 10 );
+            parsed.bought = parseInt( data[i++] , 10 );
+            parsed.name = data[i++];
+            parsed.type = CONSTANTS.INVENTORY_NUMBER_TO_TYPE[ parseInt( data[i++] , 10 ) ] || 'INVENTORY_UNKNOWN';
+            parsed.creator = data[i++];
+            parsed.keyAvailable = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.ownerPermissions = parseInt( data[i++] , 10 );
+            parsed.groupPermissions = parseInt( data[i++] , 10 );
+            parsed.publicPermissions = parseInt( data[i++] , 10 );
+            parsed.nextPermissions = parseInt( data[i++] , 10 );
+
+            return parsed;
         }
 
         , fetch: function( options ) {
@@ -69,7 +73,7 @@ define( [
             var fetchOptions = _.clone( options );
 
             fetchOptions.success = _.bind( function( model , resp ) {
-                if( !model.get( 'creator' ) || CONSTANTS.NULL_KEY == model.get( 'creator' ) ) {
+                if( CONSTANTS.NULL_KEY == model.get( 'creator' ) ) {
                     if( success ) {
                         success.call( this , model , resp , options );
                     }

@@ -1,0 +1,27 @@
+<table class="table table-striped table-bordered table-hover table-condensed table-responsive tablesorter" id="inventory">
+    <thead>
+        <tr>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="The inventory name and type"><a class="nowrap-this-element">Item Name</a></th>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="Whether or not you and the next owner can copy this item"><a class="nowrap-this-element">Copy</a></th>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="Whether or not you and the next owner can modify this item"><a class="nowrap-this-element">Mod</a></th>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="Whether or not you and the next owner can transfer this item"><a class="nowrap-this-element">Trans</a></th>
+            <th data-toggle="tooltip" data-tooltip-placement="auto" title="This is the weight you have given to this item. The percentage shown is the probability RIGHT NOW. If any inventory is no-copy or runs out of available supply, the percentages will change."><a class="nowrap-this-element">Rarity</a></th>
+            <th data-toggle="tooltip" data-tooltip-placement="auto" title="This is how many of the item you want to be available. No-copy items must be limited to a quantity of ONE. Copyable items default to unlimited supply."><a class="nowrap-this-element">Quantity</a></th>
+            <th data-toggle="tooltip" data-tooltip-placement="left" title="This is the number that have been bought so far. NOTE: These counters reset every time the inventory is changed to prevent bad statistics."><a class="nowrap-this-element">Bought</a></th>
+            <th data-toggle="tooltip" data-tooltip-placement="left" title="These are actions you can take with this row."><a class="nowrap-this-element">Actions</a></th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+        <tr>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="This is the total number of items">Total Items: <span id="total-items-count"></span></th>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="This is the total number of items which are copyable by you"><span id="total-copy-count"></span></th>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="This is the total number of items which are modifyable by you"><span id="total-mod-count"></span></th>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="This is the total number of items which are transferrable"><span id="total-trans-count"></span></th>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="This is the total of the weights entered above"><span id="total-rarity"></span> = 100%</th>
+            <th><!-- quantity --></th>
+            <th data-toggle="tooltip" data-tooltip-placement="right" title="This is the total number that have been bought since the last time statistics were reset"><span id="total-bought"></span></th>
+            <th><!-- actions--></th>
+        </tr>
+    </tfoot>
+</table>

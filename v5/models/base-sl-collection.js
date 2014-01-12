@@ -46,6 +46,27 @@ define( [
 
             fetchNext( 0 );
         }
+
+        , fromNotecardJSON: function( json ) {
+            this.set( json );
+            return true;
+        }
+
+        , toNotecardJSON: function( options ) {
+            var json = [];
+
+            _.each( this.models , function( model ) {
+                if( model.toNotecardJSON ) {
+                    var modelJSON = model.toNotecardJSON();
+
+                    if( ! _.isEmpty( modelJSON ) ) {
+                        json.push( modelJSON );
+                    }
+                }
+            } , this );
+
+            return json;
+        }
     } ) );
 
     return exports;

@@ -1,16 +1,11 @@
-#page-config .page-header {
-    border-bottom: 0;
-}
-
-#page-config .page-header .nav-links {
+#page-config #header .nav-links {
     float: right;
-    margin-right: 1em;
+    margin-left: 1em;
 }
 
-#page-config .page-header .nav-links label {
-    margin-right: 1em;
+#page-config button.disabled .if-enabled {
+    display: none;
 }
-
-#page-config #memory .alert {
-    padding: 13px;
+#page-config button:not(.disabled) .if-disabled {
+    display: none;
 }

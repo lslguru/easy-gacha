@@ -74,4 +74,8 @@ require( {
         app: app
     } );
 
+} , function( err ) {
+
+    document.body.innerHTML = '<p>ERROR LOADING PAGE: Please reload and try again</p>\n<pre>' + err + '</pre>';
+
 } );

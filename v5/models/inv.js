@@ -17,6 +17,7 @@ define( [
 
     var exports = BaseModel.extend( {
         url: 'inv'
+        , idAttribute: 'name'
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
             // TODO: Save
@@ -45,17 +46,20 @@ define( [
                 return {};
             }
 
-            return {
-                index: parseInt( data[0] , 10 )
-                , name: data[1]
-                , type: CONSTANTS.INVENTORY_NUMBER_TO_TYPE[ parseInt( data[2] , 10 ) ] || 'INVENTORY_UNKNOWN'
-                , creator: data[3]
-                , key: data[4]
-                , ownerPermissions: parseInt( data[5] , 10 )
-                , groupPermissions: parseInt( data[6] , 10 )
-                , publicPermissions: parseInt( data[7] , 10 )
-                , nextPermissions: parseInt( data[8] , 10 )
-            };
+            var i = 0;
+            var parsed = {};
+
+            parsed.index = parseInt( data[i++] , 10 );
+            parsed.name = data[i++];
+            parsed.type = CONSTANTS.INVENTORY_NUMBER_TO_TYPE[ parseInt( data[i++] , 10 ) ] || 'INVENTORY_UNKNOWN';
+            parsed.creator = data[i++];
+            parsed.key = data[i++] || CONSTANTS.NULL_KEY;
+            parsed.ownerPermissions = parseInt( data[i++] , 10 );
+            parsed.groupPermissions = parseInt( data[i++] , 10 );
+            parsed.publicPermissions = parseInt( data[i++] , 10 );
+            parsed.nextPermissions = parseInt( data[i++] , 10 );
+
+            return parsed;
         }
 
         , fetch: function( options ) {
@@ -63,7 +67,7 @@ define( [
             var fetchOptions = _.clone( options );
 
             fetchOptions.success = _.bind( function( model , resp ) {
-                if( !model.get( 'creator' ) || CONSTANTS.NULL_KEY == model.get( 'creator' ) ) {
+                if( CONSTANTS.NULL_KEY == model.get( 'creator' ) ) {
                     if( success ) {
                         success.call( this , model , resp , options );
                     }

@@ -33,11 +33,9 @@ define( [
         }
 
         , onRender: function() {
-            var gacha = new Gacha();
+            var gacha = this.options.model = this.options.gacha = window.gacha = new Gacha();
 
-            this.loader.show( new LoaderView( _.extend( {} , this.options , {
-                model: gacha
-            } ) ) );
+            this.loader.show( new LoaderView( this.options ) );
 
             gacha.on( 'change:progressPercentage' , function( gacha , percentage , options ) {
                 if( 100 === percentage ) {

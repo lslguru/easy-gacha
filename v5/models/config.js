@@ -38,8 +38,25 @@ define( [
             , im: null
             , imUserName: null
             , imDisplayName: null
-            , isRootPrim: null
+            , setFolderName: null
         }
+
+        , includeInNotecard: [
+            'folderForSingleItem'
+            , 'rootClickAction'
+            , 'group'
+            , 'allowHover'
+            , 'maxPerPurchase'
+            , 'maxBuys'
+            , 'payPrice'
+            , 'payPriceButton0'
+            , 'payPriceButton1'
+            , 'payPriceButton2'
+            , 'payPriceButton3'
+            , 'email'
+            , 'im'
+            , 'setFolderName'
+        ]
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
             // TODO: Save
@@ -54,20 +71,22 @@ define( [
                 return {};
             }
 
-            return {
-                folderForSingleItem: Boolean( parseInt( data[0] , 10 ) )
-                , rootClickAction: Boolean( parseInt( data[1] , 10 ) )
-                , group: Boolean( parseInt( data[2] , 10 ) )
-                , allowHover: Boolean( parseInt( data[3] , 10 ) )
-                , maxPerPurchase: parseInt( data[4] , 10 )
-                , maxBuys: parseInt( data[5] , 10 )
-                , payPrice: parseInt( data[6] , 10 )
-                , payPriceButton0: parseInt( data[7] , 10 )
-                , payPriceButton1: parseInt( data[8] , 10 )
-                , payPriceButton2: parseInt( data[9] , 10 )
-                , payPriceButton3: parseInt( data[10] , 10 )
-                , isRootPrim: Boolean( parseInt( data[11] , 10 ) )
-            };
+            var i = 0;
+            var parsed = {};
+
+            parsed.folderForSingleItem = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.rootClickAction = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.group = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.allowHover = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.maxPerPurchase = parseInt( data[i++] , 10 );
+            parsed.maxBuys = parseInt( data[i++] , 10 );
+            parsed.payPrice = parseInt( data[i++] , 10 );
+            parsed.payPriceButton0 = parseInt( data[i++] , 10 );
+            parsed.payPriceButton1 = parseInt( data[i++] , 10 );
+            parsed.payPriceButton2 = parseInt( data[i++] , 10 );
+            parsed.payPriceButton3 = parseInt( data[i++] , 10 );
+
+            return parsed;
         }
 
         , fetch: function( options ) {
@@ -91,7 +110,7 @@ define( [
                     imOptions.success = function( im_model , im_resp , im_options ) {
                         model.set( 'im' , im.get( 'key' ) );
 
-                        if( !model.get( 'im' ) || CONSTANTS.NULL_KEY === model.get( 'im' ) ) {
+                        if( CONSTANTS.NULL_KEY === model.get( 'im' ) ) {
                             if( success ) {
                                 success( model , resp , options );
                             }

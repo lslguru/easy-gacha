@@ -6,8 +6,11 @@ define( [
     , 'hbs!config/templates/tabs'
     , 'css!config/styles/tabs'
     , 'bootstrap'
+    , 'config/items'
     , 'config/comms'
     , 'config/advanced'
+    , 'config/export'
+    , 'config/import'
 
 ] , function(
 
@@ -17,8 +20,11 @@ define( [
     , template
     , styles
     , bootstrap
+    , ItemsView
     , CommsView
     , AdvancedView
+    , ExportView
+    , ImportView
 
 ) {
     'use strict';
@@ -28,26 +34,34 @@ define( [
 
         , ui: {
             'tabLinks': '[data-toggle=tab]'
-            , 'defaultTab': '[href=#tab-inv]'
+            , 'defaultTab': '[href=#tab-items]'
         }
 
         , regions: {
-            'inv': '#tab-inv'
-            , 'pay': '#tab-pay'
-            , 'comms': '#tab-comms'
-            , 'advanced': '#tab-advanced'
-            , 'imp': '#tab-import'
-            , 'exp': '#tab-export'
+            'items': '#tab-items'
+            , 'price': '#tab-price'
+            , 'payouts': '#tab-payouts'
+            , 'commsTab': '#tab-comms'
+            , 'advancedTab': '#tab-advanced'
+            , 'exportTab': '#tab-export'
+            , 'importTab': '#tab-import'
+        }
+
+        , events: {
+            'click [data-toggle=tab]': 'signalTabShown'
         }
 
         , onRender: function() {
-            this.comms.show( new CommsView( _.extend( {} , this.options , {
+            this.commsTab.show( new CommsView( _.extend( {} , this.options , {
                 model: this.options.model.get( 'config' )
             } ) ) );
 
-            this.advanced.show( new AdvancedView( _.extend( {} , this.options , {
+            this.advancedTab.show( new AdvancedView( _.extend( {} , this.options , {
                 model: this.options.model.get( 'config' )
             } ) ) );
+
+            this.exportTab.show( new ExportView( this.options ) );
+            this.importTab.show( new ImportView( this.options ) );
 
             this.ui.tabLinks.click( function( e ) {
                 e.preventDefault();
@@ -55,6 +69,10 @@ define( [
             } );
 
             this.ui.defaultTab.tab( 'show' );
+        }
+
+        , signalTabShown: function( jEvent ) {
+            this.$( $( jEvent.currentTarget ).attr( 'href' ) ).children().trigger( 'shown' );
         }
     } );
 
