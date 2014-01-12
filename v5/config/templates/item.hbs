@@ -9,73 +9,106 @@
 
 <td
     data-column-contents="permissions"
-    data-toggle="tooltip"
-    title="Owner: {{#if ownerCanCopy}}+{{else}}-{{/if}}copy, {{#if ownerCanMod}}+{{else}}-{{/if}}mod, {{#if ownerCanTrans}}+{{else}}-{{/if}}trans&lt;br /&gt;Next: {{#if nextCanCopy}}+{{else}}-{{/if}}copy, {{#if nextCanMod}}+{{else}}-{{/if}}mod, {{#if nextCanTrans}}+{{else}}-{{/if}}trans"
+    {{#if permissionsKnown}}
+        data-toggle="tooltip"
+        title="Owner: {{#if ownerCanCopy}}+{{else}}-{{/if}}copy, {{#if ownerCanMod}}+{{else}}-{{/if}}mod, {{#if ownerCanTrans}}+{{else}}-{{/if}}trans&lt;br /&gt;Next: {{#if nextCanCopy}}+{{else}}-{{/if}}copy, {{#if nextCanMod}}+{{else}}-{{/if}}mod, {{#if nextCanTrans}}+{{else}}-{{/if}}trans"
+    {{/if}}
 >
-    <span class="fa-stack">
-        <i class="fa fa-files-o fa-stack-1x text-{{#if ownerCanCopy}}success{{else}}danger{{/if}}"></i>
-        {{#if ownerCanCopy}}{{else}}
-            <i class="fa fa-ban fa-stack-2x text-danger"></i>
-        {{/if}}
-    </span>
-    <span class="fa-stack">
-        <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if ownerCanMod}}success{{else}}danger{{/if}}"></i>
-        {{#if ownerCanMod}}{{else}}
-            <i class="fa fa-ban fa-stack-2x text-danger"></i>
-        {{/if}}
-    </span>
-    <span class="fa-stack">
-        <i class="fa fa-share fa-stack-1x text-{{#if ownerCanTrans}}success{{else}}danger{{/if}}"></i>
-        {{#if ownerCanTrans}}{{else}}
-            <i class="fa fa-ban fa-stack-2x text-danger"></i>
-        {{/if}}
-    </span>
-    <i class="fa fa-arrow-right"></i>
-    <span class="fa-stack">
-        <i class="fa fa-files-o fa-stack-1x text-{{#if nextCanCopy}}success{{else}}danger{{/if}}"></i>
-        {{#if nextCanCopy}}{{else}}
-            <i class="fa fa-ban fa-stack-2x text-danger"></i>
-        {{/if}}
-    </span>
-    <span class="fa-stack">
-        <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if nextCanMod}}success{{else}}danger{{/if}}"></i>
-        {{#if nextCanMod}}{{else}}
-            <i class="fa fa-ban fa-stack-2x text-danger"></i>
-        {{/if}}
-    </span>
-    <span class="fa-stack">
-        <i class="fa fa-share fa-stack-1x text-{{#if nextCanTrans}}success{{else}}danger{{/if}}"></i>
-        {{#if nextCanTrans}}{{else}}
-            <i class="fa fa-ban fa-stack-2x text-danger"></i>
-        {{/if}}
-    </span>
+    {{#if permissionsKnown}}
+        <span class="fa-stack">
+            <i class="fa fa-files-o fa-stack-1x text-{{#if ownerCanCopy}}success{{else}}danger{{/if}}"></i>
+            {{#if ownerCanCopy}}{{else}}
+                <i class="fa fa-ban fa-stack-2x text-danger"></i>
+            {{/if}}
+        </span>
+        <span class="fa-stack">
+            <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if ownerCanMod}}success{{else}}danger{{/if}}"></i>
+            {{#if ownerCanMod}}{{else}}
+                <i class="fa fa-ban fa-stack-2x text-danger"></i>
+            {{/if}}
+        </span>
+        <span class="fa-stack">
+            <i class="fa fa-share fa-stack-1x text-{{#if ownerCanTrans}}success{{else}}danger{{/if}}"></i>
+            {{#if ownerCanTrans}}{{else}}
+                <i class="fa fa-ban fa-stack-2x text-danger"></i>
+            {{/if}}
+        </span>
+        <i class="fa fa-arrow-right"></i>
+        <br />
+        <span class="fa-stack">
+            <i class="fa fa-files-o fa-stack-1x text-{{#if nextCanCopy}}success{{else}}danger{{/if}}"></i>
+            {{#if nextCanCopy}}{{else}}
+                <i class="fa fa-ban fa-stack-2x text-danger"></i>
+            {{/if}}
+        </span>
+        <span class="fa-stack">
+            <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if nextCanMod}}success{{else}}danger{{/if}}"></i>
+            {{#if nextCanMod}}{{else}}
+                <i class="fa fa-ban fa-stack-2x text-danger"></i>
+            {{/if}}
+        </span>
+        <span class="fa-stack">
+            <i class="fa fa-share fa-stack-1x text-{{#if nextCanTrans}}success{{else}}danger{{/if}}"></i>
+            {{#if nextCanTrans}}{{else}}
+                <i class="fa fa-ban fa-stack-2x text-danger"></i>
+            {{/if}}
+        </span>
+    {{else}}
+        Unknown
+    {{/if}}
 </td>
 
 <td data-column-contents="rarity">
-    <input
-        type="number"
-        class="form-control"
-        placeholder="Rarity"
-        data-aria-valuemin="0" 
-        data-toggle="tooltip"
-        title="Any number &#x2265;0"
-    /> = <span
-        data-calculation="rarity"
-        data-toggle="tooltip"
-        title="This is the starting probability"
-    ></span>-<span
-        data-calculation="rarity"
-        data-toggle="tooltip"
-        title="This is the probability if all limited quantities are exhausted"
-    ></span>%
+    <span class="can-set-rarity">
+        <input
+            type="number"
+            class="form-control"
+            placeholder="Rarity"
+            data-aria-valuemin="0" 
+            data-toggle="tooltip"
+            title="Any number &#x2265;0"
+        /><span class="show-calculated-rarity"> = between <span
+            class="rarity-low"
+            data-toggle="tooltip"
+            title="This is the starting probability"
+        ></span>% and <span
+            class="rarity-high"
+            data-toggle="tooltip"
+            title="This is the probability if all limited quantities are exhausted"
+        ></span>%</span>
+    </span>
+    <span class="not-sold">Not for sale</span>
 </td>
 
 <td data-column-contents="limit">
-</td>
-
-<td data-column-contents="bought">
-    {{bought}}
+    <span class="no-trans">Not transferable</span>
+    <span class="no-copy">Not copyable</span>
+    <div class="input-group">
+        <span class="input-group-btn">
+            <button class="btn btn-primary active unlimited set-limit" type="button" data-limited="0">Unlimited</button>
+            <button class="btn btn-primary limited set-limit" type="button" data-limited="1">Limited</button>
+        </span>
+        <input class="form-control" type="number" placeholder="Max" data-aria-valuemin="0" />
+    </div>
 </td>
 
 <td data-column-contents="action">
+    <div class="btn-group">
+        TODO:
+        <button
+            class="btn btn-primary config-import-btn"
+            type="button"
+            data-toggle="tooltip"
+            data-tooltip-placement="left"
+            title="Read the contents of the notecard and send it to the &quot;Import&quot; tab"
+        ><i class="fa fa-cloud-download"></i> Import</button>
+        TODO:
+        <button
+            class="btn btn-primary item-delete-btn"
+            type="button"
+            data-toggle="tooltip"
+            data-tooltip-placement="left"
+            title="Removes this screen's settings, but does NOT delete the item from inventory if it exists"
+        ><i class="fa fa-trash-o"></i> Delete</button>
+    </div>
 </td>

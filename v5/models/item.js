@@ -19,14 +19,6 @@ define( [
         url: 'item'
         , idAttribute: 'name'
 
-        , toPostJSON: function( options , syncMethod , xhrType ) {
-            // TODO: Save
-
-            return [
-                this.get( 'index' )
-            ];
-        }
-
         , defaults: {
             index: null
             , rarity: null
@@ -37,11 +29,27 @@ define( [
             , creator: null
             , creatorUserName: null
             , creatorDisplayName: null
+            , key: null
             , keyAvailable: null
             , ownerPermissions: null
             , groupPermissions: null
             , publicPermissions: null
             , nextPermissions: null
+        }
+
+        , includeInNotecard: [
+            'rarity'
+            , 'limit'
+            , 'bought'
+            , 'name'
+        ]
+
+        , toPostJSON: function( options , syncMethod , xhrType ) {
+            // TODO: Save
+
+            return [
+                this.get( 'index' )
+            ];
         }
 
         , parse: function( data ) {
@@ -59,6 +67,7 @@ define( [
             parsed.name = data[i++];
             parsed.type = CONSTANTS.INVENTORY_NUMBER_TO_TYPE[ parseInt( data[i++] , 10 ) ] || 'INVENTORY_UNKNOWN';
             parsed.creator = data[i++];
+            parsed.key = CONSTANTS.NULL_KEY;
             parsed.keyAvailable = Boolean( parseInt( data[i++] , 10 ) );
             parsed.ownerPermissions = parseInt( data[i++] , 10 );
             parsed.groupPermissions = parseInt( data[i++] , 10 );

@@ -56,7 +56,7 @@ define( [
             var json = [];
 
             _.each( this.models , function( model ) {
-                if( model.toNotecardJSON ) {
+                if( _.isFunction( model.toNotecardJSON ) ) {
                     var modelJSON = model.toNotecardJSON();
 
                     if( ! _.isEmpty( modelJSON ) ) {

@@ -42,6 +42,9 @@ define( [
 
         , gachaEvents: {
             'change': 'updateSaveBtn'
+            , 'add': 'updateSaveBtn'
+            , 'remove': 'updateSaveBtn'
+            , 'reset': 'updateSaveBtn'
         }
 
         , initialize: function() {
@@ -160,17 +163,35 @@ define( [
             this.updateSaveBtn();
         }
 
-        , confirmReload: function() {
-            this.options.app.router.navigate( 'temp' , { replace: true } );
-            this.options.app.router.navigate( 'config' , { trigger: true , replace: true } );
+        , confirmReload: function( jEvent ) {
+            var moveAlong = _.bind( function() {
+                this.options.app.router.navigate( 'temp' , { replace: true } );
+                this.options.app.router.navigate( 'config' , { trigger: true , replace: true } );
+            } , this );
+
+            if( jEvent ) {
+                this.ui.reloadConfirmation.modal( 'hide' );
+                this.ui.reloadConfirmation.one( 'hidden.bs.modal' , moveAlong );
+            } else {
+                moveAlong();
+            }
         }
 
-        , confirmDashboard: function() {
-            this.options.app.router.navigate( 'dashboard' , { trigger: true } );
+        , confirmDashboard: function( jEvent ) {
+            var moveAlong = _.bind( function() {
+                this.options.app.router.navigate( 'dashboard' , { trigger: true } );
+            } , this );
+
+            if( jEvent ) {
+                this.ui.dashboardConfirmation.modal( 'hide' );
+                this.ui.dashboardConfirmation.one( 'hidden.bs.modal' , moveAlong );
+            } else {
+                moveAlong();
+            }
         }
 
         , hasChanges: function() {
-            return Boolean( this.options.gacha.fetchedJSON && ! _.isEqual( this.options.gacha.toJSON() , this.options.gacha.fetchedJSON ) );
+            return Boolean( this.options.gacha.fetchedNotecardJSON && ! _.isEqual( this.options.gacha.toNotecardJSON() , this.options.gacha.fetchedNotecardJSON ) );
         }
 
         , clickReload: function() {

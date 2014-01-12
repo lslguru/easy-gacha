@@ -1,10 +1,24 @@
-#page-config [data-column-contents=name] ,
 #page-config [data-column-contents=permissions] ,
-#page-config [data-column-contents=rarity] {
+#page-config [data-column-contents=rarity] .show-calculated-rarity ,
+#page-config [data-column-contents=limit] ,
+#page-config [data-column-contents=action] {
     white-space: nowrap;
+}
+
+#page-config [data-column-contents=rarity] .show-calculated-rarity ,
+#page-config [data-column-contents=limit] .input-group-btn {
+    width: auto;
+}
+
+#page-config [data-column-contents=rarity] input ,
+#page-config [data-column-contents=limit] input {
+    width: 5em;
 }
 
 #page-config [data-column-contents=rarity] input {
     display: inline-block;
-    width: auto;
+}
+
+#page-config [data-column-contents=permissions] .fa-ban {
+    opacity: 0.5;
 }

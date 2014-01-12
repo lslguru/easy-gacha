@@ -22,31 +22,45 @@ define( [
         , initialize: function() {
             BaseCollection.prototype.initialize.apply( this , arguments );
 
-            this.bind( 'reset' , function() {
-                this.totalRarity = 0;
-                this.totalBought = 0;
-                this.totalLimit = 0;
-            } , this );
+            this.on( 'add' , this.updateTotals , this );
+            this.on( 'remove' , this.updateTotals , this );
+            this.on( 'reset' , this.updateTotals , this );
+            this.on( 'change:rarity' , this.updateTotals , this );
+            this.on( 'change:limit' , this.updateTotals , this );
+            this.on( 'change:bought' , this.updateTotals , this );
+            this.updateTotals();
+        }
 
-            this.bind( 'add' , function( model ) {
-                this.totalRarity += model.get( 'rarity' );
+        , updateTotals: function() {
+            this.totalRarity = 0;
+            this.unlimitedRarity = 0;
+            this.totalBought = 0;
+            this.totalLimit = 0;
+
+            _.each( this.models , function( model ) {
                 this.totalBought += model.get( 'bought' );
 
-                if( -1 !== model.get( 'limit' ) ) {
+                if( ( 0 !== model.get( 'limit' ) ) && ( CONSTANTS.PERM_TRANSFER & model.get( 'ownerPermissions' ) ) ) {
+                    this.totalRarity += model.get( 'rarity' );
+                }
+
+                if( -1 === model.get( 'limit' ) ) {
+                    this.unlimitedRarity += model.get( 'rarity' );
+                } else {
                     this.totalLimit += model.get( 'limit' );
                 }
             } , this );
         }
 
         // Given an inventory list, create corresponding Item models
-        , populate: function( foreignCollection ) {
+        , populate: function( invs ) {
             var hadItemsAtStart = Boolean( this.length );
 
-            foreignCollection.each( function( foreignModel ) {
-                if( ! this.get( foreignModel.id ) ) {
+            invs.each( function( inv ) {
+                if( ! this.get( inv.id ) ) {
                     var model = new this.model();
 
-                    _.each( foreignModel.attributes , function( value , key ) {
+                    _.each( inv.attributes , function( value , key ) {
                         if( key in model.attributes ) {
                             model.set( key , value );
                         }
@@ -60,9 +74,13 @@ define( [
                         )
 
                         , limit: (
-                            Boolean( model.get( 'ownerPermissions' ) & CONSTANTS.PERM_COPY ) // bitwise intentional
-                            ? CONSTANTS.DEFAULT_ITEM_LIMIT_COPY
-                            : CONSTANTS.DEFAULT_ITEM_LIMIT_NOCOPY
+                            Boolean( model.get( 'ownerPermissions' ) & CONSTANTS.PERM_TRANSFER ) // bitwise intentional
+                            ?  (
+                                Boolean( model.get( 'ownerPermissions' ) & CONSTANTS.PERM_COPY ) // bitwise intentional
+                                ? CONSTANTS.DEFAULT_ITEM_LIMIT_COPY
+                                : CONSTANTS.DEFAULT_ITEM_LIMIT_NOCOPY
+                            )
+                            : 0 // no trans
                         )
 
                         , bought: 0
@@ -71,6 +89,16 @@ define( [
                     this.add( model );
                 }
             } , this );
+        }
+
+        , toNotecardJSON: function() {
+            var json = this.constructor.__super__.toNotecardJSON.apply( this , arguments );
+
+            json = _.filter( json , function( item ) {
+                return ( 0 !== item.limit && 0 !== item.rarity );
+            } );
+
+            return json;
         }
     } );
 
