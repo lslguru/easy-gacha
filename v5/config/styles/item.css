@@ -1,0 +1,10 @@
+#page-config [data-column-contents=name] ,
+#page-config [data-column-contents=permissions] ,
+#page-config [data-column-contents=rarity] {
+    white-space: nowrap;
+}
+
+#page-config [data-column-contents=rarity] input {
+    display: inline-block;
+    width: auto;
+}

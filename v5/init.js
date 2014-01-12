@@ -41,7 +41,7 @@ require( {
     , 'lib/router'
     , 'models/info'
     , 'css!styles/page'
-    , 'css!//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome'
+    , 'css!vendor/font-awesome-4.0.3/css/font-awesome'
 
 ] , function(
 

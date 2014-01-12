@@ -13,6 +13,7 @@ define( [
 
     var exports = BaseCollection.extend( {
         model: Inv
+        , comparator: 'name'
 
         , fromNotecardJSON: null
         , toNotecardJSON: null

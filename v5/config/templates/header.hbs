@@ -16,17 +16,21 @@
             <li role="presentation" class="divider"></li>
             <li role="presentation" class="dropdown-header">Status</li>
             <li role="presentation">
-                <a class="alert-{{memoryState}}" data-toggle="tooltip" data-tooltip-placement="left" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
-                    <i class="fa {{memoryIcon}}"></i> Free Memory: {{freeMemory}}
+                <a data-toggle="tooltip" data-tooltip-placement="left" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
+                    <span class="text-{{memoryState}}">
+                        <i class="fa {{memoryIcon}}"></i> Free Memory: {{freeMemory}}
+                    </span>
                 </a>
             </li>
             <li role="presentation">
-                <a class="alert-{{lagState}}" data-toggle="tooltip" data-tooltip-placement="left" title="This is how much lag the scripts in this OBJECT are generating. Lower numbers are better. If there are scripts other than Easy Gacha, we cannot determine the lag of Easy Gacha specifically.">
-                    <i class="fa {{lagIcon}}"></i> Object Lag: {{scriptTime}}
+                <a data-toggle="tooltip" data-tooltip-placement="left" title="This is how much lag the scripts in this OBJECT are generating. Lower numbers are better. If there are scripts other than Easy Gacha, we cannot determine the lag of Easy Gacha specifically.">
+                    <span class="text-{{lagState}}">
+                        <i class="fa {{lagIcon}}"></i> Object Lag: {{scriptTime}}
+                    </span>
                 </a>
             </li>
         </ul>
-        <button class="btn btn-default" data-toggle="dropdown" role="button" id="header-menu-button">
+        <button class="btn btn-{{overallState}}" data-toggle="dropdown" role="button" id="header-menu-button">
             Menu <span class="caret"></span>
         </button>
     </div>

@@ -110,6 +110,24 @@ define( [
                     )
                 )
 
+                , overallState: (
+                    null !== this.model.get( 'freeMemory' )
+                    && this.model.get( 'freeMemory' ) < CONSTANTS.DANGER_MEMORY_THRESHOLD
+                    ? 'danger'
+                    : (
+                        (
+                            null !== this.model.get( 'freeMemory' )
+                            && this.model.get( 'freeMemory' ) < CONSTANTS.WARN_MEMORY_THRESHOLD
+                        )
+                        || (
+                            1 === this.model.get( 'scriptCount' )
+                            && CONSTANTS.WARN_SCRIPT_TIME < this.model.get( 'scriptTime' )
+                        )
+                        ? 'warning'
+                        : 'default'
+                    )
+                )
+
                 , ownerUrl: (
                     'secondlife:///app/agent/'
                     + this.model.get( 'ownerKey' )

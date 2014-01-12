@@ -38,9 +38,9 @@ define( [
         }
 
         , regions: {
-            'items': '#tab-items'
-            , 'price': '#tab-price'
-            , 'payouts': '#tab-payouts'
+            'itemsTab': '#tab-items'
+            , 'priceTab': '#tab-price'
+            , 'payoutsTab': '#tab-payouts'
             , 'commsTab': '#tab-comms'
             , 'advancedTab': '#tab-advanced'
             , 'exportTab': '#tab-export'
@@ -52,6 +52,10 @@ define( [
         }
 
         , onRender: function() {
+            this.itemsTab.show( new ItemsView( _.extend( {} , this.options , {
+                collection: this.options.model.get( 'items' )
+            } ) ) );
+
             this.commsTab.show( new CommsView( _.extend( {} , this.options , {
                 model: this.options.model.get( 'config' )
             } ) ) );

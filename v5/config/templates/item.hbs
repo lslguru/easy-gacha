@@ -1,0 +1,81 @@
+<td
+    data-column-contents="name"
+    data-toggle="tooltip"
+    data-tooltip-placement="right"
+    title="{{typeName}}{{#if creatorUserName}}&lt;br /&gt;Created by: {{creatorDisplayName}} ({{creatorUserName}}){{/if}}"
+>
+    {{name}}
+</td>
+
+<td
+    data-column-contents="permissions"
+    data-toggle="tooltip"
+    title="Owner: {{#if ownerCanCopy}}+{{else}}-{{/if}}copy, {{#if ownerCanMod}}+{{else}}-{{/if}}mod, {{#if ownerCanTrans}}+{{else}}-{{/if}}trans&lt;br /&gt;Next: {{#if nextCanCopy}}+{{else}}-{{/if}}copy, {{#if nextCanMod}}+{{else}}-{{/if}}mod, {{#if nextCanTrans}}+{{else}}-{{/if}}trans"
+>
+    <span class="fa-stack">
+        <i class="fa fa-files-o fa-stack-1x text-{{#if ownerCanCopy}}success{{else}}danger{{/if}}"></i>
+        {{#if ownerCanCopy}}{{else}}
+            <i class="fa fa-ban fa-stack-2x text-danger"></i>
+        {{/if}}
+    </span>
+    <span class="fa-stack">
+        <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if ownerCanMod}}success{{else}}danger{{/if}}"></i>
+        {{#if ownerCanMod}}{{else}}
+            <i class="fa fa-ban fa-stack-2x text-danger"></i>
+        {{/if}}
+    </span>
+    <span class="fa-stack">
+        <i class="fa fa-share fa-stack-1x text-{{#if ownerCanTrans}}success{{else}}danger{{/if}}"></i>
+        {{#if ownerCanTrans}}{{else}}
+            <i class="fa fa-ban fa-stack-2x text-danger"></i>
+        {{/if}}
+    </span>
+    <i class="fa fa-arrow-right"></i>
+    <span class="fa-stack">
+        <i class="fa fa-files-o fa-stack-1x text-{{#if nextCanCopy}}success{{else}}danger{{/if}}"></i>
+        {{#if nextCanCopy}}{{else}}
+            <i class="fa fa-ban fa-stack-2x text-danger"></i>
+        {{/if}}
+    </span>
+    <span class="fa-stack">
+        <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if nextCanMod}}success{{else}}danger{{/if}}"></i>
+        {{#if nextCanMod}}{{else}}
+            <i class="fa fa-ban fa-stack-2x text-danger"></i>
+        {{/if}}
+    </span>
+    <span class="fa-stack">
+        <i class="fa fa-share fa-stack-1x text-{{#if nextCanTrans}}success{{else}}danger{{/if}}"></i>
+        {{#if nextCanTrans}}{{else}}
+            <i class="fa fa-ban fa-stack-2x text-danger"></i>
+        {{/if}}
+    </span>
+</td>
+
+<td data-column-contents="rarity">
+    <input
+        type="number"
+        class="form-control"
+        placeholder="Rarity"
+        data-aria-valuemin="0" 
+        data-toggle="tooltip"
+        title="Any number &#x2265;0"
+    /> = <span
+        data-calculation="rarity"
+        data-toggle="tooltip"
+        title="This is the starting probability"
+    ></span>-<span
+        data-calculation="rarity"
+        data-toggle="tooltip"
+        title="This is the probability if all limited quantities are exhausted"
+    ></span>%
+</td>
+
+<td data-column-contents="limit">
+</td>
+
+<td data-column-contents="bought">
+    {{bought}}
+</td>
+
+<td data-column-contents="action">
+</td>

@@ -75,6 +75,9 @@ define( [
                 , weight: 30
                 , adminOnly: true
                 , progress: _.partial( submodelProgress , 'invsProgressPercentage' , 'inventoryCount' )
+                , onFetchSuccess: function( gacha , invs ) {
+                    gacha.get( 'items' ).populate( invs );
+                }
             }
 
         }
@@ -148,6 +151,11 @@ define( [
                 var fetchOptions = _.clone( options );
                 fetchOptions.success = _.bind( function() {
                     this.set( submodelName + 'ProgressPercentage' , 100 );
+
+                    if( submodelConfig.onFetchSuccess ) {
+                        submodelConfig.onFetchSuccess( this , submodel );
+                    }
+
                     next();
                 } , this );
                 if( submodelConfig.progress ) {

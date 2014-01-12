@@ -8,7 +8,7 @@ define( [
     , 'bootstrap'
     , 'lib/constants'
     , 'lib/tooltip-placement'
-    //, 'config/item'
+    , 'config/item'
 
 ] , function(
 
@@ -20,18 +20,19 @@ define( [
     , bootstrap
     , CONSTANTS
     , tooltipPlacement
-    //, ItemView
+    , ItemView
 
 ) {
     'use strict';
 
-    var exports = Marionette.CollectionView.extend( {
+    var exports = Marionette.CompositeView.extend( {
         template: template
-        //, itemView: ItemView
+        , itemView: ItemView
         , itemViewContainer: 'tbody'
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
+            , 'tables': 'table'
         }
 
         , onRender: function() {

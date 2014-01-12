@@ -1,16 +1,16 @@
-.nowrap-this-element {
+#page-dashboard .nowrap-this-element {
     white-space: nowrap;
 }
 
-.nowrap-this-element * {
+#page-dashboard .nowrap-this-element * {
     white-space: normal;
 }
 
-[data-column-contents=name] ,
-[data-column-contents=inventory] {
+#page-dashboard [data-column-contents=name] ,
+#page-dashboard [data-column-contents=inventory] {
     padding-right: 2em !important;
 }
 
-[data-column-contents=probability] {
+#page-dashboard [data-column-contents=probability] {
     width: 100%;
 }
