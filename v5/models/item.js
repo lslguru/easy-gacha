@@ -23,14 +23,14 @@ define( [
             index: null
             , rarity: null
             , limit: null
-            , bought: null
+            , bought: 0
             , name: null
-            , type: null
+            , type: 'INVENTORY_UNKNOWN'
             , creator: null
             , creatorUserName: null
             , creatorDisplayName: null
             , key: null
-            , keyAvailable: null
+            , keyAvailable: false
             , ownerPermissions: null
             , groupPermissions: null
             , publicPermissions: null

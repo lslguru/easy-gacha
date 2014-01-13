@@ -1,50 +1,62 @@
-<h3>Instructions</h3>
-<ol>
-    <li>Find the backup you made of your configuration</li>
-    <li>Highlight all the text</li>
-    <li>Copy the text (CTRL-C in Windows, &#8984;-C)</li>
-    <li>Paste the text into the box below</li>
-    <li>Click the "Import" button</li>
-</ol>
+<div class="notecard-load-alert">
+</div>
 
-<button class="btn btn-primary btn-block" id="import-btn">Import Configuration</button>
-<br />
-<textarea class="form-control" id="import" type="text"></textarea>
-
-<div class="modal fade" id="import-error" tabindex="-1" role="dialog" aria-labelledby="import-error-modal-label" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content alert-danger">
-            <div class="modal-header">
-                <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
-                <h4 class="modal-title" id="import-error-modal-label"><i class="fa fa-exclamation-triangle"></i> Error Importing</h4>
-            </div>
-            <div class="modal-body">
-                Something in the configuration you pasted didn't work right. Here was the error message:
-                <br />
-                <pre id="import-error-message"></pre>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" data-dismiss="modal">Cancel</button>
-            </div>
+<div class="notecard-load-progress">
+    <div class="progress progress-striped active">
+        <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="import-success" tabindex="-1" role="dialog" aria-labelledby="import-success-modal-label" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content alert-success">
-            <div class="modal-header">
-                <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
-                <h4 class="modal-title" id="import-success-modal-label"><i class="fa fa-check-circle"></i> Import Successful</h4>
+<div class="import-input">
+    <h3>Instructions</h3>
+    <ol>
+        <li>Find the backup you made of your configuration</li>
+        <li>Highlight all the text</li>
+        <li>Copy the text (CTRL-C in Windows, &#8984;-C)</li>
+        <li>Paste the text into the box below</li>
+        <li>Click the "Import" button</li>
+    </ol>
+
+    <textarea class="form-control" id="import" type="text"></textarea>
+    <br />
+    <button class="btn btn-primary btn-block" id="import-btn">Import Configuration</button>
+
+    <div class="modal fade" id="import-error" tabindex="-1" role="dialog" aria-labelledby="import-error-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content alert-danger">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                    <h4 class="modal-title" id="import-error-modal-label"><i class="fa fa-exclamation-triangle"></i> Error Importing</h4>
+                </div>
+                <div class="modal-body">
+                    Something in the configuration you pasted didn't work right. Here was the error message:
+                    <br />
+                    <pre id="import-error-message"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                </div>
             </div>
-            <div class="modal-body">
-                The import was successful, but your changes have NOT been saved
-                to the Easy Gacha yet. Please double-check the configuration,
-                then when you are ready click "Save Changes" at the top of the
-                page.
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" data-dismiss="modal">Done</button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="import-success" tabindex="-1" role="dialog" aria-labelledby="import-success-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content alert-success">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                    <h4 class="modal-title" id="import-success-modal-label"><i class="fa fa-check-circle"></i> Import Successful</h4>
+                </div>
+                <div class="modal-body">
+                    The import was successful, but your changes have NOT been saved
+                    to the Easy Gacha yet. Please double-check the configuration,
+                    then when you are ready click "Save Changes" at the top of the
+                    page.
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" data-dismiss="modal">Done</button>
+                </div>
             </div>
         </div>
     </div>

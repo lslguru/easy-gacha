@@ -30,6 +30,12 @@ define( [
         , itemView: ItemView
         , itemViewContainer: 'tbody'
 
+        , itemViewOptions: function() {
+            var options = _.clone( this.options );
+            delete options.model;
+            return options;
+        }
+
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
             , 'tables': 'table'

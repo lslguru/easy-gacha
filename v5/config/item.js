@@ -53,6 +53,7 @@ define( [
             , 'change [data-column-contents=limit] input': 'setLimit'
             , 'keyup [data-column-contents=limit] input': 'setLimit'
             , 'click .item-delete-btn': 'deleteItem'
+            , 'click .config-import-btn': 'importNotecard'
         }
 
         , modelEvents: {
@@ -75,7 +76,7 @@ define( [
         , templateHelpers: function() {
             return {
                 typeName: CONSTANTS.INVENTORY_TYPE_NAME[ this.model.get( 'type' ) ]
-                , permissionsKnown: Boolean( null !== this.model.get( 'ownerPermissions' ) )
+                , inventoryExists: Boolean( 'INVENTORY_NONE' !== this.model.get( 'type' ) )
                 , ownerCanCopy: Boolean( this.model.get( 'ownerPermissions' ) & CONSTANTS.PERM_COPY )
                 , nextCanCopy: Boolean( this.model.get( 'nextPermissions' ) & CONSTANTS.PERM_COPY )
                 , ownerCanMod: Boolean( this.model.get( 'ownerPermissions' ) & CONSTANTS.PERM_MODIFY )
@@ -117,6 +118,10 @@ define( [
         }
 
         , updateValues: function() {
+            if( _.isString( this.ui.rarityField ) ) {
+                return;
+            }
+
             var rarity = this.model.get( 'rarity' );
 
             if( parseFloat( this.ui.rarityField.val() , 10 ) != rarity ) {
@@ -224,13 +229,22 @@ define( [
         }
 
         , updateDeleteBtn: function() {
-            if( 'INVENTORY_NONE' !== this.model.get( 'type' ) ) {
+            if(
+                'INVENTORY_UNKNOWN' !== this.model.get( 'type' )
+                && 'INVENTORY_NONE' !== this.model.get( 'type' )
+            ) {
                 this.ui.deleteBtn.remove();
             }
         }
 
         , deleteItem: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
             this.model.collection.remove( this.model );
+        }
+
+        , importNotecard: function() {
+            this.options.app.vent.trigger( 'selectTab' , 'import' );
+            this.options.app.vent.trigger( 'importNotecard' , this.model.get( 'name' ) );
         }
 
     } );

@@ -117,4 +117,6 @@ define( [
     , DEFAULT_ITEM_RARITY_INIT: 1
     , DEFAULT_ITEM_RARITY: 0
 
+    , EOF: '\n\n\n'
+
 } ; } );

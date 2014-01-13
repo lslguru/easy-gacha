@@ -9,12 +9,12 @@
 
 <td
     data-column-contents="permissions"
-    {{#if permissionsKnown}}
+    {{#if inventoryExists}}
         data-toggle="tooltip"
         title="Owner: {{#if ownerCanCopy}}+{{else}}-{{/if}}copy, {{#if ownerCanMod}}+{{else}}-{{/if}}mod, {{#if ownerCanTrans}}+{{else}}-{{/if}}trans&lt;br /&gt;Next: {{#if nextCanCopy}}+{{else}}-{{/if}}copy, {{#if nextCanMod}}+{{else}}-{{/if}}mod, {{#if nextCanTrans}}+{{else}}-{{/if}}trans"
     {{/if}}
 >
-    {{#if permissionsKnown}}
+    {{#if inventoryExists}}
         <span class="fa-stack">
             <i class="fa fa-files-o fa-stack-1x text-{{#if ownerCanCopy}}success{{else}}danger{{/if}}"></i>
             {{#if ownerCanCopy}}{{else}}

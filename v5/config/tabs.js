@@ -35,6 +35,13 @@ define( [
         , ui: {
             'tabLinks': '[data-toggle=tab]'
             , 'defaultTab': '[href=#tab-items]'
+            , 'itemsTab': '[href=#tab-items]'
+            , 'priceTab': '[href=#tab-price]'
+            , 'payoutsTab': '[href=#tab-payouts]'
+            , 'commsTab': '[href=#tab-comms]'
+            , 'advancedTab': '[href=#tab-advanced]'
+            , 'exportTab': '[href=#tab-export]'
+            , 'importTab': '[href=#tab-import]'
         }
 
         , regions: {
@@ -73,6 +80,11 @@ define( [
             } );
 
             this.ui.defaultTab.tab( 'show' );
+
+            this.options.app.vent.on( 'selectTab' , function( tabName ) {
+                this.ui[ tabName + 'Tab' ].tab( 'show' );
+            } , this );
+
         }
 
         , signalTabShown: function( jEvent ) {

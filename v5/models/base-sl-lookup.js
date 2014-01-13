@@ -23,7 +23,11 @@ define( [
         }
 
         , toPostJSON: function() {
-            return [ this.get( 'lookup' ) ];
+            if( _.isArray( this.get( 'lookup' ) ) ) {
+                return this.get( 'lookup' );
+            } else {
+                return [ this.get( 'lookup' ) ];
+            }
         }
 
         , parse: function( data ) {

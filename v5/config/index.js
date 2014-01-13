@@ -35,64 +35,61 @@ define( [
             , 'lookupAgent': '#lookup-agent-container'
         }
 
-        , loading: false
-
         , initialize: function() {
             this.constructor.__super__.initialize.apply( this , arguments );
 
             _.bindAll( this
                 , 'lookupAgentDialog'
             );
-
-            this.options.lookupAgentDialog = this.lookupAgentDialog;
-            this.options.model = this.options.gacha = window.gacha = new Gacha();
         }
 
-        , onRender: function() {
-            var gacha = this.options.gacha;
-
-            this.loaderView = new LoaderView( _.extend( {} , this.options , {
-                model: gacha
-            } ) );
-
-            gacha.on( 'change:progressPercentage' , function() {
-                if( !this.loading && 100 !== gacha.get( 'progressPercentage' ) ) {
+        , loaderView: function() {
+            if( 100 !== this.gacha.get( 'progressPercentage' ) ) {
+                if( undefined === this.loader.currentView ) {
                     this.header.close();
                     this.tabs.close();
-
+                    this.lookupAgent.close();
                     this.loader.show( new LoaderView( this.options ) );
-
-                    this.loading = true;
                 }
-
-                if( this.loading && 100 === gacha.get( 'progressPercentage' ) ) {
-                    this.loader.close();
-
-                    if( !gacha.get( 'info' ).get( 'isAdmin' ) ) {
-                        this.options.app.router.navigate( 'dashboard' , { trigger: true , replace: true } );
-                        return;
-                    }
-
-                    this.header.show( new HeaderView( _.extend( {} , this.options , {
-                        model: gacha.get( 'info' )
-                    } ) ) );
-
-                    this.tabs.show( new TabsView( this.options ) );
-
-                    this.loading = false;
-                }
-            } , this );
-
-            function updatePageTitle() {
-                if( gacha.get( 'info' ) && gacha.get( 'info' ).get( 'objectName' ) ) {
-                    document.title = 'Easy Gacha Config - ' + gacha.get( 'info' ).get( 'objectName' );
-                } else {
-                    document.title = 'Easy Gacha Configuration';
-                }
+            } else {
+                this.mainView();
             }
+        }
+
+        , mainView: function() {
+            var gacha = this.gacha;
+
+            if( ! this.header.currentView || ! this.tabs.currentView ) {
+                this.loader.close();
+
+                if( ! gacha.get( 'info' ).get( 'isAdmin' ) ) {
+                    this.options.app.router.navigate( 'dashboard' , { trigger: true , replace: true } );
+                    return;
+                }
+
+                this.header.show( new HeaderView( _.extend( {} , this.options , {
+                    model: gacha.get( 'info' )
+                } ) ) );
+
+                this.tabs.show( new TabsView( this.options ) );
+            }
+        }
+
+        , updatePageTitle: function() {
+            var gacha = this.gacha;
+
+            if( gacha.get( 'info' ) && gacha.get( 'info' ).get( 'objectName' ) ) {
+                document.title = 'Easy Gacha Config - ' + gacha.get( 'info' ).get( 'objectName' );
+            } else {
+                document.title = 'Easy Gacha Configuration';
+            }
+        }
+
+        , setupPageTitleHandlers: function() {
+            var gacha = this.gacha;
 
             function setupListener() {
-                gacha.get( 'info' ).on( 'change:objectName' , updatePageTitle , this );
+                gacha.get( 'info' ).on( 'change:objectName' , this.updatePageTitle , this );
             }
 
             gacha.on( 'change:info' , function() {
@@ -101,11 +98,26 @@ define( [
                 }
 
                 setupListener();
-                updatePageTitle();
+                this.updatePageTitle();
             } , this );
 
-            setupListener();
-            updatePageTitle();
+            this.updatePageTitle();
+        }
+
+        , onRender: function() {
+            var gacha = window.gacha = new Gacha();
+
+            this.options.lookupAgentDialog = this.lookupAgentDialog;
+
+            this.gacha = gacha;
+            this.options.model = gacha;
+            this.options.gacha = gacha;
+            window.gacha = gacha;
+
+            gacha.on( 'change:progressPercentage' , this.loaderView , this );
+
+            this.setupPageTitleHandlers();
+
             gacha.fetch( {
                 loadAdmin: true
             } );

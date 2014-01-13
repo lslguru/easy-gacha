@@ -38,6 +38,7 @@ define( [
             isValid: false
             , progressPercentage: 0
             , agentsCache: agentsCache
+            , overrideProgress: null
         }
 
         , fetchedJSON: null
@@ -99,6 +100,10 @@ define( [
             _.each( this.submodels , function( submodelConfig , key ) {
                 progressPercentage += ( this.get( key + 'ProgressPercentage' ) / 100 * submodelConfig.weight );
             } , this );
+
+            if( null !== this.get( 'overrideProgress' ) ) {
+                progressPercentage = this.get( 'overrideProgress' );
+            }
 
             this.set( 'progressPercentage' , progressPercentage );
         }
@@ -188,7 +193,11 @@ define( [
             return json;
         }
 
-        , fromNotecardJSON: BaseSlModel.prototype.fromNotecardJSON
+        , fromNotecardJSON: function() {
+            var returnValue = BaseSlModel.prototype.fromNotecardJSON.apply( this , arguments );
+            this.get( 'items' ).populate( this.get( 'invs' ) );
+            return returnValue;
+        }
 
         , toNotecardJSON: function() {
             var json = this.constructor.__super__.toJSON.apply( this , arguments );
