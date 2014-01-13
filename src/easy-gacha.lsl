@@ -27,6 +27,18 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
+// Notes
+////////////////////////////////////////////////////////////////////////////////
+
+//  DataServerRequestTypes
+//      1   goo.gl for info URL
+//      2   goo.gl for admin URL
+//      3   user name lookup
+//      4   display name lookup
+//      5   number of notecard lines
+//      6   notecard line
+
+////////////////////////////////////////////////////////////////////////////////
 // Application
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,16 +48,24 @@
 // Specific to scriptor
 #define CONFIG_SCRIPT_URL "http:\/\/lslguru.github.io/easy-gacha/v5/easy-gacha.js"
 #define CONFIG_SCRIPT_URL "http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js"
+#define REGISTRY_DISABLED TRUE
 #define REGISTRY_URL ""
-#define REGISTRY_HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ]
-#define PERMANENT_ADMIN_KEY ""
+#define REGISTRY_HTTP_OPTIONS [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE , "X-EasyGacha-Version" , "VERSION" ]
 
 // System constraints
 #define MAX_FOLDER_NAME_LENGTH 63
-#define GREY_GOO_HANDOUT_LIMIT 50
+
+// We have to build a list in memory of the items to be given in a folder. To
+// prevent out of memory errors and exceedlingly long-running scripts (e.g.
+// price is L$1 and gave it L$10,000), a max is enforced. The owner can choose
+// a value below this, but not above this. Because of an interesting quirk of
+// the Grey Goo Fence, unconfigured notecards handed out in excess of 50 will
+// be counted as bad behavior, so even though we can probably reliably handle
+// 100 here, it is limited to 50.
+#define DEFAULT_MAX_PER_PURCHASE 50
 
 // Tweaks
-#define ASSET_SERVER_TIMEOUT 5.0
+#define ASSET_SERVER_TIMEOUT 15.0
 #define PING_INTERVAL 86400
 
 // Inventory
@@ -62,7 +82,7 @@
     list Limit; // integer, -1 == infinite
     list Bought; // stats counter
     list Payouts; // strided: [ avatar key , lindens ]
-    integer MaxPerPurchase = GREY_GOO_HANDOUT_LIMIT;
+    integer MaxPerPurchase = DEFAULT_MAX_PER_PURCHASE;
     integer PayPrice = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (should be sum of Payouts)
     integer PayPriceButton0 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
     integer PayPriceButton1 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
@@ -73,7 +93,6 @@
     integer Group = FALSE; // If group may administer
     string Email; // Who to email after each play
     key Im; // Who to IM after each play
-    integer AllowWhisper = TRUE; // Whether or not to allow whisper
     integer AllowHover = TRUE; // Whether or not to allow hovertext output
     integer MaxBuys = -1; // Infinite
     integer Configured; // boolean - web checks only
@@ -91,11 +110,10 @@
     key Owner; // More memory efficient to only update when it could be changed
     string ScriptName; // More memory efficent to only update when it could be changed
     integer HasPermission; // More memory efficent to only update when it could be changed
-    key DataServerRequest; // Should only allow one at a time
-    integer DataServerMode; // Which kind of request is happening, 0 = none, 1 = goo.gl for info, 2 = goo.gl for admin, 3 = user name lookup, 4 = display name lookup
-    key DataServerResponse; // Only present with certain DataServerModes
-    integer InventoryChanged; // Indicates the inventory changed since last check
-    integer InventoryChangeExpected; // When we give out no-copy items...
+    list DataServerRequests; // List of the requests we have pending
+    list DataServerRequestTimes; // List of the unixtimes these requests were made
+    list DataServerRequestTypes; // List of the type of request that was made
+    list DataServerResponses; // List of the response key if this came from the outside
     integer LastPing; // UnixTime
     integer TotalPrice; // Updated when Payouts is updated, sum
     integer TotalBought; // Updated when Bought is updated
@@ -115,9 +133,7 @@
     Whisper( string msg ) {
         Debug( "Whisper( \"" + msg + "\" );" );
 
-        if( AllowWhisper ) {
-            llWhisper( 0 , "/me : " + llGetScriptName() + ": " + msg );
-        }
+        llWhisper( 0 , llGetScriptName() + ": " + msg );
     }
 
     Hover( string msg ) {
@@ -125,7 +141,7 @@
 
         if( AllowHover ) {
             if( msg ) {
-                llSetText( llGetObjectName() + ": " + llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
+                llSetText( llGetObjectName() + ": " + llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
             } else {
                 llSetText( "" , ZERO_VECTOR , 1 );
             }
@@ -135,10 +151,11 @@
     Registry( list data ) {
         Debug( "Registry( [ " + llList2CSV( data ) + " ] );" );
 
-        if( "" == REGISTRY_URL ) {
+        if( REGISTRY_DISABLED ) {
             return;
         }
 
+        // Note: Request ID not stored, so response will be safely skipped
         llHTTPRequest( REGISTRY_URL , REGISTRY_HTTP_OPTIONS , llList2Json( JSON_ARRAY , data ) );
 
         llSleep( 1.0 ); // FORCED_DELAY 1.0 seconds
@@ -162,7 +179,6 @@
         Debug( "    Group = " + (string)Group );
         Debug( "    Email = " + Email );
         Debug( "    Im = " + (string)Im );
-        Debug( "    AllowWhisper = " + (string)AllowWhisper );
         Debug( "    AllowHover = " + (string)AllowHover );
         Debug( "    MaxBuys = " + (string)MaxBuys );
         Debug( "    Configured = " + (string)Configured );
@@ -175,10 +191,10 @@
         Debug( "    Owner = " + (string)Owner );
         Debug( "    ScriptName = " + ScriptName );
         Debug( "    HasPermission = " + (string)HasPermission );
-        Debug( "    DataServerRequest = " + (string)DataServerRequest );
-        Debug( "    DataServerMode = " + (string)DataServerMode );
-        Debug( "    InventoryChanged = " + (string)InventoryChanged );
-        Debug( "    InventoryChangeExpected = " + (string)InventoryChangeExpected );
+        Debug( "    DataServerRequests = " + llList2CSV( DataServerRequests ) );
+        Debug( "    DataServerRequestTimes = " + llList2CSV( DataServerRequestTimes ) );
+        Debug( "    DataServerRequestTypes = " + llList2CSV( DataServerRequestTypes ) );
+        Debug( "    DataServerResponses = " + llList2CSV( DataServerResponses ) );
         Debug( "    LastPing = " + (string)LastPing );
         Debug( "    TotalPrice = " + (string)TotalPrice );
         Debug( "    TotalBought = " + (string)TotalBought );
@@ -203,6 +219,23 @@
         llRequestURL();
     }
 
+    integer ItemUsable( integer itemIndex ) {
+        // If inventory exists
+        if( INVENTORY_NONE != llGetInventoryType( llList2String( Items , itemIndex ) ) ) {
+            // And is transferable
+            if( PERM_TRANSFER & llGetInventoryPermMask( llList2String( Items , itemIndex ) , MASK_OWNER ) ) {
+                // And isn't sold out
+                if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+                    // Then it can be used
+                    return TRUE;
+                }
+            }
+        }
+
+        // Otherwise it cannot be used
+        return FALSE;
+    }
+
     Update() {
         Debug( "Update()" );
 
@@ -213,15 +246,23 @@
         // Calculated values
         TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
         TotalBought = (integer)llListStatistics( LIST_STAT_SUM , Bought );
-        TotalLimit = (integer)llListStatistics( LIST_STAT_SUM , Limit );
         CountItems = llGetListLength( Items );
         CountPayouts = llGetListLength( Payouts );
         HasUnlimitedItems = ( -1 != llListFindList( Limit , [ -1 ] ) );
 
+        // Build total rarity and limit
         integer itemIndex;
+        TotalLimit = 0;
         TotalEffectiveRarity = 0.0;
         for( itemIndex = 0 ; itemIndex < CountItems ; ++itemIndex ) {
-            if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+            // If limit is -1 meaning unlimited, don't add it to the total
+            if( 0 < llList2Integer( Limit , itemIndex ) ) {
+                TotalLimit += llList2Integer( Limit , itemIndex );
+            }
+
+            // If the item is usable, meaning exists and has rarity and is
+            // transferable, etc...
+            if( ItemUsable( itemIndex ) ) {
                 TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
             }
         }
@@ -237,21 +278,21 @@
             // Conditions which make it go offline. If any of these fail, fall
             // back to false
             if( TotalPrice && !HasPermission ) {
+                // If we're collecting any amount of money, we need to get
+                // debit permission to be able to give change
                 Ready = FALSE;
             }
             if( TotalBought >= MaxBuys ) {
-                Ready = FALSE;
-            }
-            if( 0 == CountItems ) {
-                Ready = FALSE;
-            }
-            if( 0 == CountPayouts ) {
+                // This can occur even if all items are unlimited in quantity
                 Ready = FALSE;
             }
             if( 0.0 == TotalEffectiveRarity ) {
+                // If no items are effective, they've either run out of
+                // inventory, don't exist, or are not transferable...
                 Ready = FALSE;
             }
-            if( !HasUnlimitedItems && TotalBought >= TotalLimit ) {
+            if( Group && llSameGroup( NULL_KEY ) ) {
+                // If we're in group-only mode but no group was set...
                 Ready = FALSE;
             }
         }
@@ -292,16 +333,18 @@
 
         // Far more simplistic config statement
         if( Ready ) {
-            if( 1 == DataServerMode || 2 == DataServerMode ) {
+            if( -1 != llListFindList( DataServerRequestTypes , [ 1 ] ) || -1 != llListFindList( DataServerRequestTypes , [ 2 ] ) ) {
                 Hover( "Working, please wait..." );
             } else {
                 Hover( "" );
             }
-        } else if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
-            Hover( "All items have been given" );
         } else if( TotalPrice && !HasPermission ) {
             Hover( "Need debit permission, please touch this object" );
             llRequestPermissions( Owner , PERMISSION_DEBIT );
+        } else if( Group && llSameGroup( NULL_KEY ) ) {
+            Hover( "Please set a group for this object" );
+        } else if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
+            Hover( "No more items to give, sorry" );
         } else {
             Hover( "Configuration needed, please touch this object" );
         }
@@ -310,23 +353,23 @@
     Shorten( string url ) {
         Debug( "Shorten( \"" + url + "\" )" );
 
-        DataServerRequest = llHTTPRequest(
-            "https:\/\/www.googleapis.com/urlshortener/v1/url" ,
-            [
-                HTTP_METHOD , "POST" ,
-                HTTP_MIMETYPE , "application/json" ,
-                HTTP_BODY_MAXLENGTH , 16384 ,
-                HTTP_VERIFY_CERT , TRUE ,
-                HTTP_VERBOSE_THROTTLE , FALSE
-            ] ,
-            llJsonSetValue( "{}" , [ "longUrl" ] , url )
-        );
+        DataServerRequests += [ llHTTPRequest(
+            "https:\/\/www.googleapis.com/urlshortener/v1/url"
+            , [
+                HTTP_METHOD , "POST"
+                , HTTP_MIMETYPE , "application/json"
+                , HTTP_BODY_MAXLENGTH , 16384
+                , HTTP_VERIFY_CERT , TRUE
+                , HTTP_VERBOSE_THROTTLE , FALSE
+            ]
+            , llJsonSetValue( "{}" , [ "longUrl" ] , url )
+        ) ];
+        DataServerRequestTimes += [ llGetUnixTime() ];
+        DataServerResponses += [ NULL_KEY ];
     }
 
     Play( key buyerId , integer lindensReceived ) {
         Debug( "Play( " + (string)buyerId + " , " + (string)lindensReceived + " )" );
-
-        // Iterator
 
         // Cache this because it's used several times
         string displayName = llGetDisplayName( buyerId );
@@ -360,6 +403,12 @@
             Debug( "    totalItems > RemainingInventory, set to: " + (string)totalItems );
         }
 
+        // If it's set to group-only play and they're not in the right group
+        if( Group && !llSameGroup( buyerId ) ) {
+            totalItems = 0;
+            Debug( "    Not in same group, totalItems = 0" );
+        }
+
         // Iterate until we've met our total, because it should now be
         // guaranteed to happen
         list itemsToSend = [];
@@ -376,9 +425,9 @@
 
             // Find the item's index
             for( itemIndex = 0 ; itemIndex < CountItems && random > 0.0 ; ++itemIndex ) {
-                // Skip over sold-out items
-                if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
-                    // Otherwise decrement the random number
+                // Only items which are usable are considered
+                if( ItemUsable( itemIndex ) ) {
+                    // Decrement the random number
                     random -= llList2Float( Rarity , itemIndex );
                 }
             }
@@ -399,16 +448,11 @@
             Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
             ++TotalBought;
 
-            // If the inventory has run out
-            if( -1 != llList2Integer( Limit , itemIndex ) && llList2Integer( Bought , itemIndex ) >= llList2Integer( Limit , itemIndex ) ) {
-                Debug( "    Inventory has run out for item!" );
-
+            // If it's no longer usable (inventory has run out)
+            if( ! ItemUsable( itemIndex ) ) {
                 // Reduce rarity total
                 TotalEffectiveRarity -= llList2Float( Rarity , itemIndex );
-                Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
-
-                // And assume inventory will change
-                InventoryChangeExpected = TRUE;
+                Debug( "    Inventory has run out for item! TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
             }
         }
 
@@ -420,8 +464,12 @@
             hasHave = "has ";
         }
 
-        // Build the name of the folder to give
-        string objectName = llGetObjectName();
+        // Build the name of the folder to give. Start by getting the name of
+        // the prim, or barring that, the name of the object
+        string objectName = llList2String( llGetLinkPrimitiveParams( LINK_THIS , [ PRIM_NAME ] ) , 0 );
+        if( "" == objectName || "Object" == objectName ) {
+            objectName = llGetObjectName();
+        }
         string folderSuffix = ( " (Easy Gacha: " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
         if( llStringLength( objectName ) + llStringLength( folderSuffix ) > MAX_FOLDER_NAME_LENGTH ) {
             // 4 == 3 for ellipses + 1 because this is end index, not count
@@ -429,7 +477,7 @@
         }
         Debug( "    Truncated object name: " + objectName );
 
-        // If too much money was given
+        // If too much money was given or they weren't able to play
         string change = "";
         lindensReceived -= ( totalItems * TotalPrice );
         if( lindensReceived ) {
@@ -440,7 +488,8 @@
         // Distribute the payouts
         integer payoutIndex;
         for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) { // Strided list
-            if( llList2Key( Payouts , payoutIndex ) != Owner ) {
+            // Only if the payment isn't to the owner and is more than L$0
+            if( llList2Key( Payouts , payoutIndex ) != Owner && 0 < llList2Integer( Payouts , payoutIndex + 1 ) ) {
                 Debug( "    Giving L$" + (string)(llList2Integer( Payouts , payoutIndex + 1 ) * totalItems) + " to " + llList2String( Payouts , payoutIndex ) );
                 llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
             }
@@ -459,9 +508,11 @@
 
         // Reports
         if( Im ) {
-            llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + (string)buyerId + ") just received " + (string)countItemsToSend + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
+            llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + llGetUsername(buyerId) + ") just received " + (string)countItemsToSend + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
         }
-        // TODO: llEmail Email FORCED_DELAY 20.0 seconds
+        if( Email ) {
+            llEmail( Email , llGetObjectName() + " - Easy Gacha Played" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
+        }
         // TODO: Ping registry
     }
 
@@ -507,14 +558,10 @@
         changed( integer changeMask ) {
             Debug( "default::changed( " + (string)changeMask + " )" );
 
-            if( CHANGED_INVENTORY & changeMask ) {
-                if( InventoryChangeExpected ) {
-                    InventoryChangeExpected = FALSE;
-                } else {
-                    InventoryChanged = TRUE;
-                    Configured = FALSE;
-                }
-            }
+            // If they change the inventory and remove something that was
+            // configured, we'll count that as alright and just recalculate the
+            // probabilities
+            // if( CHANGED_INVENTORY & changeMask )
 
             if( ( CHANGED_OWNER | CHANGED_REGION_START | CHANGED_REGION | CHANGED_TELEPORT ) & changeMask ) {
                 RequestUrl();
@@ -544,24 +591,31 @@
         timer() {
             Debug( "default::timer()" );
 
-            // If we're waiting on a dataserver event
-            if( NULL_KEY != DataServerRequest ) {
-                // TODO: llSetTimerEvent( LastPing + PING_INTERVAL - llGetUnixTime() );
-
-                if( NULL_KEY != DataServerResponse ) {
-                    llHTTPResponse( DataServerResponse , 500 , "[null]" );
-                }
-
-                llSetTimerEvent( 0.0 );
-                DataServerResponse = NULL_KEY;
-                DataServerRequest = NULL_KEY;
-                DataServerMode = 0;
-
-                DebugGlobals();
-                return;
-            }
+            llSetTimerEvent( 0.0 ); // reset
 
             DebugGlobals();
+
+            // For each pending request
+            integer requestIndex;
+            for( requestIndex = 0 ; requestIndex < llGetListLength( DataServerRequests ) ; ++requestIndex ) {
+                // If it has expired
+                if( llList2Integer( DataServerRequestTimes , requestIndex ) + ASSET_SERVER_TIMEOUT < llGetUnixTime() ) {
+                    if( NULL_KEY != llList2Key( DataServerResponses , requestIndex ) ) {
+                        llHTTPResponse( llList2Key( DataServerResponses , requestIndex ) , 200 , "null" );
+                    }
+
+                    DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex );
+                    DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
+                    DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
+                    DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
+                }
+            }
+
+            if( llGetListLength( DataServerRequests ) ) {
+                llSetTimerEvent( 5.0 );
+            } else {
+                // TODO: llSetTimerEvent( LastPing + PING_INTERVAL - llGetUnixTime() );
+            }
         }
 
         http_request( key requestId , string httpMethod , string requestBody ) {
@@ -576,8 +630,11 @@
                 ShortenedInfoUrl = ( BaseUrl + "/" );
                 ShortenedAdminUrl = ( BaseUrl + "/#admin/" + (string)AdminKey );
 
-                DataServerMode = 1;
                 Shorten( ShortenedInfoUrl );
+                DataServerRequestTypes += [ 1 ];
+
+                Shorten( ShortenedAdminUrl );
+                DataServerRequestTypes += [ 2 ];
             }
 
             if( URL_REQUEST_DENIED == httpMethod ) {
@@ -616,7 +673,7 @@
 
                 // Determine if the user is an admin by the presence of the
                 // key, and strip it off the front
-                integer isAdmin = ( ( llList2Key( path , 0 ) == AdminKey ) || ( llList2Key( path , 0 ) == PERMANENT_ADMIN_KEY ) );
+                integer isAdmin = ( llList2Key( path , 0 ) == AdminKey );
                 if( isAdmin ) {
                     path = llList2List( path , 1 , -1 );
                 }
@@ -676,8 +733,8 @@
                         }
 
                         responseBody = llList2Json(
-                            JSON_ARRAY ,
-                            values
+                            JSON_ARRAY
+                            , values
                         );
                     }
                 }
@@ -686,8 +743,8 @@
                     if( isAdmin ) {
                         if( "post" == verb ) {
                             Payouts += [
-                                llList2Key( requestBodyParts , 0 ) ,
-                                llList2Integer( requestBodyParts , 1 )
+                                llList2Key( requestBodyParts , 0 )
+                                , llList2Integer( requestBodyParts , 1 )
                             ];
                         }
 
@@ -698,8 +755,8 @@
 
                     if( llList2Integer( requestBodyParts , 0 ) < CountPayouts / 2 ) {
                         responseBody = llList2Json(
-                            JSON_ARRAY ,
-                            llList2List( Payouts , ( llList2Integer( requestBodyParts , 0 ) * 2 ) , ( llList2Integer( requestBodyParts , 0 ) * 2 ) + 1 )
+                            JSON_ARRAY
+                            , llList2List( Payouts , ( llList2Integer( requestBodyParts , 0 ) * 2 ) , ( llList2Integer( requestBodyParts , 0 ) * 2 ) + 1 )
                         );
                     }
                 }
@@ -710,38 +767,31 @@
                             FolderForSingleItem = llList2Integer( requestBodyParts , 0 );
                             RootClickAction = llList2Integer( requestBodyParts , 1 );
                             Group = llList2Integer( requestBodyParts , 2 );
-                            AllowWhisper = llList2Integer( requestBodyParts , 3 );
-                            AllowHover = llList2Integer( requestBodyParts , 4 );
-                            MaxPerPurchase  = llList2Integer( requestBodyParts , 5 );
-                            MaxBuys = llList2Integer( requestBodyParts , 6 );
-                            PayPrice = llList2Integer( requestBodyParts , 7 );
-                            PayPriceButton0 = llList2Integer( requestBodyParts , 8 );
-                            PayPriceButton1 = llList2Integer( requestBodyParts , 9 );
-                            PayPriceButton2 = llList2Integer( requestBodyParts , 10 );
-                            PayPriceButton3 = llList2Integer( requestBodyParts , 11 );
-
-                            if( GREY_GOO_HANDOUT_LIMIT < MaxPerPurchase ) {
-                                MaxPerPurchase = GREY_GOO_HANDOUT_LIMIT;
-                            }
+                            AllowHover = llList2Integer( requestBodyParts , 3 );
+                            MaxPerPurchase  = llList2Integer( requestBodyParts , 4 );
+                            MaxBuys = llList2Integer( requestBodyParts , 5 );
+                            PayPrice = llList2Integer( requestBodyParts , 6 );
+                            PayPriceButton0 = llList2Integer( requestBodyParts , 7 );
+                            PayPriceButton1 = llList2Integer( requestBodyParts , 8 );
+                            PayPriceButton2 = llList2Integer( requestBodyParts , 9 );
+                            PayPriceButton3 = llList2Integer( requestBodyParts , 10 );
                         }
                     }
 
                     responseBody = llList2Json(
-                        JSON_ARRAY ,
-                        [
-                            FolderForSingleItem ,
-                            RootClickAction ,
-                            Group ,
-                            AllowWhisper ,
-                            AllowHover ,
-                            MaxPerPurchase , 
-                            MaxBuys ,
-                            PayPrice ,
-                            PayPriceButton0 ,
-                            PayPriceButton1 ,
-                            PayPriceButton2 ,
-                            PayPriceButton3 ,
-                            LINK_ROOT == llGetLinkNumber() // if is root prim
+                        JSON_ARRAY
+                        , [
+                            FolderForSingleItem
+                            , RootClickAction
+                            , Group
+                            , AllowHover
+                            , MaxPerPurchase 
+                            , MaxBuys
+                            , PayPrice
+                            , PayPriceButton0
+                            , PayPriceButton1
+                            , PayPriceButton2
+                            , PayPriceButton3
                         ]
                     );
                 }
@@ -753,8 +803,8 @@
                         }
 
                         responseBody = llList2Json(
-                            JSON_ARRAY ,
-                            [
+                            JSON_ARRAY
+                            , [
                                 Email
                             ]
                         );
@@ -768,8 +818,8 @@
                         }
 
                         responseBody = llList2Json(
-                            JSON_ARRAY ,
-                            [
+                            JSON_ARRAY
+                            , [
                                 Im
                             ]
                         );
@@ -781,53 +831,107 @@
                         if( "post" == verb ) {
                             Configured = llList2Integer( requestBodyParts , 0 );
                             Extra = llList2String( requestBodyParts , 1 );
-                            InventoryChanged = FALSE;
                         }
                     }
 
                     responseBody = llList2Json(
-                        JSON_ARRAY ,
-                        [
-                            isAdmin ,
-                            Owner ,
-                            llGetObjectName() ,
-                            llGetObjectDesc() ,
-                            ScriptName ,
-                            llGetFreeMemory() ,
-                            HasPermission ,
-                            InventoryChanged ,
-                            LastPing ,
-                            llGetInventoryNumber( INVENTORY_ALL ) ,
-                            llGetListLength( Items ) ,
-                            llGetListLength( Payouts ) / 2 ,
-                            llGetRegionName() ,
-                            llGetPos() ,
-                            Configured ,
-                            TotalPrice ,
-                            Extra
-                        ]
+                        JSON_ARRAY
+                        , [
+                            isAdmin
+                            , Owner
+                            , llGetObjectName()
+                            , llGetObjectDesc()
+                            , ScriptName
+                            , llGetFreeMemory()
+                            , HasPermission
+                            , LastPing
+                            , llGetInventoryNumber( INVENTORY_ALL )
+                            , llGetListLength( Items )
+                            , llGetListLength( Payouts ) / 2
+                            , llGetRegionName()
+                            , llGetPos()
+                            , Configured
+                            , TotalPrice
+                            , Extra
+                            , llGetNumberOfPrims()
+                            , llGetLinkNumber()
+                            , llGetCreator()
+                        ] + llGetObjectDetails( llGetKey() , [
+                            OBJECT_GROUP
+                            , OBJECT_TOTAL_SCRIPT_COUNT
+                            , OBJECT_SCRIPT_TIME
+                        ] )
+                    );
+                }
+
+                if( "prim" == subject ) {
+                    responseBody = llList2Json(
+                        JSON_ARRAY
+                        , llGetLinkPrimitiveParams( llList2Integer( requestBodyParts , 0 ) , [
+                            PRIM_NAME
+                            , PRIM_DESC
+                            , PRIM_TYPE
+                            , PRIM_SLICE
+                            , PRIM_PHYSICS_SHAPE_TYPE
+                            , PRIM_MATERIAL
+                            , PRIM_PHYSICS
+                            , PRIM_TEMP_ON_REZ
+                            , PRIM_PHANTOM
+                            , PRIM_POSITION
+                            , PRIM_POS_LOCAL
+                            , PRIM_ROTATION
+                            , PRIM_ROT_LOCAL
+                            , PRIM_SIZE
+                            , PRIM_TEXT
+                            , PRIM_FLEXIBLE
+                            , PRIM_POINT_LIGHT
+                            , PRIM_OMEGA
+                        ] )
+                    );
+                }
+
+                if( "face" == subject ) {
+                    responseBody = llList2Json(
+                        JSON_ARRAY
+                        , llGetLinkPrimitiveParams( llList2Integer( requestBodyParts , 0 ) , [
+                            PRIM_TEXTURE , llList2Integer( requestBodyParts , 1 )
+                            , PRIM_COLOR , llList2Integer( requestBodyParts , 1 )
+                            , PRIM_BUMP_SHINY , llList2Integer( requestBodyParts , 1 )
+                            , PRIM_FULLBRIGHT , llList2Integer( requestBodyParts , 1 )
+                            , PRIM_TEXGEN , llList2Integer( requestBodyParts , 1 )
+                            , PRIM_GLOW , llList2Integer( requestBodyParts , 1 )
+                        ] )
                     );
                 }
 
                 if( "lookup" == subject ) {
-                    if( 0 == DataServerMode ) {
-                        subject = llList2String( path , 2 );
-                        DataServerResponse = requestId;
-                        llSetContentType( requestId , responseContentType );
-                        llSetTimerEvent( ASSET_SERVER_TIMEOUT );
+                    subject = llList2String( path , 2 );
+                    DataServerResponses += [ requestId ];
+                    DataServerRequestTimes += [ llGetUnixTime() ];
+                    llSetContentType( requestId , responseContentType );
+                    llSetTimerEvent( 5.0 );
 
-                        if( "username" == subject ) {
-                            DataServerMode = 3;
-                            DataServerRequest = llRequestUsername( llList2Key( requestBodyParts , 0 ) );
-                        }
-
-                        if( "displayname" == subject ) {
-                            DataServerMode = 4;
-                            DataServerRequest = llRequestDisplayName( llList2Key( requestBodyParts , 0 ) );
-                        }
-
-                        return;
+                    if( "username" == subject ) {
+                        DataServerRequests += [ llRequestUsername( llList2Key( requestBodyParts , 0 ) ) ];
+                        DataServerRequestTypes += [ 3 ];
                     }
+
+                    if( "displayname" == subject ) {
+                        DataServerRequests += [ llRequestDisplayName( llList2Key( requestBodyParts , 0 ) ) ];
+                        DataServerRequestTypes += [ 4 ];
+                    }
+
+                    if( "notecard-line-count" == subject ) {
+                        DataServerRequests += [ llGetNumberOfNotecardLines( llList2String( requestBodyParts , 0 ) ) ];
+                        DataServerRequestTypes += [ 5 ];
+                    }
+
+                    if( "notecard-line" == subject ) {
+                        DataServerRequests += [ llGetNotecardLine( llList2String( requestBodyParts , 0 ) , llList2Integer( requestBodyParts , 1 ) ) ];
+                        DataServerRequestTypes += [ 6 ];
+                    }
+
+                    return;
                 }
 
                 if( "inv" == subject && isAdmin ) {
@@ -846,8 +950,8 @@
                         ];
 
                         responseBody = llList2Json(
-                            JSON_ARRAY ,
-                            values
+                            JSON_ARRAY
+                            , values
                         );
                     }
                 }
@@ -870,17 +974,21 @@
         dataserver( key queryId , string data ) {
             Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
 
-            if( queryId != DataServerRequest )
+            integer requestIndex = llListFindList( DataServerRequests , [ queryId ] );
+            if( -1 == requestIndex ) {
                 return;
+            }
 
-            if( NULL_KEY != DataServerResponse ) {
-                llHTTPResponse( DataServerResponse , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
+            if( NULL_KEY != llList2Key( DataServerResponses , requestIndex ) ) {
+                llHTTPResponse( llList2Key( DataServerResponses , requestIndex ) , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
+
+                DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex );
+                DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
+                DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
+                DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
             }
 
             llSetTimerEvent( 0.0 );
-            DataServerResponse = NULL_KEY;
-            DataServerRequest = NULL_KEY;
-            DataServerMode = 0;
 
             DebugGlobals();
         }
@@ -888,44 +996,38 @@
         http_response( key requestId , integer responseStatus , list metadata , string responseBody ) {
             Debug( "default::http_response( " + llList2CSV( [ requestId , responseStatus ] + metadata + [ responseBody ] )+ " )" );
 
-            // If requestId isn't the one we specified, exit early
-            if( DataServerRequest != requestId ) {
+            integer requestIndex = llListFindList( DataServerRequests , [ requestId ] );
+            if( -1 == requestIndex ) {
                 return;
             }
 
             // goo.gl URL shortener parsing
             string shortened = llJsonGetValue( responseBody , [ "id" ] );
             if( JSON_INVALID != shortened && JSON_NULL != shortened ) {
-                if( 2 == DataServerMode ) {
+                if( 1 == llList2Integer( DataServerRequestTypes , requestIndex ) ) {
+                    ShortenedInfoUrl = shortened;
+                    // TODO: Ping registry
+                }
+                if( 2 == llList2Integer( DataServerRequestTypes , requestIndex ) ) {
                     ShortenedAdminUrl = shortened;
-
-                    DataServerMode = 0;
-                    DataServerRequest = NULL_KEY;
-
                     llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
                     // TODO: Ping registry
                 }
-                if( 1 == DataServerMode ) {
-                    ShortenedInfoUrl = shortened;
-
-                    DataServerMode = 2;
-                    Shorten( ShortenedAdminUrl );
-                }
-            } else if( 1 == DataServerMode || 2 == DataServerMode ) {
-                DataServerMode = 0;
-                DataServerRequest = NULL_KEY;
-
+            } else if( 2 == llList2Integer( DataServerRequestTypes , requestIndex ) ) {
                 llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
                 // TODO: Ping registry
             }
+
+            DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex );
+            DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
+            DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
+            DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
 
             DebugGlobals();
         }
 
         touch_end( integer detected ) {
             Debug( "default::touch_end( " + (string)detected + " )" );
-
-            integer whisperUrl = FALSE;
 
             // For each person that touched
             while( 0 <= ( detected -= 1 ) ) {
@@ -948,12 +1050,6 @@
                     if( TotalPrice && !HasPermission ) {
                         llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
                     }
-                } else {
-                    if( AllowWhisper ) {
-                        whisperUrl = TRUE;
-                    } else {
-                        llLoadURL( detectedKey , "For help, information, and statistics about this Easy Gacha, please go here" , ShortenedInfoUrl ); // FORCED_DELAY 10.0 seconds
-                    }
                 }
 
                 if( Ready && !TotalPrice ) {
@@ -962,16 +1058,14 @@
             }
 
             // Whisper info link
-            if( whisperUrl ) {
-                if( llGetUnixTime() != LastWhisperedUrl ) {
-                    if( ShortenedInfoUrl ) {
-                        Whisper( "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
-                    } else {
-                        Whisper( "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
-                    }
-
-                    LastWhisperedUrl = llGetUnixTime();
+            if( llGetUnixTime() != LastWhisperedUrl ) {
+                if( ShortenedInfoUrl ) {
+                    Whisper( "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+                } else {
+                    Whisper( "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
                 }
+
+                LastWhisperedUrl = llGetUnixTime();
             }
 
             Update();

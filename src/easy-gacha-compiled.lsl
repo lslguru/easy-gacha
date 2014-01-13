@@ -14,7 +14,6 @@ integer RootClickAction = -1;
 integer Group = FALSE;
 string Email;
 key Im;
-integer AllowWhisper = TRUE;
 integer AllowHover = TRUE;
 integer MaxBuys = -1;
 integer Configured;
@@ -27,11 +26,10 @@ string ShortenedAdminUrl;
 key Owner;
 string ScriptName;
 integer HasPermission;
-key DataServerRequest;
-integer DataServerMode;
-key DataServerResponse;
-integer InventoryChanged;
-integer InventoryChangeExpected;
+list DataServerRequests;
+list DataServerRequestTimes;
+list DataServerRequestTypes;
+list DataServerResponses;
 integer LastPing;
 integer TotalPrice;
 integer TotalBought;
@@ -42,24 +40,22 @@ integer CountItems;
 integer CountPayouts;
 integer LastWhisperedUrl;
 Whisper( string msg ) {
-if( AllowWhisper ) {
-llWhisper( 0 , "/me : " + llGetScriptName() + ": " + msg );
-}
+llWhisper( 0 , llGetScriptName() + ": " + msg );
 }
 Hover( string msg ) {
 if( AllowHover ) {
 if( msg ) {
-llSetText( llGetObjectName() + ": " + llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
+llSetText( llGetObjectName() + ": " + llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
 } else {
 llSetText( "" , ZERO_VECTOR , 1 );
 }
 }
 }
 Registry( list data ) {
-if( "" == "" ) {
+if( TRUE ) {
 return;
 }
-llHTTPRequest( "" , [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE ] , llList2Json( JSON_ARRAY , data ) );
+llHTTPRequest( "" , [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE , "X-EasyGacha-Version" , "5.0" ] , llList2Json( JSON_ARRAY , data ) );
 llSleep( 1.0 );
 }
 RequestUrl() {
@@ -70,20 +66,33 @@ ShortenedInfoUrl = "";
 ShortenedAdminUrl = "";
 llRequestURL();
 }
+integer ItemUsable( integer itemIndex ) {
+if( INVENTORY_NONE != llGetInventoryType( llList2String( Items , itemIndex ) ) ) {
+if( PERM_TRANSFER & llGetInventoryPermMask( llList2String( Items , itemIndex ) , MASK_OWNER ) ) {
+if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+return TRUE;
+}
+}
+}
+return FALSE;
+}
 Update() {
 Owner = llGetOwner();
 ScriptName = llGetScriptName();
 HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
 TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
 TotalBought = (integer)llListStatistics( LIST_STAT_SUM , Bought );
-TotalLimit = (integer)llListStatistics( LIST_STAT_SUM , Limit );
 CountItems = llGetListLength( Items );
 CountPayouts = llGetListLength( Payouts );
 HasUnlimitedItems = ( -1 != llListFindList( Limit , [ -1 ] ) );
 integer itemIndex;
+TotalLimit = 0;
 TotalEffectiveRarity = 0.0;
 for( itemIndex = 0 ; itemIndex < CountItems ; ++itemIndex ) {
-if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+if( 0 < llList2Integer( Limit , itemIndex ) ) {
+TotalLimit += llList2Integer( Limit , itemIndex );
+}
+if( ItemUsable( itemIndex ) ) {
 TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
 }
 }
@@ -96,16 +105,10 @@ Ready = FALSE;
 if( TotalBought >= MaxBuys ) {
 Ready = FALSE;
 }
-if( 0 == CountItems ) {
-Ready = FALSE;
-}
-if( 0 == CountPayouts ) {
-Ready = FALSE;
-}
 if( 0.0 == TotalEffectiveRarity ) {
 Ready = FALSE;
 }
-if( !HasUnlimitedItems && TotalBought >= TotalLimit ) {
+if( Group && llSameGroup( NULL_KEY ) ) {
 Ready = FALSE;
 }
 }
@@ -129,32 +132,36 @@ llSetClickAction( CLICK_ACTION_TOUCH );
 }
 }
 if( Ready ) {
-if( 1 == DataServerMode || 2 == DataServerMode ) {
+if( -1 != llListFindList( DataServerRequestTypes , [ 1 ] ) || -1 != llListFindList( DataServerRequestTypes , [ 2 ] ) ) {
 Hover( "Working, please wait..." );
 } else {
 Hover( "" );
 }
-} else if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
-Hover( "All items have been given" );
 } else if( TotalPrice && !HasPermission ) {
 Hover( "Need debit permission, please touch this object" );
 llRequestPermissions( Owner , PERMISSION_DEBIT );
+} else if( Group && llSameGroup( NULL_KEY ) ) {
+Hover( "Please set a group for this object" );
+} else if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
+Hover( "No more items to give, sorry" );
 } else {
 Hover( "Configuration needed, please touch this object" );
 }
 }
 Shorten( string url ) {
-DataServerRequest = llHTTPRequest(
-"https:\/\/www.googleapis.com/urlshortener/v1/url" ,
-[
-HTTP_METHOD , "POST" ,
-HTTP_MIMETYPE , "application/json" ,
-HTTP_BODY_MAXLENGTH , 16384 ,
-HTTP_VERIFY_CERT , TRUE ,
-HTTP_VERBOSE_THROTTLE , FALSE
-] ,
-llJsonSetValue( "{}" , [ "longUrl" ] , url )
-);
+DataServerRequests += [ llHTTPRequest(
+"https:\/\/www.googleapis.com/urlshortener/v1/url"
+, [
+HTTP_METHOD , "POST"
+, HTTP_MIMETYPE , "application/json"
+, HTTP_BODY_MAXLENGTH , 16384
+, HTTP_VERIFY_CERT , TRUE
+, HTTP_VERBOSE_THROTTLE , FALSE
+]
+, llJsonSetValue( "{}" , [ "longUrl" ] , url )
+) ];
+DataServerRequestTimes += [ llGetUnixTime() ];
+DataServerResponses += [ NULL_KEY ];
 }
 Play( key buyerId , integer lindensReceived ) {
 string displayName = llGetDisplayName( buyerId );
@@ -174,6 +181,9 @@ totalItems = MaxBuys - TotalBought;
 if( !HasUnlimitedItems && totalItems > TotalLimit - TotalBought ) {
 totalItems = TotalLimit - TotalBought;
 }
+if( Group && !llSameGroup( buyerId ) ) {
+totalItems = 0;
+}
 list itemsToSend = [];
 integer countItemsToSend = 0;
 float random;
@@ -182,7 +192,7 @@ while( countItemsToSend < totalItems ) {
 Hover( "Please wait, getting random item " + (string)( countItemsToSend + 1 ) + " of " + (string)totalItems + " for: " + displayName );
 random = TotalEffectiveRarity - llFrand( TotalEffectiveRarity );
 for( itemIndex = 0 ; itemIndex < CountItems && random > 0.0 ; ++itemIndex ) {
-if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+if( ItemUsable( itemIndex ) ) {
 random -= llList2Float( Rarity , itemIndex );
 }
 }
@@ -191,9 +201,8 @@ itemsToSend += [ llList2String( Items , itemIndex ) ];
 ++countItemsToSend;
 Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
 ++TotalBought;
-if( -1 != llList2Integer( Limit , itemIndex ) && llList2Integer( Bought , itemIndex ) >= llList2Integer( Limit , itemIndex ) ) {
+if( ! ItemUsable( itemIndex ) ) {
 TotalEffectiveRarity -= llList2Float( Rarity , itemIndex );
-InventoryChangeExpected = TRUE;
 }
 }
 string itemPlural = " items ";
@@ -202,7 +211,10 @@ if( 1 == countItemsToSend ) {
 itemPlural = " item ";
 hasHave = "has ";
 }
-string objectName = llGetObjectName();
+string objectName = llList2String( llGetLinkPrimitiveParams( LINK_THIS , [ PRIM_NAME ] ) , 0 );
+if( "" == objectName || "Object" == objectName ) {
+objectName = llGetObjectName();
+}
 string folderSuffix = ( " (Easy Gacha: " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
 if( llStringLength( objectName ) + llStringLength( folderSuffix ) > 63 ) {
 objectName = ( llGetSubString( objectName , 0 , 63 - llStringLength( folderSuffix ) - 4 ) + "..." );
@@ -215,7 +227,7 @@ change = " Your change is L$" + (string)lindensReceived;
 }
 integer payoutIndex;
 for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) {
-if( llList2Key( Payouts , payoutIndex ) != Owner ) {
+if( llList2Key( Payouts , payoutIndex ) != Owner && 0 < llList2Integer( Payouts , payoutIndex + 1 ) ) {
 llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
 }
 }
@@ -227,7 +239,10 @@ llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend );
 llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) );
 }
 if( Im ) {
-llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + (string)buyerId + ") just received " + (string)countItemsToSend + " items. " + ShortenedInfoUrl );
+llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + llGetUsername(buyerId) + ") just received " + (string)countItemsToSend + " items. " + ShortenedInfoUrl );
+}
+if( Email ) {
+llEmail( Email , llGetObjectName() + " - Easy Gacha Played" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) );
 }
 }
 default {
@@ -246,14 +261,6 @@ run_time_permissions( integer permissionMask ) {
 Update();
 }
 changed( integer changeMask ) {
-if( CHANGED_INVENTORY & changeMask ) {
-if( InventoryChangeExpected ) {
-InventoryChangeExpected = FALSE;
-} else {
-InventoryChanged = TRUE;
-Configured = FALSE;
-}
-}
 if( ( CHANGED_OWNER | CHANGED_REGION_START | CHANGED_REGION | CHANGED_TELEPORT ) & changeMask ) {
 RequestUrl();
 }
@@ -265,15 +272,22 @@ Play( buyerId , lindensReceived );
 Update();
 }
 timer() {
-if( NULL_KEY != DataServerRequest ) {
-if( NULL_KEY != DataServerResponse ) {
-llHTTPResponse( DataServerResponse , 500 , "[null]" );
-}
 llSetTimerEvent( 0.0 );
-DataServerResponse = NULL_KEY;
-DataServerRequest = NULL_KEY;
-DataServerMode = 0;
-return;
+integer requestIndex;
+for( requestIndex = 0 ; requestIndex < llGetListLength( DataServerRequests ) ; ++requestIndex ) {
+if( llList2Integer( DataServerRequestTimes , requestIndex ) + 15.0 < llGetUnixTime() ) {
+if( NULL_KEY != llList2Key( DataServerResponses , requestIndex ) ) {
+llHTTPResponse( llList2Key( DataServerResponses , requestIndex ) , 200 , "null" );
+}
+DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex );
+DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
+DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
+DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
+}
+}
+if( llGetListLength( DataServerRequests ) ) {
+llSetTimerEvent( 5.0 );
+} else {
 }
 }
 http_request( key requestId , string httpMethod , string requestBody ) {
@@ -284,8 +298,10 @@ if( URL_REQUEST_GRANTED == httpMethod ) {
 BaseUrl = requestBody;
 ShortenedInfoUrl = ( BaseUrl + "/" );
 ShortenedAdminUrl = ( BaseUrl + "/#admin/" + (string)AdminKey );
-DataServerMode = 1;
 Shorten( ShortenedInfoUrl );
+DataServerRequestTypes += [ 1 ];
+Shorten( ShortenedAdminUrl );
+DataServerRequestTypes += [ 2 ];
 }
 if( URL_REQUEST_DENIED == httpMethod ) {
 llOwnerSay( "Unable to get a URL. This Easy Gacha cannot be configured until one becomes available: " + requestBody );
@@ -317,7 +333,7 @@ responseStatus = 200;
 responseContentType = CONTENT_TYPE_JSON;
 responseBody = "null";
 list path = llParseString2List( llGetHTTPHeader( requestId , "x-path-info" ) , [ "/" ] , [ ] );
-integer isAdmin = ( ( llList2Key( path , 0 ) == AdminKey ) || ( llList2Key( path , 0 ) == "" ) );
+integer isAdmin = ( llList2Key( path , 0 ) == AdminKey );
 if( isAdmin ) {
 path = llList2List( path , 1 , -1 );
 }
@@ -371,8 +387,8 @@ FALSE ,
 ];
 }
 responseBody = llList2Json(
-JSON_ARRAY ,
-values
+JSON_ARRAY
+, values
 );
 }
 }
@@ -380,8 +396,8 @@ if( "payout" == subject ) {
 if( isAdmin ) {
 if( "post" == verb ) {
 Payouts += [
-llList2Key( requestBodyParts , 0 ) ,
-llList2Integer( requestBodyParts , 1 )
+llList2Key( requestBodyParts , 0 )
+, llList2Integer( requestBodyParts , 1 )
 ];
 }
 if( "delete" == verb ) {
@@ -390,8 +406,8 @@ Payouts = [];
 }
 if( llList2Integer( requestBodyParts , 0 ) < CountPayouts / 2 ) {
 responseBody = llList2Json(
-JSON_ARRAY ,
-llList2List( Payouts , ( llList2Integer( requestBodyParts , 0 ) * 2 ) , ( llList2Integer( requestBodyParts , 0 ) * 2 ) + 1 )
+JSON_ARRAY
+, llList2List( Payouts , ( llList2Integer( requestBodyParts , 0 ) * 2 ) , ( llList2Integer( requestBodyParts , 0 ) * 2 ) + 1 )
 );
 }
 }
@@ -401,36 +417,30 @@ if( "post" == verb ) {
 FolderForSingleItem = llList2Integer( requestBodyParts , 0 );
 RootClickAction = llList2Integer( requestBodyParts , 1 );
 Group = llList2Integer( requestBodyParts , 2 );
-AllowWhisper = llList2Integer( requestBodyParts , 3 );
-AllowHover = llList2Integer( requestBodyParts , 4 );
-MaxPerPurchase  = llList2Integer( requestBodyParts , 5 );
-MaxBuys = llList2Integer( requestBodyParts , 6 );
-PayPrice = llList2Integer( requestBodyParts , 7 );
-PayPriceButton0 = llList2Integer( requestBodyParts , 8 );
-PayPriceButton1 = llList2Integer( requestBodyParts , 9 );
-PayPriceButton2 = llList2Integer( requestBodyParts , 10 );
-PayPriceButton3 = llList2Integer( requestBodyParts , 11 );
-if( 50 < MaxPerPurchase ) {
-MaxPerPurchase = 50;
-}
+AllowHover = llList2Integer( requestBodyParts , 3 );
+MaxPerPurchase  = llList2Integer( requestBodyParts , 4 );
+MaxBuys = llList2Integer( requestBodyParts , 5 );
+PayPrice = llList2Integer( requestBodyParts , 6 );
+PayPriceButton0 = llList2Integer( requestBodyParts , 7 );
+PayPriceButton1 = llList2Integer( requestBodyParts , 8 );
+PayPriceButton2 = llList2Integer( requestBodyParts , 9 );
+PayPriceButton3 = llList2Integer( requestBodyParts , 10 );
 }
 }
 responseBody = llList2Json(
-JSON_ARRAY ,
-[
-FolderForSingleItem ,
-RootClickAction ,
-Group ,
-AllowWhisper ,
-AllowHover ,
-MaxPerPurchase ,
-MaxBuys ,
-PayPrice ,
-PayPriceButton0 ,
-PayPriceButton1 ,
-PayPriceButton2 ,
-PayPriceButton3 ,
-LINK_ROOT == llGetLinkNumber()
+JSON_ARRAY
+, [
+FolderForSingleItem
+, RootClickAction
+, Group
+, AllowHover
+, MaxPerPurchase
+, MaxBuys
+, PayPrice
+, PayPriceButton0
+, PayPriceButton1
+, PayPriceButton2
+, PayPriceButton3
 ]
 );
 }
@@ -440,8 +450,8 @@ if( "post" == verb ) {
 Email = llList2String( requestBodyParts , 0 );
 }
 responseBody = llList2Json(
-JSON_ARRAY ,
-[
+JSON_ARRAY
+, [
 Email
 ]
 );
@@ -453,8 +463,8 @@ if( "post" == verb ) {
 Im = llList2Key( requestBodyParts , 0 );
 }
 responseBody = llList2Json(
-JSON_ARRAY ,
-[
+JSON_ARRAY
+, [
 Im
 ]
 );
@@ -465,48 +475,98 @@ if( isAdmin ) {
 if( "post" == verb ) {
 Configured = llList2Integer( requestBodyParts , 0 );
 Extra = llList2String( requestBodyParts , 1 );
-InventoryChanged = FALSE;
 }
 }
 responseBody = llList2Json(
-JSON_ARRAY ,
-[
-isAdmin ,
-Owner ,
-llGetObjectName() ,
-llGetObjectDesc() ,
-ScriptName ,
-llGetFreeMemory() ,
-HasPermission ,
-InventoryChanged ,
-LastPing ,
-llGetInventoryNumber( INVENTORY_ALL ) ,
-llGetListLength( Items ) ,
-llGetListLength( Payouts ) / 2 ,
-llGetRegionName() ,
-llGetPos() ,
-Configured ,
-TotalPrice ,
-Extra
-]
+JSON_ARRAY
+, [
+isAdmin
+, Owner
+, llGetObjectName()
+, llGetObjectDesc()
+, ScriptName
+, llGetFreeMemory()
+, HasPermission
+, LastPing
+, llGetInventoryNumber( INVENTORY_ALL )
+, llGetListLength( Items )
+, llGetListLength( Payouts ) / 2
+, llGetRegionName()
+, llGetPos()
+, Configured
+, TotalPrice
+, Extra
+, llGetNumberOfPrims()
+, llGetLinkNumber()
+, llGetCreator()
+] + llGetObjectDetails( llGetKey() , [
+OBJECT_GROUP
+, OBJECT_TOTAL_SCRIPT_COUNT
+, OBJECT_SCRIPT_TIME
+] )
+);
+}
+if( "prim" == subject ) {
+responseBody = llList2Json(
+JSON_ARRAY
+, llGetLinkPrimitiveParams( llList2Integer( requestBodyParts , 0 ) , [
+PRIM_NAME
+, PRIM_DESC
+, PRIM_TYPE
+, PRIM_SLICE
+, PRIM_PHYSICS_SHAPE_TYPE
+, PRIM_MATERIAL
+, PRIM_PHYSICS
+, PRIM_TEMP_ON_REZ
+, PRIM_PHANTOM
+, PRIM_POSITION
+, PRIM_POS_LOCAL
+, PRIM_ROTATION
+, PRIM_ROT_LOCAL
+, PRIM_SIZE
+, PRIM_TEXT
+, PRIM_FLEXIBLE
+, PRIM_POINT_LIGHT
+, PRIM_OMEGA
+] )
+);
+}
+if( "face" == subject ) {
+responseBody = llList2Json(
+JSON_ARRAY
+, llGetLinkPrimitiveParams( llList2Integer( requestBodyParts , 0 ) , [
+PRIM_TEXTURE , llList2Integer( requestBodyParts , 1 )
+, PRIM_COLOR , llList2Integer( requestBodyParts , 1 )
+, PRIM_BUMP_SHINY , llList2Integer( requestBodyParts , 1 )
+, PRIM_FULLBRIGHT , llList2Integer( requestBodyParts , 1 )
+, PRIM_TEXGEN , llList2Integer( requestBodyParts , 1 )
+, PRIM_GLOW , llList2Integer( requestBodyParts , 1 )
+] )
 );
 }
 if( "lookup" == subject ) {
-if( 0 == DataServerMode ) {
 subject = llList2String( path , 2 );
-DataServerResponse = requestId;
+DataServerResponses += [ requestId ];
+DataServerRequestTimes += [ llGetUnixTime() ];
 llSetContentType( requestId , responseContentType );
 llSetTimerEvent( 5.0 );
 if( "username" == subject ) {
-DataServerMode = 3;
-DataServerRequest = llRequestUsername( llList2Key( requestBodyParts , 0 ) );
+DataServerRequests += [ llRequestUsername( llList2Key( requestBodyParts , 0 ) ) ];
+DataServerRequestTypes += [ 3 ];
 }
 if( "displayname" == subject ) {
-DataServerMode = 4;
-DataServerRequest = llRequestDisplayName( llList2Key( requestBodyParts , 0 ) );
+DataServerRequests += [ llRequestDisplayName( llList2Key( requestBodyParts , 0 ) ) ];
+DataServerRequestTypes += [ 4 ];
+}
+if( "notecard-line-count" == subject ) {
+DataServerRequests += [ llGetNumberOfNotecardLines( llList2String( requestBodyParts , 0 ) ) ];
+DataServerRequestTypes += [ 5 ];
+}
+if( "notecard-line" == subject ) {
+DataServerRequests += [ llGetNotecardLine( llList2String( requestBodyParts , 0 ) , llList2Integer( requestBodyParts , 1 ) ) ];
+DataServerRequestTypes += [ 6 ];
 }
 return;
-}
 }
 if( "inv" == subject && isAdmin ) {
 if( llList2Integer( requestBodyParts , 0 ) < llGetInventoryNumber( INVENTORY_ALL ) ) {
@@ -523,8 +583,8 @@ llGetInventoryPermMask( inventoryName , MASK_EVERYONE ) ,
 llGetInventoryPermMask( inventoryName , MASK_NEXT )
 ];
 responseBody = llList2Json(
-JSON_ARRAY ,
-values
+JSON_ARRAY
+, values
 );
 }
 }
@@ -536,41 +596,42 @@ llSetContentType( requestId , responseContentType );
 llHTTPResponse( requestId , responseStatus , responseBody );
 }
 dataserver( key queryId , string data ) {
-if( queryId != DataServerRequest )
+integer requestIndex = llListFindList( DataServerRequests , [ queryId ] );
+if( -1 == requestIndex ) {
 return;
-if( NULL_KEY != DataServerResponse ) {
-llHTTPResponse( DataServerResponse , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
+}
+if( NULL_KEY != llList2Key( DataServerResponses , requestIndex ) ) {
+llHTTPResponse( llList2Key( DataServerResponses , requestIndex ) , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
+DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex );
+DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
+DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
+DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
 }
 llSetTimerEvent( 0.0 );
-DataServerResponse = NULL_KEY;
-DataServerRequest = NULL_KEY;
-DataServerMode = 0;
 }
 http_response( key requestId , integer responseStatus , list metadata , string responseBody ) {
-if( DataServerRequest != requestId ) {
+integer requestIndex = llListFindList( DataServerRequests , [ requestId ] );
+if( -1 == requestIndex ) {
 return;
 }
 string shortened = llJsonGetValue( responseBody , [ "id" ] );
 if( JSON_INVALID != shortened && JSON_NULL != shortened ) {
-if( 2 == DataServerMode ) {
+if( 1 == llList2Integer( DataServerRequestTypes , requestIndex ) ) {
+ShortenedInfoUrl = shortened;
+}
+if( 2 == llList2Integer( DataServerRequestTypes , requestIndex ) ) {
 ShortenedAdminUrl = shortened;
-DataServerMode = 0;
-DataServerRequest = NULL_KEY;
 llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
 }
-if( 1 == DataServerMode ) {
-ShortenedInfoUrl = shortened;
-DataServerMode = 2;
-Shorten( ShortenedAdminUrl );
-}
-} else if( 1 == DataServerMode || 2 == DataServerMode ) {
-DataServerMode = 0;
-DataServerRequest = NULL_KEY;
+} else if( 2 == llList2Integer( DataServerRequestTypes , requestIndex ) ) {
 llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
 }
+DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex );
+DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
+DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
+DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
 }
 touch_end( integer detected ) {
-integer whisperUrl = FALSE;
 while( 0 <= ( detected -= 1 ) ) {
 key detectedKey = llDetectedKey( detected );
 if( detectedKey == Owner ) {
@@ -585,18 +646,11 @@ llDialog( Owner , "No URLs are available on this parcel/sim, so the configuratio
 if( TotalPrice && !HasPermission ) {
 llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
 }
-} else {
-if( AllowWhisper ) {
-whisperUrl = TRUE;
-} else {
-llLoadURL( detectedKey , "For help, information, and statistics about this Easy Gacha, please go here" , ShortenedInfoUrl );
-}
 }
 if( Ready && !TotalPrice ) {
 Play( detectedKey , 0 );
 }
 }
-if( whisperUrl ) {
 if( llGetUnixTime() != LastWhisperedUrl ) {
 if( ShortenedInfoUrl ) {
 Whisper( "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
@@ -604,7 +658,6 @@ Whisper( "For help, information, and statistics about this Easy Gacha, please go
 Whisper( "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
 }
 LastWhisperedUrl = llGetUnixTime();
-}
 }
 Update();
 }

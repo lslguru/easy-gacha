@@ -23,8 +23,9 @@ TODO
 
 # Features #
 
-* Most configuration done automatically
+* No need to rename any items
 * Incredibly easy to configure
+* Most configuration done automatically
 * Detects and prevents most mistakes
 * Can set rarity per item
 * Supports 30+ items at a time
@@ -244,7 +245,6 @@ Space separated fields
 
 ## Work In Progress ##
 
-* Process everything from "old" directory, removing as I go
 * New scripting approach
 * Documentation
 * Release
@@ -252,42 +252,14 @@ Space separated fields
 
 ### SL Script ###
 
-* Report once every 24 hours and on each significant event
+* Report to registry once every 24 hours and on each significant event
 
 ### Configuration Page ###
 
-* Check that we have at least one thing to hand out
-* Check price == total payouts
-* Check buy button configs
-* List final rarity of each item
-* Root prim detection
 * If no-copy item is to be handed out
     * Max per purchase = 1 (and update buy buttons)
     * Folders turned off
-* Memory checks
-* Progress bars during operations
-* Serialized background operations
-* Style divs after Firestorm windows
-* Configured inventory not found
-* Auto-configure new inventory
-* Save data in localStorage, export/import JSON
-* Stats display with auto-reload
-* If price is zero
-    * Max per purchase = 1 (no way to tell how many times to play, update buy buttons)
-* Source code message and link in footer
-
-    // We have to build a list in memory of the items to be given in a folder. To
-    // prevent out of memory errors and exceedlingly long-running scripts (e.g.
-    // price is L$1 and gave it L$10,000), a max is enforced. The owner can choose
-    // a value below this, but not above this.
-    #define MAX_PER_PURCHASE 100
-
-    // When reporting via email, the max email body is effectively 3600 bytes. At
-    // MAX_INVENTORY_NAME_LENGTH times number of purchases with at least two
-    // characters of separation and including the name of the purchaser...
-    #define MAX_PER_PURCHASE_WITH_EMAIL 50
 
 ### Registry ###
 
 * Record all reports
-* Display paginated sortable/searchable list of Gacha boxes
