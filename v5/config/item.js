@@ -42,7 +42,8 @@ define( [
             , 'unlimitedBtn': '[data-column-contents=limit] .unlimited'
             , 'limitedBtn': '[data-column-contents=limit] .limited'
             , 'limitField': '[data-column-contents=limit] input'
-            , 'configImportBtn': '.config-import-btn'
+            , 'importBtn': '.config-import-btn'
+            , 'deleteBtn': '.item-delete-btn'
         }
 
         , events: {
@@ -51,11 +52,12 @@ define( [
             , 'click .set-limit': 'setLimitMode'
             , 'change [data-column-contents=limit] input': 'setLimit'
             , 'keyup [data-column-contents=limit] input': 'setLimit'
+            , 'click .item-delete-btn': 'deleteItem'
         }
 
         , modelEvents: {
-            'change:rarity': 'updateValues'
-            , 'change:limit': 'updateValues updateLimit'
+            'change:rarity': 'updateValues updateDeleteBtn'
+            , 'change:limit': 'updateValues updateLimit updateDeleteBtn'
         }
 
         , collectionEvents: {
@@ -100,16 +102,17 @@ define( [
 
             this.updateValues();
             this.updateLimit();
+            this.updateDeleteBtn();
 
             if( 'INVENTORY_NOTECARD' !== this.model.get( 'type' ) ) {
-                this.ui.configImportBtn.remove();
+                this.ui.importBtn.remove();
             } else if(
                 CONSTANTS.NULL_KEY === this.model.get( 'key' )
                 || !( this.model.get( 'ownerPermissions' ) & CONSTANTS.PERM_COPY )
                 || !( this.model.get( 'ownerPermissions' ) & CONSTANTS.PERM_MODIFY )
                 || !( this.model.get( 'ownerPermissions' ) & CONSTANTS.PERM_TRANSFER )
             ) {
-                this.ui.configImportBtn.prop( 'disabled', 'disabled' );
+                this.ui.importBtn.remove();
             }
         }
 
@@ -218,6 +221,16 @@ define( [
 
             this.ui.limitField.parent().removeClass( 'has-error' );
             this.model.set( 'limit' , limit );
+        }
+
+        , updateDeleteBtn: function() {
+            if( 'INVENTORY_NONE' !== this.model.get( 'type' ) ) {
+                this.ui.deleteBtn.remove();
+            }
+        }
+
+        , deleteItem: function() {
+            this.model.collection.remove( this.model );
         }
 
     } );
