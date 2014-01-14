@@ -313,15 +313,18 @@ responseBody = (
 "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
 + "<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n"
 + "    <head>\n"
-+ "        <script type=\"text/javascript\">document.easyGachaScriptVersion = 5.0;</script>\n"
++ "        <script type=\"text/javascript\">\n"
++ "            document.easyGachaScriptVersion = 5.0;\n"
++ "            document.body.innerHTML = 'Loading scripts, please wait...';\n"
++ "        </script>\n"
 + "        <script type=\"text/javascript\" src=\"" + "http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js" + "\"></script>\n"
 + "        <script type=\"text/javascript\">\n"
 + "            if( !window.easyGachaLoaded )\n"
-+ "                document.getElementById( 'loading' ).innerHTML = 'Error loading scripts, please refresh page';\n"
++ "                document.body.innerHTML = 'Error loading scripts, please refresh page';\n"
 + "        </script>\n"
 + "    </head>\n"
 + "    <body>\n"
-+ "        <div id=\"loading\">Please wait, loading...</div>\n"
++ "        <noscript>Please load this in your normal web browser with JavaScript enabled.</noscript>\n"
 + "    </body>\n"
 + "</html>"
 );
@@ -636,7 +639,7 @@ while( 0 <= ( detected -= 1 ) ) {
 key detectedKey = llDetectedKey( detected );
 if( detectedKey == Owner ) {
 if( ShortenedAdminUrl ) {
-llLoadURL( Owner , "To configure and administer this Easy Gacha, please go here. DO NOT GIVE THIS LINK TO ANYONE ELSE." , ShortenedAdminUrl );
+llOwnerSay( "To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
 } else if( "" == BaseUrl && llGetFreeURLs() ) {
 llOwnerSay( "Trying to get a new URL now... please wait" );
 RequestUrl();
