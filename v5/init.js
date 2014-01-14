@@ -55,6 +55,8 @@ require( {
 ) {
     'use strict';
 
+    document.body.innerHTML = 'Please use a different web browser. I suggest Chrome or FireFox.';
+
     var app = new Marionette.Application();
 
     app.addInitializer( function( options ) {
