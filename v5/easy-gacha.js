@@ -27,6 +27,13 @@
     el.setAttribute( 'content' , 'width=device-width, initial-scale=1.0' );
     document.head.appendChild( el );
 
+    // Let them know we're doing stuff
+    window.onload = function() {
+        var el = document.createElement( 'p' );
+        el.innerHTML = 'Please wait, loading...';
+        document.body.appendChild( el );
+    };
+
     // Use requirejs to load init.js
     el = document.createElement( 'script' );
     el.setAttribute( 'type' , 'text/javascript' );
