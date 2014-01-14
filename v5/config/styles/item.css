@@ -1,5 +1,5 @@
 #page-config [data-column-contents=permissions] ,
-#page-config [data-column-contents=rarity] .show-calculated-rarity ,
+#page-config [data-column-contents=rarity] .nowrap ,
 #page-config [data-column-contents=limit] ,
 #page-config [data-column-contents=action] {
     white-space: nowrap;

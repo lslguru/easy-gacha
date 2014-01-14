@@ -130,7 +130,7 @@ define( [
 
                     // NOTE: Doing this AFTER saving the fetchedJSON
                     if( this.get( 'items' ) && this.get( 'invs' ) ) {
-                        this.get( 'items' ).populate( this.get( 'invs' ) );
+                        this.get( 'items' ).populate( this.get( 'invs' ) , this.get( 'info' ).get( 'scriptName' ) );
                     }
 
                     if( success ) {

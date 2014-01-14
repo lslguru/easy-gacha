@@ -30,9 +30,9 @@ define( [
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
-            , 'allowHover': '#allowHover'
+            , 'allowHoverOff': '#allowHover-off'
+            , 'allowHoverOn': '#allowHover-on'
             , 'email': '#email'
-            , 'emailContainer': '#email-container'
             , 'imOff': '#im-off'
             , 'imOwner': '#im-owner'
             , 'imSelected': '#im-selected'
@@ -40,18 +40,21 @@ define( [
         }
 
         , events: {
-            'change #allowHover': 'updateConfigs'
-            , 'keyup #email': 'updateConfigs'
-            , 'change #email': 'updateConfigs'
+            'click #allowHover-off': 'setAllowHover'
+            , 'click #allowHover-on': 'setAllowHover'
+            , 'keyup #email': 'updateEmail'
+            , 'change #email': 'updateEmail'
+            , 'click #clear-email': 'clearEmail'
             , 'click #im-off': 'selectIm'
             , 'click #im-owner': 'selectIm'
             , 'click #im-selected': 'selectIm'
             , 'click #im-other': 'selectIm'
-            , 'click #clear-email': 'clearEmail'
         }
 
         , modelEvents: {
-            'change:im': 'updateImSelection'
+            'change:allowHover': 'updateSelections'
+            , 'change:email': 'updateSelections'
+            , 'change:im': 'updateSelections'
         }
 
         , onRender: function() {
@@ -61,28 +64,16 @@ define( [
                 , placement: tooltipPlacement
             } );
 
-            this.ui.allowHover.prop( 'checked' , this.model.get( 'allowHover' ) );
-            this.ui.email.val( this.model.get( 'email' ) || '' );
-
             this.ui.imOwner.text( this.options.gacha.get( 'info' ).get( 'ownerDisplayName' ) );
-            this.updateImSelection();
+            this.updateSelections();
         }
 
-        , updateConfigs: function() {
-            this.model.set( {
-                allowHover: Boolean( this.ui.allowHover.prop( 'checked' ) )
-                , email: this.ui.email.val()
-            } );
+        , updateSelections: function() {
+            this.ui.allowHoverOff.toggleClass( 'active' , !this.model.get( 'allowHover' ) );
+            this.ui.allowHoverOn.toggleClass( 'active' , this.model.get( 'allowHover' ) );
+            this.ui.email.parent().removeClass( 'has-error' );
+            this.ui.email.val( this.model.get( 'email' ) );
 
-            this.validate();
-        }
-
-        , clearEmail: function() {
-            this.ui.email.val( '' );
-            this.updateConfigs();
-        }
-
-        , updateImSelection: function() {
             this.ui.imOff.removeClass( 'active' );
             this.ui.imOwner.removeClass( 'active' );
             this.ui.imSelected.removeClass( 'active' ).hide();
@@ -96,6 +87,26 @@ define( [
             }
         }
 
+        , clearEmail: function() {
+            this.ui.email.val( '' );
+            this.updateEmail();
+        }
+
+        , setAllowHover: function( jEvent ) {
+            var target = $( jEvent.currentTarget );
+            var newValue = Boolean( parseInt( target.data( 'value' ) , 10 ) );
+            this.model.set( 'allowHover' , newValue );
+        }
+
+        , updateEmail: function() {
+            if( '' !== this.ui.email.val() && ! validateEmailAddress( this.ui.email.val() ) ) {
+                this.ui.email.parent().addClass( 'has-error' );
+            } else {
+                this.ui.email.parent().removeClass( 'has-error' );
+                this.model.set( 'email' , this.ui.email.val() );
+            }
+        }
+
         , selectIm: function( jEvent ) {
             var target = $( jEvent.currentTarget );
 
@@ -105,8 +116,6 @@ define( [
                     , imUserName: null
                     , imDisplayName: null
                 } );
-
-                this.updateImSelection();
             }
             if( this.ui.imOwner.is( target ) ) {
                 this.model.set( {
@@ -114,8 +123,6 @@ define( [
                     , imUserName: this.options.gacha.get( 'info' ).get( 'ownerUserName' )
                     , imDisplayName: this.options.gacha.get( 'info' ).get( 'ownerDisplayName' )
                 } );
-
-                this.updateImSelection();
             }
             if( this.ui.imOther.is( target ) ) {
                 this.options.lookupAgentDialog( {
@@ -125,18 +132,8 @@ define( [
                             , imUserName: agent.get( 'username' )
                             , imDisplayName: agent.get( 'displayname' )
                         } );
-
-                        this.updateImSelection();
                     } , this )
                 } );
-            }
-        }
-
-        , validate: function() {
-            if( '' !== this.ui.email.val() && ! validateEmailAddress( this.ui.email.val() ) ) {
-                this.ui.emailContainer.addClass( 'has-error' );
-            } else {
-                this.ui.emailContainer.removeClass( 'has-error' );
             }
         }
     } );

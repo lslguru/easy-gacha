@@ -1,0 +1,52 @@
+<div class="form-horizontal">
+
+    <div class="form-group" data-toggle="tooltip" title="This determines how much each play costs for one item">
+        <label class="col-sm-2 control-label">Price</label>
+        <div class="col-sm-10">
+            <div class="input-group">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button" id="price-free" data-extra-field="btn_price" value="0">Free</button>
+                </span>
+                <span class="input-group-addon"><i class="fa fa-money"></i></span>
+                <input type="number" class="form-control" placeholder="Price" id="btn-price" data-extra-field="btn_price" />
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group fade hide" id="price-buttons">
+        <label class="col-sm-2 control-label">Buttons</label>
+        <div class="col-sm-6">
+            <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in the &quot;choose amount&quot; box by default">
+                <span class="input-group-addon">Default Count</span>
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-default" data-extra-field="btn_default" />
+            </div>
+            <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #1">
+                <span class="input-group-addon">Button 1 Count</span>
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-0" data-extra-field="btn_0" />
+            </div>
+            <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #2">
+                <span class="input-group-addon">Button 2 Count</span>
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-1" data-extra-field="btn_1" />
+            </div>
+            <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #3">
+                <span class="input-group-addon">Button 3 Count</span>
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-2" data-extra-field="btn_2" />
+            </div>
+            <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #4">
+                <span class="input-group-addon">Button 4 Count</span>
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-3" data-extra-field="btn_3" />
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div id="pay-preview-background">
+                <div id="pay-preview-default">L$1</div>
+                <div id="pay-preview-button-0">L$1</div>
+                <div id="pay-preview-button-1">L$1</div>
+                <div id="pay-preview-button-2">L$1</div>
+                <div id="pay-preview-button-3">L$1</div>
+                <div id="pay-preview-name"></div>
+            </div>
+        </div>
+    </div>
+
+</div>

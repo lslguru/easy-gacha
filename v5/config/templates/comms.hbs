@@ -2,12 +2,16 @@
     <div class="panel-heading">
         <h2 class="panel-title">Output</h2>
     </div>
-    <div class="panel-body">
+    <div class="panel-body form-horizontal">
 
-        <div class="checkbox">
-            <label data-toggle="tooltip" title="If this box is checked, hovertext will be used to indicate when Easy Gacha is busy or unavailable">
-                <input id="allowHover" type="checkbox" /> Hovertext
-            </label>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" data-toggle="tooltip" title="When a person plays this Easy Gacha and receives only one item, should it be in a folder?">Hovertext</label>
+            <div class="col-sm-10">
+                <div class="btn-group" data-toggle="tooltip" title="If this is enabled, hovertext will be used to indicate when Easy Gacha is busy or unavailable">
+                    <button id="allowHover-off" class="btn btn-primary" data-value="0">Disabled</button>
+                    <button id="allowHover-on" class="btn btn-primary" data-value="1">Enabled</button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -17,25 +21,27 @@
     <div class="panel-heading">
         <h2 class="panel-title">Purchase Reports</h2>
     </div>
-    <div class="panel-body">
+    <div class="panel-body form-horizontal">
 
-        <div id="email-container" class="form-group">
-            <label data-toggle="tooltip" title="If provided, a list of items received for each purchase will be sent to you directly from Easy Gacha">
-                Email:
-                <i id="clear-email" class="fa fa-times-circle-o"></i>
+        <div class="form-group" data-toggle="tooltip" title="If this is enabled, hovertext will be used to indicate when Easy Gacha is busy or unavailable">
+            <label class="col-sm-2 control-label">Email</label>
+            <div class="col-sm-10">
                 <input type="email" class="form-control" id="email" placeholder="Email address" />
-            </label>
+                <i id="clear-email" class="fa fa-times-circle-o"></i>
+            </div>
         </div>
 
-        <div id="im-container" class="form-group">
-            <label data-toggle="tooltip" title="If set, a short message will be sent each time someone plays this Easy Gacha">
-                IM: <div class="btn-group">
+        <div class="form-group" data-toggle="tooltip" title="If set, a short message will be sent each time someone plays this Easy Gacha">
+            <label class="col-sm-2 control-label">IM</label>
+            <div class="col-sm-10">
+                <div class="btn-group">
                     <button id="im-off" type="button" class="btn btn-primary">Off</button>
                     <button id="im-owner" type="button" class="btn btn-primary"></button>
                     <button id="im-selected" type="button" class="btn btn-primary"></button>
                     <button id="im-other" type="button" class="btn btn-primary">Someone Else</button>
                 </div>
-            </label>
+            </div>
         </div>
+
     </div>
 </div>

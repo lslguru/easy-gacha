@@ -1,0 +1,78 @@
+#page-config #pay-preview-background {
+    position: relative;
+    width: 228px;
+    height: 212px;
+}
+
+#page-config #pay-preview-default ,
+#page-config #pay-preview-button-0 ,
+#page-config #pay-preview-button-1 ,
+#page-config #pay-preview-button-2 ,
+#page-config #pay-preview-button-3 ,
+#page-config #pay-preview-name {
+    position: absolute;
+}
+
+#page-config #pay-preview-default ,
+#page-config #pay-preview-button-0 ,
+#page-config #pay-preview-button-1 ,
+#page-config #pay-preview-button-2 ,
+#page-config #pay-preview-button-3 {
+    width: 72px;
+    height: 20px;
+    padding: 3px 0;
+
+    text-align: center;
+    font-size: 13px;
+    line-height: 13px;
+    color: #ffffff;
+}
+
+#page-config #pay-preview-default.pay-hide ,
+#page-config #pay-preview-button-0.pay-hide ,
+#page-config #pay-preview-button-1.pay-hide ,
+#page-config #pay-preview-button-2.pay-hide ,
+#page-config #pay-preview-button-3.pay-hide {
+    background-color: #3e3e3e;
+}
+
+#page-config #pay-preview-default {
+    width: 160px;
+    height: 32px;
+    left: 20px;
+    top: 144px;
+    padding-left: 84px;
+    padding-top: 14px;
+    color: #000000;
+}
+
+#page-config #pay-preview-button-0 {
+    left: 21px;
+    top: 88px;
+}
+
+#page-config #pay-preview-button-1 {
+    left: 106px;
+    top: 88px;
+}
+
+#page-config #pay-preview-button-2 {
+    left: 21px;
+    top: 116px;
+}
+
+#page-config #pay-preview-button-3 {
+    left: 106px;
+    top: 116px;
+}
+
+#page-config #price-buttons .input-group {
+    margin-bottom: 15px;
+}
+
+#page-config #pay-preview-name {
+    font-size: 10px;
+    top: 28px;
+    left: 8px;
+    color: #b5dd78;
+}

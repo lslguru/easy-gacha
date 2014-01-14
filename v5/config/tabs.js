@@ -7,6 +7,8 @@ define( [
     , 'css!config/styles/tabs'
     , 'bootstrap'
     , 'config/items'
+    , 'config/price'
+    // , 'config/payouts'
     , 'config/comms'
     , 'config/advanced'
     , 'config/export'
@@ -21,6 +23,8 @@ define( [
     , styles
     , bootstrap
     , ItemsView
+    , PriceView
+    // , PayoutsView
     , CommsView
     , AdvancedView
     , ExportView
@@ -62,6 +66,14 @@ define( [
             this.itemsTab.show( new ItemsView( _.extend( {} , this.options , {
                 collection: this.options.model.get( 'items' )
             } ) ) );
+
+            this.priceTab.show( new PriceView( this.options ) );
+
+            /* TODO:
+            this.payoutsTab.show( new PayoutsView( _.extend( {} , this.options , {
+                collection: this.options.model.get( 'payouts' )
+            } ) ) );
+            */
 
             this.commsTab.show( new CommsView( _.extend( {} , this.options , {
                 model: this.options.model.get( 'config' )

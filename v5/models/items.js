@@ -53,11 +53,11 @@ define( [
         }
 
         // Given an inventory list, create corresponding Item models
-        , populate: function( invs ) {
+        , populate: function( invs , scriptName ) {
             var hadItemsAtStart = Boolean( this.length );
 
             invs.each( function( inv ) {
-                if( ! this.get( inv.id ) ) {
+                if( ! this.get( inv.id ) && inv.id !== scriptName ) {
                     var model = new this.model();
 
                     _.each( inv.attributes , function( value , key ) {

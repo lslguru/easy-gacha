@@ -95,7 +95,14 @@ define( [
             try {
                 data[i] = JSON.parse( data[i] );
             } catch( e ) {
-                data[i] = {};
+                data[i] = {
+                    'btn_price': 0
+                    , 'btn_default': 1
+                    , 'btn_0': 1
+                    , 'btn_1': 5
+                    , 'btn_2': 10
+                    , 'btn_3': 25
+                };
             }
             parsed.extra = data[i++];
 
