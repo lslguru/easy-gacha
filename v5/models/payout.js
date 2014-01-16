@@ -19,12 +19,19 @@ define( [
 
     var exports = BaseModel.extend( {
         url: 'payout'
+        , idAttribute: 'agentKey'
+
+        , includeInNotecard: [
+            'agentKey'
+            , 'amount'
+            , 'userName'
+            , 'displayName'
+        ]
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
-            // TODO: Save
-
             return [
-                this.get( 'index' )
+                this.get( 'agentKey' )
+                , this.get( 'amount' )
             ];
         }
 

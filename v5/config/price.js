@@ -83,6 +83,8 @@ define( [
             var img = $(payWindowImage).clone();
             this.ui.payPreviewBg.prepend( img );
             this.updateDisplay();
+
+            this.listenTo( this.options.gacha.get( 'info' ) , 'change:extra' , this.updateDisplay );
         }
 
         , updateDisplay: function() {
@@ -157,7 +159,7 @@ define( [
 
             var set = {};
             set[ field ] = val;
-            _.extend( this.model.get( 'info' ).get( 'extra' ) , set );
+            this.model.get( 'info' ).set( 'extra' , _.extend( {} , this.model.get( 'info' ).get( 'extra' ) , set ) );
             this.setButtons();
             this.updateDisplay();
         }

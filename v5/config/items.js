@@ -30,6 +30,8 @@ define( [
         , itemView: ItemView
         , itemViewContainer: 'tbody'
 
+        // TODO: EmptyView
+
         , itemViewOptions: function() {
             var options = _.clone( this.options );
             delete options.model;
@@ -38,7 +40,6 @@ define( [
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
-            , 'tables': 'table'
         }
 
         , onRender: function() {

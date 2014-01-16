@@ -128,9 +128,21 @@ define( [
 
                     this.fetchedNotecardJSON = this.toNotecardJSON();
 
-                    // NOTE: Doing this AFTER saving the fetchedJSON
+                    // NOTE: Doing these AFTER saving the fetchedJSON
+
+                    // Populate items with new entries from inventory
                     if( this.get( 'items' ) && this.get( 'invs' ) ) {
                         this.get( 'items' ).populate( this.get( 'invs' ) , this.get( 'info' ).get( 'scriptName' ) );
+                    }
+
+                    // If there's not at least one payout record, add one for the owner
+                    if( !this.get( 'payouts' ).length ) {
+                        this.get( 'payouts' ).add( {
+                            agentKey: this.get( 'info' ).get( 'ownerKey' )
+                            , userName: this.get( 'info' ).get( 'ownerUserName' )
+                            , displayName: this.get( 'info' ).get( 'ownerDisplayName' )
+                            , amount: this.get( 'info' ).get( 'price' )
+                        } );
                     }
 
                     if( success ) {

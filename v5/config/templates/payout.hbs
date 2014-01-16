@@ -1,0 +1,14 @@
+<td data-column-contents="user" data-toggle="tooltip" data-tooltip-placement="right" title="{{agentKey}}" class="nowrap-this-element">
+    {{displayName}} ({{userName}})
+</td>
+
+<td data-column-contents="payout" data-toggle="tooltip" data-tooltip-placement="top" title="{{#if isOwner}}The owner gets the price minus any other payouts{{else}}This is how many lindens they will receive{{/if}}">
+    <div class="input-group">
+        <span class="input-group-addon"><i class="fa fa-money"></i> Lindens</span>
+        <input class="form-control payout-amount" type="number" placeholder="Lindens" data-aria-valuemin="0" />
+    </div>
+</td>
+
+<td data-column-contents="action" class="nowrap-this-element">
+    <button class="payout-delete-btn btn btn-primary" type="button"><i class="fa fa-trash-o"></i> Remove</button>
+</td>
