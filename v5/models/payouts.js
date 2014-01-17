@@ -17,13 +17,16 @@ define( [
         , initialize: function() {
             BaseCollection.prototype.initialize.apply( this , arguments );
 
-            this.bind( 'reset' , function() {
-                this.totalPrice = 0;
-            } , this );
+            this.on( 'reset' , this.updateTotalPrice , this );
+            this.on( 'add' , this.updateTotalPrice , this );
+            this.on( 'remove' , this.updateTotalPrice , this );
+            this.on( 'change:amount' , this.updateTotalPrice , this );
+        }
 
-            this.bind( 'add' , function( model ) {
-                this.totalPrice += model.get( 'amount' );
-            } , this );
+        , updateTotalPrice: function() {
+            this.totalPrice = this.reduce( function( memo , model ) {
+                return memo + model.get( 'amount' )
+            } , 0 );
         }
     } );
 

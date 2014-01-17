@@ -49,12 +49,21 @@ define( [
                 model: Info
                 , weight: 10
                 , adminOnly: false
+                , fetch: true
+            }
+
+            , info_extra: {
+                model: Backbone.Model
+                , weight: 0
+                , adminOnly: false
+                , fetch: false
             }
 
             , config: {
                 model: Config
                 , weight: 10
                 , adminOnly: true
+                , fetch: true
             }
 
             , payouts: {
@@ -62,6 +71,7 @@ define( [
                 , weight: 20
                 , adminOnly: true
                 , progress: _.partial( submodelProgress , 'payoutsProgressPercentage' , 'payoutCount' )
+                , fetch: true
             }
 
             , items: {
@@ -69,6 +79,7 @@ define( [
                 , weight: 30
                 , adminOnly: false
                 , progress: _.partial( submodelProgress , 'itemsProgressPercentage' , 'itemCount' )
+                , fetch: true
             }
 
             , invs: {
@@ -76,6 +87,7 @@ define( [
                 , weight: 30
                 , adminOnly: true
                 , progress: _.partial( submodelProgress , 'invsProgressPercentage' , 'inventoryCount' )
+                , fetch: true
             }
 
         }
@@ -84,14 +96,58 @@ define( [
             this.on( 'change' , this.updateProgress , this );
 
             _.each( this.submodels , function( submodelConfig , name ) {
-                this.set( name , new submodelConfig.model() , { silent: true } );
+                this.set( name , new submodelConfig.model( {} , { gacha: this } ) , { silent: true } );
                 this.set( name + 'ProgressPercentage' , 0 , { silent: true } );
 
                 // Echo all sub-model events as native on this model
                 this.get( name ).on( 'all' , function() {
                     this.trigger.apply( this , arguments );
                 } , this );
+
+                this.on( 'change:' + name , this.listenToSubmodels , this );
             } , this );
+
+            this.listenToSubmodels();
+        }
+
+        , listenToSubmodels: function() {
+            this.stopListening( null , null , null );
+
+            this.listenTo( this.get( 'info' ) , 'change:extra' , this.updateExtraFromInfo );
+            this.listenTo( this.get( 'info_extra' ) , 'change' , this.updateInfoFromExtra );
+
+            this.listenTo( this.get( 'info_extra' ) , 'change:btn_price' , this.recalculateOwnerAmount );
+            this.listenTo( this.get( 'payouts' ) , 'add' , this.recalculateOwnerAmount );
+            this.listenTo( this.get( 'payouts' ) , 'remove' , this.recalculateOwnerAmount );
+            this.listenTo( this.get( 'payouts' ) , 'reset' , this.recalculateOwnerAmount );
+            this.listenTo( this.get( 'payouts' ) , 'change:amount' , this.recalculateOwnerAmount );
+        }
+
+        , updateExtraFromInfo: function() {
+            this.get( 'info_extra' ).set( this.get( 'info' ).get( 'extra' ) );
+        }
+
+        , updateInfoFromExtra: function() {
+            this.get( 'info' ).set( 'extra' , _.clone( this.get( 'info_extra' ).attributes ) );
+        }
+
+        , recalculateOwnerAmount: function() {
+            var ownerPayout = this.get( 'payouts' ).get( this.get( 'info' ).get( 'ownerKey' ) );
+
+            if( ! ownerPayout ) {
+                return;
+            }
+
+            ownerPayout.set( 'amount' , (
+                // The new price
+                this.get( 'info_extra' ).get( 'btn_price' )
+
+                // Minus the total of all payouts
+                - this.get( 'payouts' ).totalPrice
+
+                // But don't count the owner in total payouts
+                + ownerPayout.get( 'amount' )
+            ) );
         }
 
         , updateProgress: function() {
@@ -156,10 +212,11 @@ define( [
                 var submodelConfig = this.submodels[ submodelName ];
                 var submodel = this.get( submodelName );
 
-                // Skip admin-only if we're not admin
+                // Skip admin-only if we're not admin or non-fetching submodels
                 if(
                     ( !options.loadAdmin && submodelConfig.adminOnly )
                     || ( ! adminKey.load() && submodelConfig.adminOnly )
+                    || !submodelConfig.fetch
                 ) {
                     this.set( submodelName + 'ProgressPercentage' , 100 );
                     next();
@@ -207,7 +264,7 @@ define( [
 
         , fromNotecardJSON: function() {
             var returnValue = BaseSlModel.prototype.fromNotecardJSON.apply( this , arguments );
-            this.get( 'items' ).populate( this.get( 'invs' ) );
+            this.get( 'items' ).populate( this.get( 'invs' ) , this.get( 'info' ).get( 'scriptName' ) );
             return returnValue;
         }
 
@@ -224,6 +281,10 @@ define( [
             } , this );
 
             return json;
+        }
+
+        , hasChangedSinceFetch: function() {
+            return ! _.isEqual( this.toNotecardJSON() , this.fetchedNotecardJSON );
         }
     } );
 

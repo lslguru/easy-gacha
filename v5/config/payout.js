@@ -55,35 +55,10 @@ define( [
             if( this.options.gacha.get( 'info' ).get( 'ownerKey' ) === this.model.get( 'agentKey' ) ) {
                 this.ui.deleteBtn.remove();
                 this.ui.amount.attr( 'readonly' , 'readonly' );
-
-                this.options.gacha.get( 'info' ).on( 'change:extra' , this.recalculateOwnerAmount , this );
-                this.options.gacha.get( 'payouts' ).on( 'add' , this.recalculateOwnerAmount , this );
-                this.options.gacha.get( 'payouts' ).on( 'remove' , this.recalculateOwnerAmount , this );
-                this.options.gacha.get( 'payouts' ).on( 'reset' , this.recalculateOwnerAmount , this );
-                this.options.gacha.get( 'payouts' ).on( 'change:amount' , this.recalculateOwnerAmount , this );
             }
 
             this.ui.amount.val( '0' ); // In case no amount is set
             this.updateAmount();
-        }
-
-        , recalculateOwnerAmount: function() {
-            this.model.set( 'amount' , (
-                // The new price
-                this.options.gacha.get( 'info' ).get( 'extra' ).btn_price
-
-                // Minus the total of all payouts
-                - this.model.collection.reduce( function( memo , model ) {
-                    return memo + model.get( 'amount' );
-                } , 0 )
-
-                // But don't count the owner in total payouts
-                + this.model.get( 'amount' )
-            ) );
-
-            if( 0 > this.model.get( 'amount' ) ) {
-                this.ui.amount.parent().addClass( 'has-error' );
-            }
         }
 
         , updateAmount: function() {
@@ -91,6 +66,10 @@ define( [
 
             if( this.ui.amount.val() != this.model.get( 'amount' ) ) {
                 this.ui.amount.val( this.model.get( 'amount' ) );
+            }
+
+            if( 0 > this.model.get( 'amount' ) ) {
+                this.ui.amount.parent().addClass( 'has-error' );
             }
         }
 

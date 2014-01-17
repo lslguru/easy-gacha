@@ -75,7 +75,7 @@ define( [
             var parsed = {};
 
             parsed.folderForSingleItem = Boolean( parseInt( data[i++] , 10 ) );
-            parsed.rootClickAction = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.rootClickAction = parseInt( data[i++] , 10 ); // -1 == not asked, otherwise boolean via int
             parsed.group = Boolean( parseInt( data[i++] , 10 ) );
             parsed.allowHover = Boolean( parseInt( data[i++] , 10 ) );
             parsed.maxPerPurchase = parseInt( data[i++] , 10 );

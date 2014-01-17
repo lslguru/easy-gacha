@@ -23,8 +23,6 @@ define( [
 ) {
     'use strict';
 
-    // _.reduce( JSON.stringify( gacha.toJSON() , null , 1 ).split( '\n' ) , function( memo , line ) { if( line.length > memo ) return line.length; return memo; } , 0 );
-
     var exports = Marionette.ItemView.extend( {
         template: template
 

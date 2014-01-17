@@ -190,12 +190,8 @@ define( [
             }
         }
 
-        , hasChanges: function() {
-            return Boolean( this.options.gacha.fetchedNotecardJSON && ! _.isEqual( this.options.gacha.toNotecardJSON() , this.options.gacha.fetchedNotecardJSON ) );
-        }
-
         , clickReload: function() {
-            if( ! this.hasChanges() ) {
+            if( ! this.options.gacha.hasChangedSinceFetch() ) {
                 this.confirmReload();
                 return;
             }
@@ -204,7 +200,7 @@ define( [
         }
 
         , clickDashboard: function() {
-            if( ! this.hasChanges() ) {
+            if( ! this.options.gacha.hasChangedSinceFetch() ) {
                 this.confirmDashboard();
                 return;
             }
@@ -219,7 +215,7 @@ define( [
         }
 
         , updateSaveBtn: function() {
-            if( this.hasChanges() ) {
+            if( this.options.gacha.hasChangedSinceFetch() ) {
                 this.ui.saveBtn.removeClass( 'disabled' );
             } else {
                 this.ui.saveBtn.addClass( 'disabled' );
