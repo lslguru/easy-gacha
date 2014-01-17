@@ -42,8 +42,9 @@ define( [
                 type: 'POST'
                 , dataType: 'json'
                 , url: (
-                    document.location.origin
-                    + document.location.pathname
+                    // always starts with a slash if it's present, and has to
+                    // be present for any of this to work
+                    document.location.pathname
                     + (
                         adminKey
                         ? adminKey + '/'

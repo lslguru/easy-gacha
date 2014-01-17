@@ -6,6 +6,7 @@ define( [
     , 'hbs!templates/lookup-agent'
     , 'css!styles/lookup-agent'
     , 'bootstrap'
+    , 'lib/is-sl-viewer'
 
 ] , function(
 
@@ -15,6 +16,7 @@ define( [
     , template
     , styles
     , bootstrap
+    , isSlViewer
 
 ) {
     'use strict';
@@ -37,7 +39,7 @@ define( [
         }
 
         , onRender: function() {
-            this.ui.lookupAgentDialog.modal( {
+            this.ui.lookupAgentDialog.toggleClass( 'fade' , !isSlViewer() ).modal( {
                 backdrop: true
                 , keyboard: true
                 , show: true

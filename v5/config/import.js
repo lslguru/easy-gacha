@@ -9,6 +9,7 @@ define( [
     , 'lib/constants'
     , 'lib/tooltip-placement'
     , 'models/notecard'
+    , 'lib/is-sl-viewer'
 
 ] , function(
 
@@ -21,6 +22,7 @@ define( [
     , CONSTANTS
     , tooltipPlacement
     , Notecard
+    , isSlViewer
 
 ) {
     'use strict';
@@ -59,13 +61,13 @@ define( [
                 , placement: tooltipPlacement
             } );
 
-            this.ui.importErrorModal.modal( {
+            this.ui.importErrorModal.toggleClass( 'fade' , !isSlViewer() ).modal( {
                 backdrop: true
                 , keyboard: true
                 , show: false
             } );
 
-            this.ui.importSuccessModal.modal( {
+            this.ui.importSuccessModal.toggleClass( 'fade' , !isSlViewer() ).modal( {
                 backdrop: true
                 , keyboard: true
                 , show: false

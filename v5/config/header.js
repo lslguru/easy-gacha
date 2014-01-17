@@ -7,6 +7,7 @@ define( [
     , 'lib/constants'
     , 'lib/tooltip-placement'
     , 'lib/map-uri'
+    , 'lib/is-sl-viewer'
 
 ] , function(
 
@@ -17,6 +18,7 @@ define( [
     , CONSTANTS
     , tooltipPlacement
     , mapUri
+    , isSlViewer
 
 ) {
     'use strict';
@@ -148,13 +150,13 @@ define( [
 
             this.ui.dropdowns.dropdown();
 
-            this.ui.dashboardConfirmation.modal( {
+            this.ui.dashboardConfirmation.toggleClass( 'fade' , !isSlViewer() ).modal( {
                 backdrop: true
                 , keyboard: true
                 , show: false
             } );
 
-            this.ui.reloadConfirmation.modal( {
+            this.ui.reloadConfirmation.toggleClass( 'fade' , !isSlViewer() ).modal( {
                 backdrop: true
                 , keyboard: true
                 , show: false
@@ -170,8 +172,8 @@ define( [
             } , this );
 
             if( jEvent ) {
-                this.ui.reloadConfirmation.modal( 'hide' );
                 this.ui.reloadConfirmation.one( 'hidden.bs.modal' , moveAlong );
+                this.ui.reloadConfirmation.modal( 'hide' );
             } else {
                 moveAlong();
             }
@@ -183,8 +185,8 @@ define( [
             } , this );
 
             if( jEvent ) {
-                this.ui.dashboardConfirmation.modal( 'hide' );
                 this.ui.dashboardConfirmation.one( 'hidden.bs.modal' , moveAlong );
+                this.ui.dashboardConfirmation.modal( 'hide' );
             } else {
                 moveAlong();
             }

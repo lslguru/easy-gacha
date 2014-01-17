@@ -30,7 +30,6 @@ define( [
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
-            , 'btn_free': '#price-free'
             , 'btn_price': '#btn-price'
             , 'btn_default': '#btn-default'
             , 'btn_0': '#btn-0'
@@ -56,8 +55,7 @@ define( [
         }
 
         , events: {
-            'click #price-free': 'setField'
-            , 'change #btn-price': 'setField'
+            'change #btn-price': 'setField'
             , 'keyup #btn-price': 'setField'
             , 'change #btn-default': 'setField'
             , 'keyup #btn-default': 'setField'
@@ -101,8 +99,6 @@ define( [
             }
 
             this.ui.btn_price.parent().removeClass( 'has-error' );
-
-            this.ui.btn_free.toggleClass( 'active' , 0 === btn_price );
 
             _.each( [ 'default' , '0' , '1' , '2' , '3' ] , function( btn ) {
                 if( extra.get( 'btn_' + btn ) != this.ui[ 'btn_' + btn ].val() ) {

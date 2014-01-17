@@ -9,3 +9,8 @@
 #page-config button:not(.disabled) .if-disabled {
     display: none;
 }
+
+#page-config #header .alert.sl-viewer-only .fa-info-circle {
+    float: left;
+    margin-right: 0.5em;
+}

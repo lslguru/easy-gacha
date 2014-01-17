@@ -3,3 +3,7 @@ body {
     overflow-x: hidden;
     overflow-y: auto;
 }
+
+body:not(.sl-viewer) .sl-viewer-only {
+    display: none;
+}

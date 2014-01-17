@@ -40,4 +40,16 @@
     el.setAttribute( 'data-main' , mydir + 'init' + ( dev ? '' : '.min' ) + '.js' );
     el.setAttribute( 'src' , mydir + 'vendor/require.js' );
     document.head.appendChild( el );
+
+    // A generic catch-all for errors to give us some idea what went wrong in
+    // the SecondLife Viewer's Browser. Note: This is ugly, and intolerant of
+    // uncaught but harmless errors.
+    window.onerror = function( msg , url , lineNumber ) {
+        document.body.innerHTML = (
+            'Something went wrong. Please send this to the developer:<br />'
+            + 'Message: <pre>' + msg + '</pre><br />'
+            + 'URL: <pre>' + url + '</pre><br />'
+            + 'LineNumber: <pre>' + lineNumber + '</pre><br />'
+        );
+    };
 })();

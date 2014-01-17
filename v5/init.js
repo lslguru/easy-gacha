@@ -42,6 +42,8 @@ require( {
     , 'models/info'
     , 'css!styles/page'
     , 'css!vendor/font-awesome-4.0.3/css/font-awesome'
+    , 'jquery'
+    , 'lib/is-sl-viewer'
 
 ] , function(
 
@@ -51,6 +53,8 @@ require( {
     , Info
     , pageStyles
     , fontawesome // pre-loaded for entire project
+    , $
+    , isSlViewer
 
 ) {
     'use strict';
@@ -66,6 +70,12 @@ require( {
     app.addInitializer( function( options ) {
         this.router = new AppRouter( options );
         Backbone.history.start( { } );
+    } );
+
+    app.addInitializer( function( options ) {
+        if( isSlViewer() ) {
+            $( document.body ).addClass( 'sl-viewer' );
+        }
     } );
 
     app.addRegions( {
