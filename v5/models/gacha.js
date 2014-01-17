@@ -164,6 +164,28 @@ define( [
             this.set( 'progressPercentage' , progressPercentage );
         }
 
+        , dataInitializations: function( admin ) {
+            // Everything from here on is admin-only
+            if( !admin ) {
+                return;
+            }
+
+            // Populate items with new entries from inventory
+            if( this.get( 'items' ) && this.get( 'invs' ) ) {
+                this.get( 'items' ).populate( this.get( 'invs' ) , this.get( 'info' ).get( 'scriptName' ) );
+            }
+
+            // If there's not at least one payout record, add one for the owner
+            if( !this.get( 'payouts' ).length ) {
+                this.get( 'payouts' ).add( {
+                    agentKey: this.get( 'info' ).get( 'ownerKey' )
+                    , userName: this.get( 'info' ).get( 'ownerUserName' )
+                    , displayName: this.get( 'info' ).get( 'ownerDisplayName' )
+                    , amount: this.get( 'info' ).get( 'price' )
+                } );
+            }
+        }
+
         , fetch: function( options ) {
             // Input normalization
             options = options || {};
@@ -185,21 +207,7 @@ define( [
                     this.fetchedNotecardJSON = this.toNotecardJSON();
 
                     // NOTE: Doing these AFTER saving the fetchedJSON
-
-                    // Populate items with new entries from inventory
-                    if( this.get( 'items' ) && this.get( 'invs' ) ) {
-                        this.get( 'items' ).populate( this.get( 'invs' ) , this.get( 'info' ).get( 'scriptName' ) );
-                    }
-
-                    // If there's not at least one payout record, add one for the owner
-                    if( !this.get( 'payouts' ).length ) {
-                        this.get( 'payouts' ).add( {
-                            agentKey: this.get( 'info' ).get( 'ownerKey' )
-                            , userName: this.get( 'info' ).get( 'ownerUserName' )
-                            , displayName: this.get( 'info' ).get( 'ownerDisplayName' )
-                            , amount: this.get( 'info' ).get( 'price' )
-                        } );
-                    }
+                    this.dataInitializations( options.loadAdmin );
 
                     if( success ) {
                         success();
