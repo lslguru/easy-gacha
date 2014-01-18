@@ -50,6 +50,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="reload-save-first" class="btn btn-default">Save and Reload</button>
                     <button id="reload-confirm" class="btn btn-primary">Reload</button>
                 </div>
             </div>
@@ -77,5 +78,9 @@
     </h1>
     <div>
         {{objectDesc}}
+    </div>
+    <div class="alert alert-info fade in" id="first-run-message">
+        <button class="close" data-dismiss="alert" aria-hidden="true">&#215;</button>
+        <i class="fa fa-info-circle"></i> Welcome to Easy Gacha! We set some defaults for you, but they have not been saved yet.
     </div>
 </div>

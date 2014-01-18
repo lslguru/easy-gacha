@@ -38,6 +38,8 @@ define( [
             , progressPercentage: 0
             , agentsCache: agentsCache
             , overrideProgress: null
+            , hasChangesToSave: false
+            , autoModified: true
 
             // From models/info
             , isAdmin: null
@@ -75,6 +77,7 @@ define( [
             , btn_1: null
             , btn_2: null
             , btn_3: null
+            , zeroPriceOkay: false
 
             // From models/config
             , folderForSingleItem: null
@@ -102,6 +105,7 @@ define( [
             , 'btn_1'
             , 'btn_2'
             , 'btn_3'
+            , 'zeroPriceOkay'
             , 'folderForSingleItem'
             , 'rootClickAction'
             , 'group'
@@ -192,6 +196,7 @@ define( [
 
             this.listenTo( this , 'change:btn_price' , this.recalculateOwnerAmount );
             this.listenTo( this.get( 'payouts' ) , 'add remove reset change:amount' , this.recalculateOwnerAmount );
+            this.listenTo( this , 'all' , this.updateChangesToSave );
         }
 
         , recalculateOwnerAmount: function() {
@@ -247,6 +252,13 @@ define( [
                     , amount: this.get( 'price' )
                 } );
             }
+
+            // If we've modified settings on a fetch, count that as a first-run
+            if( this.get( 'hasChangesToSave' ) ) {
+                this.set( 'autoModified' , true );
+            } else {
+                this.set( 'autoModified' , false );
+            }
         }
 
         , fetch: function( options ) {
@@ -257,7 +269,10 @@ define( [
             var submodelNames = _.keys( this.submodels );
             var success = options.success;
 
-            // Set my initial progress
+            // Reset all progress
+            _.each( this.submodels , function( submodelConfig ) {
+                submodelConfig.progressPercentage = 0;
+            } , this );
             this.set( 'progressPercentage' , 0 );
             this.updateProgress();
 
@@ -266,14 +281,17 @@ define( [
                 // Get next submodelName or we're done
                 var submodelName = submodelNames.shift();
                 if( ! submodelName ) {
-                    this.set( 'progressPercentage' , 100 );
-                    this.updateProgress();
-
+                    // Cache the finalized fetched data meant for export/import
                     this.fetchedNotecardJSON = this.toNotecardJSON();
 
                     // NOTE: Doing these AFTER saving the fetchedJSON
                     this.dataInitializations( options.loadAdmin );
 
+                    // Now tell everyone that we're done
+                    this.set( 'progressPercentage' , 100 );
+                    this.updateProgress();
+
+                    // And call any specific completion request
                     if( success ) {
                         success();
                     }
@@ -351,8 +369,8 @@ define( [
             return returnValue;
         }
 
-        , hasChangedSinceFetch: function() {
-            return ! _.isEqual( this.toNotecardJSON() , this.fetchedNotecardJSON );
+        , updateChangesToSave: function() {
+            this.set( 'hasChangesToSave' , ! _.isEqual( this.toNotecardJSON() , this.fetchedNotecardJSON ) );
         }
     } );
 

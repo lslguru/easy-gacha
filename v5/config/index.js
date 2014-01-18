@@ -45,7 +45,7 @@ define( [
 
         , loaderView: function() {
             if( 100 !== this.model.get( 'progressPercentage' ) ) {
-                if( undefined === this.loader.currentView ) {
+                if( !this.loader.currentView ) {
                     this.header.close();
                     this.tabs.close();
                     this.lookupAgent.close();

@@ -9,6 +9,7 @@ define( [
     , 'lib/constants'
     , 'lib/tooltip-placement'
     , 'config/item'
+    , 'config/items-empty'
 
 ] , function(
 
@@ -21,6 +22,7 @@ define( [
     , CONSTANTS
     , tooltipPlacement
     , ItemView
+    , EmptyView
 
 ) {
     'use strict';
@@ -29,8 +31,7 @@ define( [
         template: template
         , itemView: ItemView
         , itemViewContainer: 'tbody'
-
-        // TODO: EmptyView
+        , emptyView: EmptyView
 
         , itemViewOptions: function() {
             var options = _.clone( this.options );

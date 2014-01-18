@@ -46,10 +46,7 @@
     // uncaught but harmless errors.
     window.onerror = function( msg , url , lineNumber ) {
         document.body.innerHTML = (
-            'Something went wrong. Please send this to the developer:<br />'
-            + 'Message: <pre>' + msg + '</pre><br />'
-            + 'URL: <pre>' + url + '</pre><br />'
-            + 'LineNumber: <pre>' + lineNumber + '</pre><br />'
+            'Something went wrong. Please refresh the page and try again.'
         );
     };
 })();

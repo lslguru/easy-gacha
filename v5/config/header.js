@@ -26,31 +26,36 @@ define( [
     var exports = Marionette.ItemView.extend( {
         template: template
 
-        , events: {
-            'click #dashboard': 'clickDashboard'
-            , 'click #dashboard-confirm': 'confirmDashboard'
-            , 'click #reload': 'clickReload'
-            , 'click #reload-confirm': 'confirmReload'
-            , 'click #save': 'clickSave'
-        }
-
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
             , 'dropdowns': '[data-toggle=dropdown]'
             , 'dashboardConfirmation': '#dashboard-confirmation'
+            , 'dashboardConfirmed': '#dashboard-confirm'
+            , 'reloadButton': '#reload'
             , 'reloadConfirmation': '#reload-confirmation'
-            , 'saveBtn': '#save'
+            , 'reloadConfirmed': '#reload-confirm'
+            , 'reloadSaveFirst': '#reload-save-first'
+            , 'saveButton': '#save'
+            , 'dashboardBtn': '#dashboard'
+            , 'firstRunMessage': '#first-run-message'
+        }
+
+        , events: {
+            'click @ui.dashboardBtn': 'clickDashboard'
+            , 'click @ui.dashboardConfirmed': 'confirmDashboard'
+            , 'click @ui.reloadButton': 'clickReload'
+            , 'click @ui.reloadConfirmed': 'confirmReload'
+            , 'click @ui.reloadSaveFirst': 'confirmReloadSaveFirst'
+            , 'click @ui.saveButton': 'clickSave'
         }
 
         , modelEvents: {
-            'change': 'updateSaveBtn'
-            , 'add': 'updateSaveBtn'
-            , 'remove': 'updateSaveBtn'
-            , 'reset': 'updateSaveBtn'
+            'change:hasChangesToSave': 'updateSaveBtn'
         }
 
         , initialize: function() {
             this.constructor.__super__.initialize.apply( this , arguments );
+            this.listenTo( this.options.app.vent , 'reloadRequested' , this.clickReload );
         }
 
         , templateHelpers: function() {
@@ -162,12 +167,31 @@ define( [
             } );
 
             this.updateSaveBtn();
+
+            if( ! this.model.get( 'autoModified' ) ) {
+                this.ui.firstRunMessage.remove();
+            }
+        }
+
+        , confirmReloadSaveFirst: function( jEvent ) {
+            var moveAlong = _.bind( function() {
+                this.model.save( {
+                    success: _.bind( function() {
+                        this.options.app.router.navigate( 'temp' , { replace: true } );
+                        this.options.app.router.navigate( 'config' , { trigger: true , replace: true } );
+                    } , this )
+                } );
+            } , this );
+
+            this.ui.reloadConfirmation.one( 'hidden.bs.modal' , moveAlong );
+            this.ui.reloadConfirmation.modal( 'hide' );
         }
 
         , confirmReload: function( jEvent ) {
             var moveAlong = _.bind( function() {
-                this.options.app.router.navigate( 'temp' , { replace: true } );
-                this.options.app.router.navigate( 'config' , { trigger: true , replace: true } );
+                this.model.fetch( {
+                    loadAdmin: true
+                } );
             } , this );
 
             if( jEvent ) {
@@ -192,7 +216,7 @@ define( [
         }
 
         , clickReload: function() {
-            if( ! this.model.hasChangedSinceFetch() ) {
+            if( ! this.model.get( 'hasChangesToSave' ) ) {
                 this.confirmReload();
                 return;
             }
@@ -201,7 +225,7 @@ define( [
         }
 
         , clickDashboard: function() {
-            if( ! this.model.hasChangedSinceFetch() ) {
+            if( ! this.model.get( 'hasChangesToSave' ) ) {
                 this.confirmDashboard();
                 return;
             }
@@ -210,16 +234,17 @@ define( [
         }
 
         , clickSave: function() {
-            if( ! this.ui.saveBtn.hasClass( 'disabled' ) ) {
+            if( ! this.ui.saveButton.hasClass( 'disabled' ) ) {
                 this.model.save();
+                this.model.set( 'overrideProgress' , 0 );
             }
         }
 
         , updateSaveBtn: function() {
-            if( this.model.hasChangedSinceFetch() ) {
-                this.ui.saveBtn.removeClass( 'disabled' );
+            if( this.model.get( 'hasChangesToSave' ) ) {
+                this.ui.saveButton.removeClass( 'disabled' );
             } else {
-                this.ui.saveBtn.addClass( 'disabled' );
+                this.ui.saveButton.addClass( 'disabled' );
             }
         }
     } );

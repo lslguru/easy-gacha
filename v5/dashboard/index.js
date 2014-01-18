@@ -52,15 +52,15 @@ define( [
                 }
             } , this );
 
-            function updatePageTitle() {
+            var updatePageTitle = _.bind( function() {
                 if( this.model.get( 'objectName' ) ) {
                     document.title = this.model.get( 'objectName' ) + ' - Easy Gacha Dashboard';
                 } else {
                     document.title = 'Easy Gacha Dashboard';
                 }
-            }
+            } , this );
 
-            this.model.on( 'change:objectName' , updatePageTitle , this );
+            this.model.on( 'change:objectName' , updatePageTitle );
             updatePageTitle();
             this.model.fetch();
         }
