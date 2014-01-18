@@ -64,7 +64,7 @@ define( [
                 , placement: tooltipPlacement
             } );
 
-            this.ui.imOwner.text( this.options.gacha.get( 'info' ).get( 'ownerDisplayName' ) );
+            this.ui.imOwner.text( this.model.get( 'ownerDisplayName' ) );
             this.updateSelections();
         }
 
@@ -80,7 +80,7 @@ define( [
 
             if( CONSTANTS.NULL_KEY === this.model.get( 'im' ) ) {
                 this.ui.imOff.addClass( 'active' );
-            } else if( this.options.gacha.get( 'info' ).get( 'ownerKey' ) === this.model.get( 'im' ) ) {
+            } else if( this.model.get( 'ownerKey' ) === this.model.get( 'im' ) ) {
                 this.ui.imOwner.addClass( 'active' );
             } else {
                 this.ui.imSelected.addClass( 'active' ).show().text( this.model.get( 'imDisplayName' ) );
@@ -119,9 +119,9 @@ define( [
             }
             if( this.ui.imOwner.is( target ) ) {
                 this.model.set( {
-                    im: this.options.gacha.get( 'info' ).get( 'ownerKey' )
-                    , imUserName: this.options.gacha.get( 'info' ).get( 'ownerUserName' )
-                    , imDisplayName: this.options.gacha.get( 'info' ).get( 'ownerDisplayName' )
+                    im: this.model.get( 'ownerKey' )
+                    , imUserName: this.model.get( 'ownerUserName' )
+                    , imDisplayName: this.model.get( 'ownerDisplayName' )
                 } );
             }
             if( this.ui.imOther.is( target ) ) {

@@ -41,23 +41,6 @@ define( [
             , setFolderName: null
         }
 
-        , includeInNotecard: [
-            'folderForSingleItem'
-            , 'rootClickAction'
-            , 'group'
-            , 'allowHover'
-            , 'maxPerPurchase'
-            , 'maxBuys'
-            , 'payPrice'
-            , 'payPriceButton0'
-            , 'payPriceButton1'
-            , 'payPriceButton2'
-            , 'payPriceButton3'
-            , 'email'
-            , 'im'
-            , 'setFolderName'
-        ]
-
         , toPostJSON: function( options , syncMethod , xhrType ) {
             // TODO: Save
 

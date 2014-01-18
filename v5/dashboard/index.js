@@ -33,48 +33,36 @@ define( [
         }
 
         , onRender: function() {
-            var gacha = this.options.model = this.options.gacha = window.gacha = new Gacha();
+            this.model = new Gacha();
+            this.options.model = this.model;
+            this.options.gacha = this.model;
+            window.gacha = this.model;
 
             this.loader.show( new LoaderView( this.options ) );
 
-            gacha.on( 'change:progressPercentage' , function( gacha , percentage , options ) {
+            this.model.on( 'change:progressPercentage' , function( gacha , percentage , options ) {
                 if( 100 === percentage ) {
                     this.loader.close();
 
-                    this.header.show( new HeaderView( _.extend( {} , this.options , {
-                        model: gacha.get( 'info' )
-                    } ) ) );
+                    this.header.show( new HeaderView( this.options ) );
 
                     this.items.show( new ItemsView( _.extend( {} , this.options , {
-                        collection: gacha.get( 'items' )
+                        collection: this.model.get( 'items' )
                     } ) ) );
                 }
             } , this );
 
             function updatePageTitle() {
-                if( gacha.get( 'info' ) && gacha.get( 'info' ).get( 'objectName' ) ) {
-                    document.title = gacha.get( 'info' ).get( 'objectName' ) + ' - Easy Gacha Dashboard';
+                if( this.model.get( 'objectName' ) ) {
+                    document.title = this.model.get( 'objectName' ) + ' - Easy Gacha Dashboard';
                 } else {
                     document.title = 'Easy Gacha Dashboard';
                 }
             }
 
-            function setupListener() {
-                gacha.get( 'info' ).on( 'change:objectName' , updatePageTitle , this );
-            }
-
-            gacha.on( 'change:info' , function() {
-                if( gacha.previous( 'info' ) ) {
-                    gacha.previous( 'info' ).off( null , null , this );
-                }
-
-                setupListener();
-                updatePageTitle();
-            } , this );
-
-            setupListener();
+            this.model.on( 'change:objectName' , updatePageTitle , this );
             updatePageTitle();
-            gacha.fetch();
+            this.model.fetch();
         }
     } );
 

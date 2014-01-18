@@ -68,8 +68,8 @@ define( [
         , templateHelpers: function() {
             return {
                 isRootOrOnlyPrim: (
-                    1 === this.options.gacha.get( 'info' ).get( 'numberOfPrims' )
-                    || CONSTANTS.LINK_ROOT === this.options.gacha.get( 'info' ).get( 'scriptLinkNumber' )
+                    1 === this.model.get( 'numberOfPrims' )
+                    || CONSTANTS.LINK_ROOT === this.model.get( 'scriptLinkNumber' )
                 )
 
                 , MAX_PER_PURCHASE: CONSTANTS.MAX_PER_PURCHASE
@@ -83,7 +83,7 @@ define( [
                 , placement: tooltipPlacement
             } );
 
-            this.ui.folderName.val( this.options.gacha.get( 'info' ).get( 'primName' ) );
+            this.ui.folderName.val( this.model.get( 'primName' ) );
             this.updateFolderForSingleItem();
             this.updateMaxBuys();
             this.updateMaxPerPurchase();

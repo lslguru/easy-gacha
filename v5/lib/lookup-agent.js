@@ -7,6 +7,7 @@ define( [
     , 'css!styles/lookup-agent'
     , 'bootstrap'
     , 'lib/is-sl-viewer'
+    , 'models/agents-cache'
 
 ] , function(
 
@@ -17,6 +18,7 @@ define( [
     , styles
     , bootstrap
     , isSlViewer
+    , agentsCache
 
 ) {
     'use strict';
@@ -56,13 +58,12 @@ define( [
         , selectAgent: function( jEvent ) {
             var target = $( jEvent.currentTarget );
             var selected = target.data( 'agent-id' );
-            var agent = this.model.get( 'agentsCache' ).get( selected );
+            var agent = agentsCache.get( selected );
             this.agentSelected = agent;
             this.ui.lookupAgentDialog.modal( 'hide' );
         }
 
         , lookupAgent: function() {
-            var agentsCache = this.model.get( 'agentsCache' );
             agentsCache.fetch( {
                 id: this.ui.lookupAgentKey.val()
                 , context: this

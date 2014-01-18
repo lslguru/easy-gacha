@@ -44,7 +44,7 @@ define( [
         }
 
         , loaderView: function() {
-            if( 100 !== this.gacha.get( 'progressPercentage' ) ) {
+            if( 100 !== this.model.get( 'progressPercentage' ) ) {
                 if( undefined === this.loader.currentView ) {
                     this.header.close();
                     this.tabs.close();
@@ -57,68 +57,41 @@ define( [
         }
 
         , mainView: function() {
-            var gacha = this.gacha;
-
             if( ! this.header.currentView || ! this.tabs.currentView ) {
                 this.loader.close();
 
-                if( ! gacha.get( 'info' ).get( 'isAdmin' ) ) {
+                if( ! this.model.get( 'isAdmin' ) ) {
                     this.options.app.router.navigate( 'dashboard' , { trigger: true , replace: true } );
                     return;
                 }
 
-                this.header.show( new HeaderView( _.extend( {} , this.options , {
-                    model: gacha.get( 'info' )
-                } ) ) );
-
+                this.header.show( new HeaderView( this.options ) );
                 this.tabs.show( new TabsView( this.options ) );
             }
         }
 
         , updatePageTitle: function() {
-            var gacha = this.gacha;
-
-            if( gacha.get( 'info' ) && gacha.get( 'info' ).get( 'objectName' ) ) {
-                document.title = 'Easy Gacha Config - ' + gacha.get( 'info' ).get( 'objectName' );
+            if( this.model.get( 'objectName' ) ) {
+                document.title = 'Easy Gacha Config - ' + this.model.get( 'objectName' );
             } else {
                 document.title = 'Easy Gacha Configuration';
             }
         }
 
-        , setupPageTitleHandlers: function() {
-            var gacha = this.gacha;
-
-            function setupListener() {
-                gacha.get( 'info' ).on( 'change:objectName' , this.updatePageTitle , this );
-            }
-
-            gacha.on( 'change:info' , function() {
-                if( gacha.previous( 'info' ) ) {
-                    gacha.previous( 'info' ).off( null , null , this );
-                }
-
-                setupListener();
-                this.updatePageTitle();
-            } , this );
-
-            this.updatePageTitle();
-        }
-
         , onRender: function() {
-            var gacha = window.gacha = new Gacha();
-
             this.options.lookupAgentDialog = this.lookupAgentDialog;
 
-            this.gacha = gacha;
-            this.options.model = gacha;
-            this.options.gacha = gacha;
-            window.gacha = gacha;
+            this.model = new Gacha();
+            this.options.model = this.model;
+            this.options.gacha = this.model;
+            window.gacha = this.model;
 
-            gacha.on( 'change:progressPercentage' , this.loaderView , this );
+            this.model.on( 'change:progressPercentage' , this.loaderView , this );
+            this.model.on( 'change:objectName' , this.updatePageTitle , this );
 
-            this.setupPageTitleHandlers();
+            this.updatePageTitle();
 
-            gacha.fetch( {
+            this.model.fetch( {
                 loadAdmin: true
             } );
         }

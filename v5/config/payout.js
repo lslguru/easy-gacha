@@ -52,7 +52,7 @@ define( [
 
             // If this record is the owner, they may not change it because it
             // is calculated on the fly based on the total price
-            if( this.options.gacha.get( 'info' ).get( 'ownerKey' ) === this.model.get( 'agentKey' ) ) {
+            if( this.options.gacha.get( 'ownerKey' ) === this.model.get( 'agentKey' ) ) {
                 this.ui.deleteBtn.remove();
                 this.ui.amount.attr( 'readonly' , 'readonly' );
             }

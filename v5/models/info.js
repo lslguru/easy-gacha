@@ -52,10 +52,6 @@ define( [
             , prim: null
         }
 
-        , includeInNotecard: [
-            'extra'
-        ]
-
         , toPostJSON: function() {
             return [
                 this.get( 'configured' )

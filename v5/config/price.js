@@ -52,6 +52,12 @@ define( [
             , 'change:payPriceButton1': 'updateDisplay'
             , 'change:payPriceButton2': 'updateDisplay'
             , 'change:payPriceButton3': 'updateDisplay'
+            , 'change:btn_price': 'updateDisplay'
+            , 'change:btn_default': 'updateDisplay'
+            , 'change:btn_0': 'updateDisplay'
+            , 'change:btn_1': 'updateDisplay'
+            , 'change:btn_2': 'updateDisplay'
+            , 'change:btn_3': 'updateDisplay'
         }
 
         , events: {
@@ -80,19 +86,12 @@ define( [
 
             var img = $(payWindowImage).clone();
             this.ui.payPreviewBg.prepend( img );
+            this.setButtons();
             this.updateDisplay();
-
-            this.listenTo( this.options.gacha.get( 'info_extra' ) , 'change:btn_price' , this.updateDisplay );
-            this.listenTo( this.options.gacha.get( 'info_extra' ) , 'change:btn_default' , this.updateDisplay );
-            this.listenTo( this.options.gacha.get( 'info_extra' ) , 'change:btn_0' , this.updateDisplay );
-            this.listenTo( this.options.gacha.get( 'info_extra' ) , 'change:btn_1' , this.updateDisplay );
-            this.listenTo( this.options.gacha.get( 'info_extra' ) , 'change:btn_2' , this.updateDisplay );
-            this.listenTo( this.options.gacha.get( 'info_extra' ) , 'change:btn_3' , this.updateDisplay );
         }
 
         , updateDisplay: function() {
-            var extra = this.model.get( 'info_extra' );
-            var btn_price = extra.get( 'btn_price' );
+            var btn_price = this.model.get( 'btn_price' );
 
             if( btn_price != this.ui.btn_price.val() ) {
                 this.ui.btn_price.val( btn_price );
@@ -101,19 +100,19 @@ define( [
             this.ui.btn_price.parent().removeClass( 'has-error' );
 
             _.each( [ 'default' , '0' , '1' , '2' , '3' ] , function( btn ) {
-                if( extra.get( 'btn_' + btn ) != this.ui[ 'btn_' + btn ].val() ) {
-                    this.ui[ 'btn_' + btn ].val( extra.get( 'btn_' + btn ) );
+                if( this.model.get( 'btn_' + btn ) != this.ui[ 'btn_' + btn ].val() ) {
+                    this.ui[ 'btn_' + btn ].val( this.model.get( 'btn_' + btn ) );
                 }
 
                 this.ui[ 'btn_' + btn ].parent().removeClass( 'has-error' );
 
                 this.ui[ 'payPreview_' + btn ].text(
-                    extra.get( 'btn_' + btn )
-                    ? 'L$' + ( extra.get( 'btn_' + btn ) * btn_price )
+                    this.model.get( 'btn_' + btn )
+                    ? 'L$' + ( this.model.get( 'btn_' + btn ) * btn_price )
                     : ''
                 );
 
-                this.ui[ 'payPreview_' + btn ].toggleClass( 'pay-hide' , !extra.get( 'btn_' + btn ) );
+                this.ui[ 'payPreview_' + btn ].toggleClass( 'pay-hide' , !this.model.get( 'btn_' + btn ) );
             } , this );
 
             // If it should be shown
@@ -140,7 +139,7 @@ define( [
                 }
             }
 
-            this.ui.payPreviewName.text( this.model.get( 'info' ).get( 'ownerDisplayName' ) + ' (' + this.model.get( 'info' ).get( 'ownerUserName' ) + ')' );
+            this.ui.payPreviewName.text( this.model.get( 'ownerDisplayName' ) + ' (' + this.model.get( 'ownerUserName' ) + ')' );
         }
 
         , setField: function( jEvent ) {
@@ -158,44 +157,42 @@ define( [
                 return;
             }
 
-            this.model.get( 'info_extra' ).set( field , val );
+            this.model.set( field , val );
             this.setButtons();
             this.updateDisplay();
         }
 
         , setButtons: function() {
-            var config = this.model.get( 'config' );
-            var extra = this.model.get( 'info_extra' );
-            var btn_price = extra.get( 'btn_price' );
+            var btn_price = this.model.get( 'btn_price' );
 
-            config.set( {
+            this.model.set( {
                 payPrice: (
-                    btn_price && extra.get( 'btn_default' )
-                    ? btn_price * extra.get( 'btn_default' )
+                    btn_price && this.model.get( 'btn_default' )
+                    ? btn_price * this.model.get( 'btn_default' )
                     : CONSTANTS.PAY_HIDE
                 )
 
                 , payPriceButton0: (
-                    btn_price && extra.get( 'btn_0' )
-                    ? btn_price * extra.get( 'btn_0' )
+                    btn_price && this.model.get( 'btn_0' )
+                    ? btn_price * this.model.get( 'btn_0' )
                     : CONSTANTS.PAY_HIDE
                 )
 
                 , payPriceButton1: (
-                    btn_price && extra.get( 'btn_1' )
-                    ? btn_price * extra.get( 'btn_1' )
+                    btn_price && this.model.get( 'btn_1' )
+                    ? btn_price * this.model.get( 'btn_1' )
                     : CONSTANTS.PAY_HIDE
                 )
 
                 , payPriceButton2: (
-                    btn_price && extra.get( 'btn_2' )
-                    ? btn_price * extra.get( 'btn_2' )
+                    btn_price && this.model.get( 'btn_2' )
+                    ? btn_price * this.model.get( 'btn_2' )
                     : CONSTANTS.PAY_HIDE
                 )
 
                 , payPriceButton3: (
-                    btn_price && extra.get( 'btn_3' )
-                    ? btn_price * extra.get( 'btn_3' )
+                    btn_price && this.model.get( 'btn_3' )
+                    ? btn_price * this.model.get( 'btn_3' )
                     : CONSTANTS.PAY_HIDE
                 )
             } );

@@ -1,7 +1,6 @@
 define( [
 
     'underscore'
-    , 'backbone'
     , 'models/info'
     , 'models/config'
     , 'models/items'
@@ -14,7 +13,6 @@ define( [
 ] , function(
 
     _
-    , Backbone
     , Info
     , Config
     , Items
@@ -27,112 +25,177 @@ define( [
 ) {
     'use strict';
 
-    var submodelProgress = function( gachaProgressProperty , gachaInfoProperty , gacha , submodel ) {
-        var submodelExpectedCount = ( gacha.get( 'info' ).get( gachaInfoProperty ) + 1 );
+    var submodelProgress = function( submodelName , gachaInfoProperty , gacha , submodel ) {
+        var submodelExpectedCount = ( gacha.get( gachaInfoProperty ) + 1 );
         var submodelProgressPercentage = ( submodel.length / submodelExpectedCount * 100 );
-        gacha.set( gachaProgressProperty , submodelProgressPercentage );
+        gacha.submodels[ submodelName ].progressPercentage = submodelProgressPercentage;
+        gacha.updateProgress();
     };
 
-    var exports = Backbone.Model.extend( {
+    var exports = BaseSlModel.extend( {
         defaults: {
             isValid: false
             , progressPercentage: 0
             , agentsCache: agentsCache
             , overrideProgress: null
+
+            // From models/info
+            , isAdmin: null
+            , ownerKey: null
+            , ownerUserName: null
+            , ownerDisplayName: null
+            , objectName: null
+            , objectDesc: null
+            , scriptName: null
+            , freeMemory: null
+            , debitPermission: null
+            , lastPing: null
+            , inventoryCount: null
+            , itemCount: null
+            , payoutCount: null
+            , regionName: null
+            , position: null
+            , configured: null
+            , price: null
+            , extra: null
+            , numberOfPrims: null
+            , scriptLinkNumber: null
+            , creatorKey: null
+            , creatorUserName: null
+            , creatorDisplayname: null
+            , groupKey: null
+            , scriptCount: null
+            , scriptTime: null
+            , prim: null
+
+            // From models/info/extra
+            , btn_price: null
+            , btn_default: null
+            , btn_0: null
+            , btn_1: null
+            , btn_2: null
+            , btn_3: null
+
+            // From models/config
+            , folderForSingleItem: null
+            , rootClickAction: null
+            , group: null
+            , allowHover: null
+            , maxPerPurchase: null
+            , maxBuys: null
+            , payPrice: null
+            , payPriceButton0: null
+            , payPriceButton1: null
+            , payPriceButton2: null
+            , payPriceButton3: null
+            , email: null
+            , im: null
+            , imUserName: null
+            , imDisplayName: null
+            , setFolderName: null
         }
+
+        , includeInNotecard: [
+            'btn_price'
+            , 'btn_default'
+            , 'btn_0'
+            , 'btn_1'
+            , 'btn_2'
+            , 'btn_3'
+            , 'folderForSingleItem'
+            , 'rootClickAction'
+            , 'group'
+            , 'allowHover'
+            , 'maxPerPurchase'
+            , 'maxBuys'
+            , 'email'
+            , 'im'
+            , 'setFolderName'
+            , 'payouts'
+            , 'items'
+        ]
 
         , fetchedJSON: null
 
-        , submodels: {
+        , submodels: null // instances
+        , Submodels: {
 
             info: {
                 model: Info
+                , type: 'merge'
                 , weight: 10
                 , adminOnly: false
-                , fetch: true
-            }
-
-            , info_extra: {
-                model: Backbone.Model
-                , weight: 0
-                , adminOnly: false
-                , fetch: false
+                , success: function( gacha , info ) {
+                    gacha.set( info.get( 'extra' ) );
+                }
             }
 
             , config: {
                 model: Config
+                , type: 'merge'
                 , weight: 10
                 , adminOnly: true
-                , fetch: true
             }
 
             , payouts: {
                 model: Payouts
+                , type: 'attribute'
                 , weight: 20
                 , adminOnly: true
-                , progress: _.partial( submodelProgress , 'payoutsProgressPercentage' , 'payoutCount' )
-                , fetch: true
+                , progressCallback: _.partial( submodelProgress , 'payouts' , 'payoutCount' )
             }
 
             , items: {
                 model: Items
+                , type: 'attribute'
                 , weight: 30
                 , adminOnly: false
-                , progress: _.partial( submodelProgress , 'itemsProgressPercentage' , 'itemCount' )
-                , fetch: true
+                , progressCallback: _.partial( submodelProgress , 'items' , 'itemCount' )
             }
 
             , invs: {
                 model: Invs
+                , type: 'attribute'
                 , weight: 30
                 , adminOnly: true
-                , progress: _.partial( submodelProgress , 'invsProgressPercentage' , 'inventoryCount' )
-                , fetch: true
+                , progressCallback: _.partial( submodelProgress , 'invs' , 'inventoryCount' )
             }
 
         }
 
         , initialize: function() {
             this.on( 'change' , this.updateProgress , this );
+            this.submodels = {};
 
-            _.each( this.submodels , function( submodelConfig , name ) {
-                this.set( name , new submodelConfig.model( {} , { gacha: this } ) , { silent: true } );
-                this.set( name + 'ProgressPercentage' , 0 , { silent: true } );
+            _.each( this.Submodels , function( submodelConfig , name ) {
+                // Clone the settings
+                this.submodels[ name ] = _.clone( submodelConfig );
 
-                // Echo all sub-model events as native on this model
-                this.get( name ).on( 'all' , function() {
-                    this.trigger.apply( this , arguments );
-                } , this );
+                // Initialize progress as zero
+                this.submodels[ name ].progressPercentage = 0;
 
-                this.on( 'change:' + name , this.listenToSubmodels , this );
+                // Create the instance
+                this.submodels[ name ].instance = new submodelConfig.model( {} , { gacha: this } );
+
+                // When the submodel is considered an attribute (not just a
+                // mechanism for fetch/save)
+                if( 'attribute' === submodelConfig.type ) {
+                    // Store it in attributes
+                    this.set( name , this.submodels[ name ].instance , { silent: true } );
+
+                    // Echo all sub-model events as native on this model
+                    this.get( name ).on( 'all' , function() {
+                        this.trigger.apply( this , arguments );
+                    } , this );
+                }
             } , this );
 
-            this.listenToSubmodels();
-        }
-
-        , listenToSubmodels: function() {
-            this.stopListening( null , null , null );
-
-            this.listenTo( this.get( 'info' ) , 'change:extra' , this.updateExtraFromInfo );
-            this.listenTo( this.get( 'info_extra' ) , 'change' , this.updateInfoFromExtra );
-
-            this.listenTo( this.get( 'info_extra' ) , 'change:btn_price' , this.recalculateOwnerAmount );
-            this.listenTo( this.get( 'payouts' ) , 'add' , this.recalculateOwnerAmount );
-            this.listenTo( this.get( 'payouts' ) , 'remove' , this.recalculateOwnerAmount );
-            this.listenTo( this.get( 'payouts' ) , 'reset' , this.recalculateOwnerAmount );
-            this.listenTo( this.get( 'payouts' ) , 'change:amount' , this.recalculateOwnerAmount );
-        }
-
-        , updateExtraFromInfo: function() {
-            this.get( 'info_extra' ).set( this.get( 'info' ).get( 'extra' ) );
-        }
-
-        , updateInfoFromExtra: function() {
-            this.get( 'info' ).set( 'extra' , _.clone( this.get( 'info_extra' ).attributes ) );
+            this.listenTo( this , 'change:btn_price' , this.recalculateOwnerAmount );
+            this.listenTo( this.get( 'payouts' ) , 'add remove reset change:amount' , this.recalculateOwnerAmount );
         }
 
         , recalculateOwnerAmount: function() {
-            var ownerPayout = this.get( 'payouts' ).get( this.get( 'info' ).get( 'ownerKey' ) );
+            var ownerPayout = this.get( 'payouts' ).get( this.get( 'ownerKey' ) );
 
             if( ! ownerPayout ) {
                 return;
@@ -140,7 +203,7 @@ define( [
 
             ownerPayout.set( 'amount' , (
                 // The new price
-                this.get( 'info_extra' ).get( 'btn_price' )
+                this.get( 'btn_price' )
 
                 // Minus the total of all payouts
                 - this.get( 'payouts' ).totalPrice
@@ -154,7 +217,7 @@ define( [
             var progressPercentage = 0;
 
             _.each( this.submodels , function( submodelConfig , key ) {
-                progressPercentage += ( this.get( key + 'ProgressPercentage' ) / 100 * submodelConfig.weight );
+                progressPercentage += ( submodelConfig.progressPercentage / 100 * submodelConfig.weight );
             } , this );
 
             if( null !== this.get( 'overrideProgress' ) ) {
@@ -172,16 +235,16 @@ define( [
 
             // Populate items with new entries from inventory
             if( this.get( 'items' ) && this.get( 'invs' ) ) {
-                this.get( 'items' ).populate( this.get( 'invs' ) , this.get( 'info' ).get( 'scriptName' ) );
+                this.get( 'items' ).populate( this.get( 'invs' ) , this.get( 'scriptName' ) );
             }
 
             // If there's not at least one payout record, add one for the owner
             if( !this.get( 'payouts' ).length ) {
                 this.get( 'payouts' ).add( {
-                    agentKey: this.get( 'info' ).get( 'ownerKey' )
-                    , userName: this.get( 'info' ).get( 'ownerUserName' )
-                    , displayName: this.get( 'info' ).get( 'ownerDisplayName' )
-                    , amount: this.get( 'info' ).get( 'price' )
+                    agentKey: this.get( 'ownerKey' )
+                    , userName: this.get( 'ownerUserName' )
+                    , displayName: this.get( 'ownerDisplayName' )
+                    , amount: this.get( 'price' )
                 } );
             }
         }
@@ -191,18 +254,20 @@ define( [
             options = options || {};
 
             // Get list of submodels to fetch
-            var submodels = _.keys( this.submodels );
+            var submodelNames = _.keys( this.submodels );
             var success = options.success;
 
             // Set my initial progress
             this.set( 'progressPercentage' , 0 );
+            this.updateProgress();
 
             // Method to process one submodel
             var next = _.bind( function() {
                 // Get next submodelName or we're done
-                var submodelName = submodels.shift();
+                var submodelName = submodelNames.shift();
                 if( ! submodelName ) {
                     this.set( 'progressPercentage' , 100 );
+                    this.updateProgress();
 
                     this.fetchedNotecardJSON = this.toNotecardJSON();
 
@@ -218,15 +283,15 @@ define( [
 
                 // Cache
                 var submodelConfig = this.submodels[ submodelName ];
-                var submodel = this.get( submodelName );
+                var submodel = submodelConfig.instance;
 
-                // Skip admin-only if we're not admin or non-fetching submodels
+                // Skip admin-only if we're not admin
                 if(
                     ( !options.loadAdmin && submodelConfig.adminOnly )
                     || ( ! adminKey.load() && submodelConfig.adminOnly )
-                    || !submodelConfig.fetch
                 ) {
-                    this.set( submodelName + 'ProgressPercentage' , 100 );
+                    submodelConfig.progressPercentage = 100;
+                    this.updateProgress();
                     next();
                     return;
                 }
@@ -234,11 +299,21 @@ define( [
                 // Override success with next callback
                 var fetchOptions = _.clone( options );
                 fetchOptions.success = _.bind( function() {
-                    this.set( submodelName + 'ProgressPercentage' , 100 );
+                    if( submodelConfig.success ) {
+                        submodelConfig.success( this , submodel );
+                    }
+
+                    if( 'merge' === submodelConfig.type ) {
+                        this.set( submodel.attributes );
+                    }
+
+                    submodelConfig.progressPercentage = 100;
+                    this.updateProgress();
+
                     next();
                 } , this );
-                if( submodelConfig.progress ) {
-                    fetchOptions.progress = _.partial( submodelConfig.progress , this , submodel );
+                if( submodelConfig.progressCallback ) {
+                    fetchOptions.progress = _.partial( submodelConfig.progressCallback , this , submodel );
                 }
 
                 // And start the fetch
@@ -249,12 +324,12 @@ define( [
         }
 
         , validate: function() {
-            console.log( 'TODO' );
+            console.log( 'TODO: validate' );
             this.set( 'isValid' , false );
         }
 
         , save: function() {
-            console.log( 'TODO' );
+            console.log( 'TODO: save' );
         }
 
         , toJSON: function() {
@@ -272,23 +347,8 @@ define( [
 
         , fromNotecardJSON: function() {
             var returnValue = BaseSlModel.prototype.fromNotecardJSON.apply( this , arguments );
-            this.get( 'items' ).populate( this.get( 'invs' ) , this.get( 'info' ).get( 'scriptName' ) );
+            this.dataInitializations();
             return returnValue;
-        }
-
-        , toNotecardJSON: function() {
-            var json = this.constructor.__super__.toJSON.apply( this , arguments );
-
-            _.each( json , function( value , key ) {
-                // Only keep if the value has a toNotecardJSON method
-                if( _.isObject( value ) && _.isFunction( value.toNotecardJSON ) ) {
-                    json[ key ] = value.toNotecardJSON();
-                } else {
-                    delete json[ key ];
-                }
-            } , this );
-
-            return json;
         }
 
         , hasChangedSinceFetch: function() {

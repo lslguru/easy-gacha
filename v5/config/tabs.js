@@ -62,25 +62,24 @@ define( [
             'click [data-toggle=tab]': 'signalTabShown'
         }
 
+        , initialize: function() {
+            this.constructor.__super__.initialize.apply( this , arguments );
+            this.model = this.options.model;
+        }
+
         , onRender: function() {
             this.itemsTab.show( new ItemsView( _.extend( {} , this.options , {
-                collection: this.options.model.get( 'items' )
+                collection: this.model.get( 'items' )
             } ) ) );
 
             this.priceTab.show( new PriceView( this.options ) );
 
             this.payoutsTab.show( new PayoutsView( _.extend( {} , this.options , {
-                collection: this.options.model.get( 'payouts' )
+                collection: this.model.get( 'payouts' )
             } ) ) );
 
-            this.commsTab.show( new CommsView( _.extend( {} , this.options , {
-                model: this.options.model.get( 'config' )
-            } ) ) );
-
-            this.advancedTab.show( new AdvancedView( _.extend( {} , this.options , {
-                model: this.options.model.get( 'config' )
-            } ) ) );
-
+            this.commsTab.show( new CommsView( this.options ) );
+            this.advancedTab.show( new AdvancedView( this.options ) );
             this.exportTab.show( new ExportView( this.options ) );
             this.importTab.show( new ImportView( this.options ) );
 

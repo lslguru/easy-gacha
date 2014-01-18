@@ -41,7 +41,11 @@ define( [
 
             _.each( this.constructor.__super__.toJSON.apply( this , arguments ) , function( value , key ) {
                 if( -1 !== this.includeInNotecard.indexOf( key ) ) {
-                    json[ key ] = value;
+                    if( value && value.toNotecardJSON ) {
+                        json[ key ] = value.toNotecardJSON();
+                    } else {
+                        json[ key ] = value;
+                    }
                 }
             } , this );
 

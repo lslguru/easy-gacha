@@ -42,7 +42,7 @@ define( [
             , 'saveBtn': '#save'
         }
 
-        , gachaEvents: {
+        , modelEvents: {
             'change': 'updateSaveBtn'
             , 'add': 'updateSaveBtn'
             , 'remove': 'updateSaveBtn'
@@ -51,7 +51,6 @@ define( [
 
         , initialize: function() {
             this.constructor.__super__.initialize.apply( this , arguments );
-            Marionette.bindEntityEvents( this , this.options.gacha , Marionette.getOption( this , 'gachaEvents' ) );
         }
 
         , templateHelpers: function() {
@@ -193,7 +192,7 @@ define( [
         }
 
         , clickReload: function() {
-            if( ! this.options.gacha.hasChangedSinceFetch() ) {
+            if( ! this.model.hasChangedSinceFetch() ) {
                 this.confirmReload();
                 return;
             }
@@ -202,7 +201,7 @@ define( [
         }
 
         , clickDashboard: function() {
-            if( ! this.options.gacha.hasChangedSinceFetch() ) {
+            if( ! this.model.hasChangedSinceFetch() ) {
                 this.confirmDashboard();
                 return;
             }
@@ -212,12 +211,12 @@ define( [
 
         , clickSave: function() {
             if( ! this.ui.saveBtn.hasClass( 'disabled' ) ) {
-                this.options.gacha.save();
+                this.model.save();
             }
         }
 
         , updateSaveBtn: function() {
-            if( this.options.gacha.hasChangedSinceFetch() ) {
+            if( this.model.hasChangedSinceFetch() ) {
                 this.ui.saveBtn.removeClass( 'disabled' );
             } else {
                 this.ui.saveBtn.addClass( 'disabled' );
