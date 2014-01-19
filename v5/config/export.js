@@ -34,14 +34,22 @@ define( [
         }
 
         , events: {
-            'focus #export': 'highlightAll'
-            , 'click #export': 'highlightAll'
-            , 'mouseup #export': 'highlightAll'
-            , 'shown': 'updateExportField'
+            'focus @ui.exportField': 'highlightAll' // should fire on tabbing, but some browsers don't
+            , 'click @ui.exportField': 'highlightAll' // every time the field is clicked, reestablish
+            , 'keyup @ui.exportField': 'highlightAll' // occurs if you tab into the field
+            , 'mouseover @ui.exportField': 'highlightAll' // heck, why not
         }
 
         , modelEvents: {
             'change': 'updateExportField'
+        }
+
+        , onTabShown: function() {
+            this.updateExportField();
+            this.highlightAll();
+
+            // Counter scroll effect from selection only when switching tabs
+            $(window).scrollTop(0);
         }
 
         , onRender: function() {
@@ -52,6 +60,9 @@ define( [
             } );
 
             this.updateExportField();
+
+            // Chrome is the odd man out this time. onmouseup deselects...
+            this.ui.exportField[0].onmouseup = function() { return false; };
         }
 
         , updateExportField: function() {
@@ -91,7 +102,8 @@ define( [
         }
 
         , highlightAll: function() {
-            this.ui.exportField.select();
+            this.ui.exportField.focus(); // Make sure cursor is in the box
+            this.ui.exportField.select(); // Make sure text is highlighted
         }
 
     } );

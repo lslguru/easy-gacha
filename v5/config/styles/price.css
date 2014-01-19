@@ -26,6 +26,9 @@
     font-size: 13px;
     line-height: 13px;
     color: #ffffff;
+
+    -webkit-transition: background-color 0.15s linear;
+            transition: background-color 0.15s linear;
 }
 
 #page-config #pay-preview-default.pay-hide ,
@@ -75,4 +78,12 @@
     top: 28px;
     left: 8px;
     color: #b5dd78;
+}
+
+#page-config #prize-zero-okay {
+    float: right;
+}
+
+#page-config #buttons-not-ordered-warning .btn-group {
+    float: right;
 }

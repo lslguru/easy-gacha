@@ -10,28 +10,33 @@
         </div>
     </div>
 
+    <div class="alert alert-danger fade hide clearfix" id="price-zero-warning">
+        <i class="fa fa-exclamation-triangle"></i> The price is L$0.
+        <button class="btn btn-primary" id="prize-zero-okay">Yes, I want this to be FREE</button>
+    </div>
+
     <div class="form-group fade hide" id="price-buttons">
         <label class="col-sm-2 control-label">Buttons</label>
         <div class="col-sm-6">
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #1">
                 <span class="input-group-addon">Button 1 Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-0" data-extra-field="btn_0" />
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-0" data-extra-field="btn_0" data-max-per-play="true" />
             </div>
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #2">
                 <span class="input-group-addon">Button 2 Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-1" data-extra-field="btn_1" />
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-1" data-extra-field="btn_1" data-max-per-play="true" />
             </div>
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #3">
                 <span class="input-group-addon">Button 3 Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-2" data-extra-field="btn_2" />
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-2" data-extra-field="btn_2" data-max-per-play="true" />
             </div>
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #4">
                 <span class="input-group-addon">Button 4 Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-3" data-extra-field="btn_3" />
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-3" data-extra-field="btn_3" data-max-per-play="true" />
             </div>
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in the &quot;choose amount&quot; box by default">
                 <span class="input-group-addon">Default Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-default" data-extra-field="btn_default" />
+                <input type="number" class="form-control" placeholder="Item Count" id="btn-default" data-extra-field="btn_default" data-max-per-play="true" />
             </div>
         </div>
         <div class="col-sm-4">
@@ -43,6 +48,18 @@
                 <div id="pay-preview-button-3">L$1</div>
                 <div id="pay-preview-name"></div>
             </div>
+        </div>
+    </div>
+
+    <div class="alert alert-danger fade hide clearfix" id="no-payment-options-warning">
+        <i class="fa fa-exclamation-triangle"></i> You've set a price but no payment options. Please choose at least one payment option.
+    </div>
+
+    <div class="alert alert-warning fade hide clearfix" id="buttons-not-ordered-warning">
+        <i class="fa fa-exclamation-triangle"></i> The buttons aren't in order. Would you like us to fix this for you?
+        <div class="btn-group">
+            <button class="btn btn-default" id="ignore-buttons-out-of-order">Ignore</button>
+            <button class="btn btn-primary" id="fix-button-order">Fix</button>
         </div>
     </div>
 

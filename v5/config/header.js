@@ -86,7 +86,7 @@ define( [
                 , memoryIcon: (
                     null !== this.model.get( 'freeMemory' )
                     && this.model.get( 'freeMemory' ) < CONSTANTS.DANGER_MEMORY_THRESHOLD
-                    ? 'fa-exclamation-circle'
+                    ? 'fa-exclamation-triangle'
                     : (
                         null !== this.model.get( 'freeMemory' )
                         && this.model.get( 'freeMemory' ) < CONSTANTS.WARN_MEMORY_THRESHOLD
@@ -110,7 +110,7 @@ define( [
                     ? 'fa-info-circle'
                     : (
                         CONSTANTS.WARN_SCRIPT_TIME < this.model.get( 'scriptTime' )
-                        ? 'fa-exclamation-circle'
+                        ? 'fa-exclamation-triangle'
                         : (
                             this.model.get( 'scriptTime' )
                             ? 'fa-check-circle'

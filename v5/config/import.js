@@ -44,14 +44,19 @@ define( [
         }
 
         , events: {
-            'keyup #import': 'expandImportField'
-            , 'change #import': 'expandImportField'
-            , 'click #import-btn': 'importConfig'
+            'keyup @ui.importField': 'onImportFieldChange'
+            , 'change @ui.importField': 'onImportFieldChange'
+            , 'click @ui.importButton': 'importConfig'
         }
 
         , initialize: function() {
             this.constructor.__super__.initialize.apply( this , arguments );
             this.options.app.vent.on( 'importNotecard' , this.importNotecard , this );
+        }
+
+        , onTabShown: function() {
+            this.ui.importField.focus(); // Make sure cursor is in the box
+            this.ui.importField.select(); // Make sure text is highlighted
         }
 
         , onRender: function() {
@@ -73,12 +78,13 @@ define( [
                 , show: false
             } );
 
-            this.expandImportField();
+            this.onImportFieldChange();
             this.ui.progressArea.hide();
         }
 
-        , expandImportField: function() {
+        , onImportFieldChange: function() {
             this.ui.importField.attr( 'rows' , this.ui.importField.val().split( '\n' ).length );
+            this.ui.importButton.attr( 'disabled' , ( this.ui.importField.val().length ? null : 'disabled' ) );
         }
 
         , importConfig: function() {
@@ -104,7 +110,7 @@ define( [
             }
 
             this.ui.importField.val( '' );
-            this.expandImportField();
+            this.onImportFieldChange();
 
             this.ui.importSuccessModal.modal( 'show' );
             this.ui.importSuccessModal.one( 'hidden.bs.modal' , _.bind( function() {
@@ -140,7 +146,7 @@ define( [
             notecard.fetch( {
                 success: _.bind( function() {
                     this.ui.importField.val( notecard.get( 'text' ) );
-                    this.expandImportField();
+                    this.onImportFieldChange();
                     onComplete( 'success' , 'Your notecard has been loaded. Please review the data, then press the "Import" button to continue.' );
                 } , this )
 

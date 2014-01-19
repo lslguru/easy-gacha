@@ -40,14 +40,16 @@ define( [
             _.each( this.models , function( model ) {
                 this.totalBought += model.get( 'bought' );
 
-                if( ( 0 !== model.get( 'limit' ) ) && ( CONSTANTS.PERM_TRANSFER & model.get( 'ownerPermissions' ) ) ) {
-                    this.totalRarity += model.get( 'rarity' );
-                }
+                if( CONSTANTS.PERM_TRANSFER & model.get( 'ownerPermissions' ) ) {
+                    if( 0 !== model.get( 'limit' ) ) {
+                        this.totalRarity += model.get( 'rarity' );
+                    }
 
-                if( -1 === model.get( 'limit' ) ) {
-                    this.unlimitedRarity += model.get( 'rarity' );
-                } else {
-                    this.totalLimit += model.get( 'limit' );
+                    if( -1 === model.get( 'limit' ) ) {
+                        this.unlimitedRarity += model.get( 'rarity' );
+                    } else {
+                        this.totalLimit += model.get( 'limit' );
+                    }
                 }
             } , this );
         }

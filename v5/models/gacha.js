@@ -9,6 +9,7 @@ define( [
     , 'lib/admin-key'
     , 'models/agents-cache'
     , 'models/base-sl-model'
+    , 'lib/constants'
 
 ] , function(
 
@@ -21,6 +22,7 @@ define( [
     , adminKey
     , agentsCache
     , BaseSlModel
+    , CONSTANTS
 
 ) {
     'use strict';
@@ -78,6 +80,8 @@ define( [
             , btn_2: null
             , btn_3: null
             , zeroPriceOkay: false
+            , suggestedButtonOrder: null
+            , ignoreButtonsOutOfOrder: false
 
             // From models/config
             , folderForSingleItem: null
@@ -106,6 +110,7 @@ define( [
             , 'btn_2'
             , 'btn_3'
             , 'zeroPriceOkay'
+            , 'ignoreButtonsOutOfOrder'
             , 'folderForSingleItem'
             , 'rootClickAction'
             , 'group'
@@ -168,7 +173,6 @@ define( [
         }
 
         , initialize: function() {
-            this.on( 'change' , this.updateProgress , this );
             this.submodels = {};
 
             _.each( this.Submodels , function( submodelConfig , name ) {
@@ -194,9 +198,16 @@ define( [
                 }
             } , this );
 
-            this.listenTo( this , 'change:btn_price' , this.recalculateOwnerAmount );
-            this.listenTo( this.get( 'payouts' ) , 'add remove reset change:amount' , this.recalculateOwnerAmount );
-            this.listenTo( this , 'all' , this.updateChangesToSave );
+            this.on( 'all' , this.updateHasChangesToSave , this );
+            this.on( 'change:overrideProgress' , this.updateProgress , this );
+            this.on( 'change:btn_price' , this.recalculateOwnerAmount , this );
+            this.on( 'change:btn_price' , this.updateZeroPriceOkay , this );
+            this.on( 'change:btn_0' , this.updateButtonsOutOfOrder , this );
+            this.on( 'change:btn_1' , this.updateButtonsOutOfOrder , this );
+            this.on( 'change:btn_2' , this.updateButtonsOutOfOrder , this );
+            this.on( 'change:btn_3' , this.updateButtonsOutOfOrder , this );
+            this.get( 'payouts' ).on( 'add remove reset change:amount' , this.recalculateOwnerAmount , this );
+            this.on( 'all' , this.updateConfigured , this );
         }
 
         , recalculateOwnerAmount: function() {
@@ -341,11 +352,6 @@ define( [
             next();
         }
 
-        , validate: function() {
-            console.log( 'TODO: validate' );
-            this.set( 'isValid' , false );
-        }
-
         , save: function() {
             console.log( 'TODO: save' );
         }
@@ -369,8 +375,87 @@ define( [
             return returnValue;
         }
 
-        , updateChangesToSave: function() {
+        , updateHasChangesToSave: function() {
             this.set( 'hasChangesToSave' , ! _.isEqual( this.toNotecardJSON() , this.fetchedNotecardJSON ) );
+        }
+
+        , updateZeroPriceOkay: function() {
+            if( 0 !== this.get( 'btn_price' ) ) {
+                this.set( 'zeroPriceOkay' , false );
+            } else {
+                this.set( 'ignoreButtonsOutOfOrder' , false );
+            }
+        }
+
+        , updateConfigured: function() {
+            var configured = true;
+
+            // If no items available
+            if( 0 === this.get( 'items' ).totalRarity ) {
+                configured = false;
+            }
+            // TODO: other items checks
+
+            // Check price and buttons
+            var btn_price = parseInt( this.get( 'btn_price' ) , 10 );
+            if( _.isNaN( btn_price ) ) {
+                configured = false;
+            } else if( 0 > btn_price ) {
+                configured = false;
+            } else if( 0 === btn_price && !this.get( 'zeroPriceOkay' ) ) {
+                configured = false;
+            } else if( 0 !== btn_price ) {
+                var hasPaymentOptions = false;
+
+                _.each( [ 'default' , '0' , '1' , '2' , '3' ] , function( btn ) {
+                    var btn_val = parseInt( this.get( 'btn_' + btn ) , 10 );
+
+                    if( _.isNaN( btn_val ) ) {
+                        configured = false;
+                    } else if( 0 > btn_val ) {
+                        configured = false;
+                    } else if( CONSTANTS.MAX_PER_PURCHASE < btn_val ) {
+                        configured = false;
+                    } else if( this.get( 'maxPerPurchase' ) < btn_val ) {
+                        configured = false;
+                    }
+
+                    if( 0 < btn_val ) {
+                        hasPaymentOptions = true;
+                    }
+                } , this );
+
+                if( !hasPaymentOptions ) {
+                    configured = false;
+                }
+            }
+
+            // TODO: payouts
+            // TODO: comms
+            // TODO: advanced
+
+            this.set( 'configured' , configured );
+        }
+
+        , updateButtonsOutOfOrder: function() {
+            var buttons = [
+                this.get( 'btn_0' )
+                , this.get( 'btn_1' )
+                , this.get( 'btn_2' )
+                , this.get( 'btn_3' )
+            ];
+
+            var buttonsOrdered = _.clone( buttons ).sort( function( a , b ) {
+                if( 0 === a ) return  1;
+                if( 0 === b ) return -1;
+                return a - b;
+            } );
+
+            this.set( 'suggestedButtonOrder' , (
+                _.isEqual( buttons , buttonsOrdered )
+                ? null
+                : buttonsOrdered
+            ) );
         }
     } );
 

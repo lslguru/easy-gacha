@@ -1,0 +1,4 @@
+.fade-size {
+    -webkit-transition: width 0.15s linear, height 0.15s linear;
+            transition: width 0.15s linear, height 0.15s linear;
+}
