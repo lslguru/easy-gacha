@@ -560,9 +560,11 @@ JSON_ARRAY
 , [
 isAdmin
 , Owner
-, llGetObjectName()
-, llGetObjectDesc()
-, ScriptName
+] + llGetLinkPrimitiveParams( (!!llGetLinkNumber()) , [
+PRIM_NAME
+, PRIM_DESC
+] ) + [
+ScriptName
 , llGetFreeMemory()
 , HasPermission
 , LastPing

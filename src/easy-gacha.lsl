@@ -839,9 +839,11 @@
                         , [
                             isAdmin
                             , Owner
-                            , llGetObjectName()
-                            , llGetObjectDesc()
-                            , ScriptName
+                        ] + llGetLinkPrimitiveParams( (!!llGetLinkNumber()) , [
+                            PRIM_NAME
+                            , PRIM_DESC
+                        ] ) + [
+                            ScriptName
                             , llGetFreeMemory()
                             , HasPermission
                             , LastPing
@@ -863,6 +865,7 @@
                         ] )
                     );
                 }
+
 
                 if( "prim" == subject ) {
                     responseBody = llList2Json(
