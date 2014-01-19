@@ -102,6 +102,7 @@ define( [
             , imDisplayName: null
             , setFolderName: null
             , rootClickActionNeeded: false
+            , ackEmailSlowness: false
         }
 
         , includeInNotecard: [
@@ -124,6 +125,7 @@ define( [
             , 'setFolderName'
             , 'payouts'
             , 'items'
+            , 'ackEmailSlowness'
         ]
 
         , fetchedJSON: null
@@ -211,6 +213,7 @@ define( [
             this.on( 'change:scriptLinkNumber' , this.updateRootClickActionNeeded , this );
             this.on( 'change:rootClickAction' , this.updateRootClickActionNeeded , this );
             this.on( 'change:scriptLinkNumber' , this.updateIsRootOrOnlyPrim , this );
+            this.on( 'change:email' , this.updateAckEmailSlowness , this );
             this.get( 'payouts' ).on( 'add remove reset change:amount' , this.recalculateOwnerAmount , this );
             this.on( 'all' , this.updateConfigured , this );
         }
@@ -436,7 +439,11 @@ define( [
             }
 
             // TODO: payouts
-            // TODO: comms
+
+            // If they haven't acknowledge the warning
+            if( '' !== this.get( 'email' ) && !this.get( 'ackEmailSlowness' ) ) {
+                configured = false;
+            }
 
             // Whether or not we're in the root prim and have made up our minds
             if( this.get( 'rootClickActionNeeded' ) ) {
@@ -479,6 +486,12 @@ define( [
                 ? null
                 : buttonsOrdered
             ) );
+        }
+
+        , updateAckEmailSlowness: function() {
+            if( '' === this.get( 'email' ) ) {
+                this.set( 'ackEmailSlowness' , false );
+            }
         }
     } );
 

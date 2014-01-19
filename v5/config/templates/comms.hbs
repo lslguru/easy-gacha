@@ -23,9 +23,14 @@
     </div>
     <div class="panel-body form-horizontal">
 
-        <div class="form-group" data-toggle="tooltip" title="If this is enabled, hovertext will be used to indicate when Easy Gacha is busy or unavailable">
-            <label class="col-sm-2 control-label">Email</label>
-            <div class="col-sm-10">
+        <div class="alert alert-warning fade hide clearfix" id="email-is-slow-warning">
+            <i class="fa fa-exclamation-triangle"></i> Email is <strong>very slow</strong>, and causes a <strong>20 second</strong> delay after each play (not after each item).
+            <button class="btn btn-primary" aria-hidden="true" id="email-is-slow-warning-dismiss">I understand</button>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" data-toggle="tooltip" title="If a valid email address is entered here, Easy Gacha will send an email with each play (but not for each item). This causes a very long script delay (20 seconds).">Email</label>
+            <div class="col-sm-10" data-toggle="tooltip" title="If a valid email address is entered here, Easy Gacha will send an email with each play (but not for each item). This causes a very long script delay (20 seconds).">
                 <input type="email" class="form-control" id="email" placeholder="Email address" />
                 <i id="clear-email" class="fa fa-times-circle-o"><span class="sr-only">Clear email address</span></i>
             </div>

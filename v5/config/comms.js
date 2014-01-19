@@ -9,6 +9,7 @@ define( [
     , 'lib/constants'
     , 'lib/tooltip-placement'
     , 'lib/validate-email-address'
+    , 'lib/fade'
 
 ] , function(
 
@@ -21,6 +22,7 @@ define( [
     , CONSTANTS
     , tooltipPlacement
     , validateEmailAddress
+    , fade
 
 ) {
     'use strict';
@@ -33,27 +35,32 @@ define( [
             , 'allowHoverOff': '#allowHover-off'
             , 'allowHoverOn': '#allowHover-on'
             , 'email': '#email'
+            , 'emailIsSlowWarning': '#email-is-slow-warning'
+            , 'emailSlownessAck': '#email-is-slow-warning-dismiss'
             , 'imOff': '#im-off'
             , 'imOwner': '#im-owner'
             , 'imSelected': '#im-selected'
             , 'imOther': '#im-other'
+            , 'clearEmail': '#clear-email'
         }
 
         , events: {
-            'click #allowHover-off': 'setAllowHover'
-            , 'click #allowHover-on': 'setAllowHover'
-            , 'keyup #email': 'updateEmail'
-            , 'change #email': 'updateEmail'
-            , 'click #clear-email': 'clearEmail'
-            , 'click #im-off': 'selectIm'
-            , 'click #im-owner': 'selectIm'
-            , 'click #im-selected': 'selectIm'
-            , 'click #im-other': 'selectIm'
+            'click @ui.allowHoverOff': 'setAllowHover'
+            , 'click @ui.allowHoverOn': 'setAllowHover'
+            , 'keyup @ui.email': 'updateEmail'
+            , 'change @ui.email': 'updateEmail'
+            , 'click @ui.clearEmail': 'clearEmail'
+            , 'click @ui.imOff': 'selectIm'
+            , 'click @ui.imOwner': 'selectIm'
+            , 'click @ui.imSelected': 'selectIm'
+            , 'click @ui.imOther': 'selectIm'
+            , 'click @ui.emailSlownessAck': 'dismissEmailSlowness'
         }
 
         , modelEvents: {
             'change:allowHover': 'updateSelections'
             , 'change:email': 'updateSelections'
+            , 'change:ackEmailSlowness': 'updateSelections'
             , 'change:im': 'updateSelections'
         }
 
@@ -71,20 +78,41 @@ define( [
         , updateSelections: function() {
             this.ui.allowHoverOff.toggleClass( 'active' , !this.model.get( 'allowHover' ) );
             this.ui.allowHoverOn.toggleClass( 'active' , this.model.get( 'allowHover' ) );
-            this.ui.email.parent().removeClass( 'has-error' );
-            this.ui.email.val( this.model.get( 'email' ) );
 
             this.ui.imOff.removeClass( 'active' );
             this.ui.imOwner.removeClass( 'active' );
-            this.ui.imSelected.removeClass( 'active' ).hide();
+
+            this.ui.imSelected
+                .removeClass( 'active' )
+                .hide()
+            ;
 
             if( CONSTANTS.NULL_KEY === this.model.get( 'im' ) ) {
                 this.ui.imOff.addClass( 'active' );
             } else if( this.model.get( 'ownerKey' ) === this.model.get( 'im' ) ) {
                 this.ui.imOwner.addClass( 'active' );
             } else {
-                this.ui.imSelected.addClass( 'active' ).show().text( this.model.get( 'imDisplayName' ) );
+                this.ui.imSelected
+                    .addClass( 'active' )
+                    .show()
+                    .text( this.model.get( 'imDisplayName' ) )
+                ;
             }
+
+            this.ui.email.parent().removeClass( 'has-error' );
+            this.ui.email.val( this.model.get( 'email' ) );
+
+            var warningNeeded = (
+                '' !== this.model.get( 'email' )
+                && !this.model.get( 'ackEmailSlowness' )
+            );
+
+            fade( this.ui.emailIsSlowWarning , warningNeeded );
+            this.trigger( 'updateTabStatus' , (
+                warningNeeded
+                ? 'warning'
+                : null
+            ) );
         }
 
         , clearEmail: function() {
@@ -135,6 +163,10 @@ define( [
                     } , this )
                 } );
             }
+        }
+
+        , dismissEmailSlowness: function() {
+            this.model.set( 'ackEmailSlowness' , true );
         }
     } );
 
