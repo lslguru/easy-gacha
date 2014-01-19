@@ -69,6 +69,10 @@ define( [
 
             parsed.isAdmin = Boolean( parseInt( data[i++] , 10 ) );
             parsed.ownerKey = data[i++] || CONSTANTS.NULL_KEY;
+
+            if( 'Object' == data[i] ) {
+                data[i] = 'Unnamed';
+            }
             parsed.objectName = data[i++];
 
             if( '(No Description)' === data[i] ) {

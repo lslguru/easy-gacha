@@ -84,8 +84,14 @@ define( [
             var i = 0;
             var parsed = {};
 
+            if( 'Object' == data[i] ) {
+                data[i] = 'Unnamed';
+            }
             parsed.primName = data[i++];
 
+            if( '(No Description)' === data[i] ) {
+                data[i] = '';
+            }
             parsed.primDesc = data[i++];
 
             parsed.primType = parseInt( data[i++] , 10 );

@@ -8,6 +8,7 @@ define( [
     , 'bootstrap'
     , 'lib/constants'
     , 'lib/tooltip-placement'
+    , 'lib/fade'
 
 ] , function(
 
@@ -19,6 +20,7 @@ define( [
     , bootstrap
     , CONSTANTS
     , tooltipPlacement
+    , fade
 
 ) {
     'use strict';
@@ -39,22 +41,23 @@ define( [
             , 'groupOn': '#group-on'
             , 'rootClickOff': '#root-click-off'
             , 'rootClickOn': '#root-click-on'
+            , 'rootClickWarning': '#root-prim-choice-needed-warning'
         }
 
         , events: {
-            'change #folder-name': 'setFolderName'
-            , 'click #always-folder-off': 'setFolderForSingleItem'
-            , 'click #always-folder-on': 'setFolderForSingleItem'
-            , 'click #max-buys-unlimited': 'toggleMaxBuysLimited'
-            , 'click #max-buys-limited': 'toggleMaxBuysLimited'
-            , 'change #max-buys-count': 'setMaxBuysCount'
-            , 'keyup #max-buys-count': 'setMaxBuysCount'
-            , 'change #max-per-purchase-count': 'setMaxPerPurchase'
-            , 'keyup #max-per-purchase-count': 'setMaxPerPurchase'
-            , 'click #group-off': 'setGroup'
-            , 'click #group-on': 'setGroup'
-            , 'click #root-click-off': 'setRootClickAction'
-            , 'click #root-click-on': 'setRootClickAction'
+            'change @ui.folderName': 'setFolderName'
+            , 'click @ui.folderForSingleItemOff': 'setFolderForSingleItem'
+            , 'click @ui.folderForSingleItemOn': 'setFolderForSingleItem'
+            , 'click @ui.maxBuysUnlimited': 'toggleMaxBuysLimited'
+            , 'click @ui.maxBuysLimited': 'toggleMaxBuysLimited'
+            , 'change @ui.maxBuysLimit': 'setMaxBuysCount'
+            , 'keyup @ui.maxBuysLimit': 'setMaxBuysCount'
+            , 'change @ui.maxPerPurchase': 'setMaxPerPurchase'
+            , 'keyup @ui.maxPerPurchase': 'setMaxPerPurchase'
+            , 'click @ui.groupOff': 'setGroup'
+            , 'click @ui.groupOn': 'setGroup'
+            , 'click @ui.rootClickOff': 'setRootClickAction'
+            , 'click @ui.rootClickOn': 'setRootClickAction'
         }
 
         , modelEvents: {
@@ -63,16 +66,12 @@ define( [
             , 'change:maxPerPurchase': 'updateMaxPerPurchase'
             , 'change:group': 'updateGroup'
             , 'change:rootClickAction': 'updateRootClickAction'
+            , 'change:scriptLinkNumber': 'updateRootClickAction'
         }
 
         , templateHelpers: function() {
             return {
-                isRootOrOnlyPrim: (
-                    1 === this.model.get( 'numberOfPrims' )
-                    || CONSTANTS.LINK_ROOT === this.model.get( 'scriptLinkNumber' )
-                )
-
-                , MAX_PER_PURCHASE: CONSTANTS.MAX_PER_PURCHASE
+                MAX_PER_PURCHASE: CONSTANTS.MAX_PER_PURCHASE
             };
         }
 
@@ -206,16 +205,15 @@ define( [
         }
 
         , updateRootClickAction: function() {
-            if( -1 === this.model.get( 'rootClickAction' ) ) {
-                this.ui.rootClickOff.removeClass( 'active' );
-                this.ui.rootClickOn.removeClass( 'active' );
-            } else if( 0 === this.model.get( 'rootClickAction' ) ) {
-                this.ui.rootClickOff.addClass( 'active' );
-                this.ui.rootClickOn.removeClass( 'active' );
-            } else if( 1 === this.model.get( 'rootClickAction' ) ) {
-                this.ui.rootClickOff.removeClass( 'active' );
-                this.ui.rootClickOn.addClass( 'active' );
-            }
+            this.ui.rootClickOff.toggleClass( 'active' , ( 0 === this.model.get( 'rootClickAction' ) ) );
+            this.ui.rootClickOn.toggleClass( 'active' , ( 1 === this.model.get( 'rootClickAction' ) ) );
+
+            fade( this.ui.rootClickWarning , this.model.get( 'rootClickActionNeeded' ) );
+            this.trigger( 'updateTabStatus' , (
+                this.model.get( 'rootClickActionNeeded' )
+                ? 'danger'
+                : null
+            ) );
         }
 
         , setRootClickAction: function( jEvent ) {

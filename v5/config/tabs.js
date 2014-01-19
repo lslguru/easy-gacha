@@ -145,13 +145,13 @@ define( [
             var tabUi = this.ui[ tabName ];
 
             _.each( ( tabUi.attr( 'class' ) || '' ).split( /\s+/ ) , function( className ) {
-                if( /^alert-/.test( className ) ) {
+                if( /^text-/.test( className ) ) {
                     tabUi.removeClass( className );
                 }
             } , this );
 
             if( null !== newStatus ) {
-                tabUi.addClass( 'alert-' + newStatus );
+                tabUi.addClass( 'text-' + newStatus );
             }
         }
     } );

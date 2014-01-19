@@ -71,6 +71,7 @@ define( [
             , scriptCount: null
             , scriptTime: null
             , prim: null
+            , isRootOrOnlyPrim: null
 
             // From models/info/extra
             , btn_price: null
@@ -100,6 +101,7 @@ define( [
             , imUserName: null
             , imDisplayName: null
             , setFolderName: null
+            , rootClickActionNeeded: false
         }
 
         , includeInNotecard: [
@@ -206,6 +208,9 @@ define( [
             this.on( 'change:btn_1' , this.updateButtonsOutOfOrder , this );
             this.on( 'change:btn_2' , this.updateButtonsOutOfOrder , this );
             this.on( 'change:btn_3' , this.updateButtonsOutOfOrder , this );
+            this.on( 'change:scriptLinkNumber' , this.updateRootClickActionNeeded , this );
+            this.on( 'change:rootClickAction' , this.updateRootClickActionNeeded , this );
+            this.on( 'change:scriptLinkNumber' , this.updateIsRootOrOnlyPrim , this );
             this.get( 'payouts' ).on( 'add remove reset change:amount' , this.recalculateOwnerAmount , this );
             this.on( 'all' , this.updateConfigured , this );
         }
@@ -432,9 +437,27 @@ define( [
 
             // TODO: payouts
             // TODO: comms
-            // TODO: advanced
+
+            // Whether or not we're in the root prim and have made up our minds
+            if( this.get( 'rootClickActionNeeded' ) ) {
+                configured = false;
+            }
 
             this.set( 'configured' , configured );
+        }
+
+        , updateRootClickActionNeeded: function() {
+            this.set( 'rootClickActionNeeded' , (
+                CONSTANTS.LINK_ROOT === this.get( 'scriptLinkNumber' )
+                && -1 === this.get( 'rootClickAction' )
+            ) );
+        }
+
+        , updateIsRootOrOnlyPrim: function() {
+            this.set( 'isRootOrOnlyPrim' , (
+                CONSTANTS.LINK_ROOT === this.get( 'scriptLinkNumber' ) // root prim
+                || 0 === this.get( 'scriptLinkNumber' ) // only prim
+            ) );
         }
 
         , updateButtonsOutOfOrder: function() {
