@@ -1,7 +1,7 @@
 <div class="form-horizontal">
 
     <div class="form-group" data-toggle="tooltip" title="This determines how much it costs to play for one item">
-        <label class="col-sm-2 control-label">Price</label>
+        <label class="col-sm-2 control-label">Price Per Item</label>
         <div class="col-sm-10">
             <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-money"></i> Lindens</span>
@@ -16,7 +16,7 @@
     </div>
 
     <div class="form-group fade hide" id="price-buttons">
-        <label class="col-sm-2 control-label">Buttons</label>
+        <label class="col-sm-2 control-label">Pay Buttons</label>
         <div class="col-sm-6">
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #1">
                 <span class="input-group-addon">Button 1 Count</span>
@@ -56,11 +56,16 @@
     </div>
 
     <div class="alert alert-warning fade hide clearfix" id="buttons-not-ordered-warning">
-        <i class="fa fa-exclamation-triangle"></i> The buttons aren't in order. Would you like us to fix this for you?
         <div class="btn-group">
             <button class="btn btn-default" id="ignore-buttons-out-of-order">Ignore</button>
             <button class="btn btn-primary" id="fix-button-order">Fix</button>
         </div>
+        <i class="fa fa-exclamation-triangle"></i> The buttons aren't in order. Would you like us to fix this for you?
+    </div>
+
+    <div class="alert alert-warning fade hide clearfix" id="plays-fixed-because-no-copy">
+        <button class="btn btn-primary" id="ack-no-copy-items-means-single-item-play">Okay</button>
+        <i class="fa fa-exclamation-triangle"></i> You have selected to hand out no-copy items. Because of this, the multi-item play feature has to be disabled. Once all no-copy items have been given, the above button settings will take effect.
     </div>
 
 </div>

@@ -20,7 +20,7 @@ define( [
         , comparator: 'name'
 
         , initialize: function() {
-            BaseCollection.prototype.initialize.apply( this , arguments );
+            this.constructor.__super__.initialize.apply( this , arguments );
 
             this.on( 'add' , this.updateTotals , this );
             this.on( 'remove' , this.updateTotals , this );
@@ -36,6 +36,7 @@ define( [
             this.unlimitedRarity = 0;
             this.totalBought = 0;
             this.totalLimit = 0;
+            this.willHandOutNoCopyObjects = false;
 
             _.each( this.models , function( model ) {
                 this.totalBought += model.get( 'bought' );
@@ -43,6 +44,10 @@ define( [
                 if( CONSTANTS.PERM_TRANSFER & model.get( 'ownerPermissions' ) ) {
                     if( 0 !== model.get( 'limit' ) ) {
                         this.totalRarity += model.get( 'rarity' );
+
+                        if( !( CONSTANTS.PERM_COPY & model.get( 'ownerPermissions' ) ) && model.get( 'rarity' ) ) {
+                            this.willHandOutNoCopyObjects = true;
+                        }
                     }
 
                     if( -1 === model.get( 'limit' ) ) {

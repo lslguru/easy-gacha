@@ -61,7 +61,7 @@ define( [
         }
 
         , modelEvents: {
-            'change:folderForSingleItem': 'updateFolderForSingleItem'
+            'change:folderForSingleItemDesired': 'updateFolderForSingleItem'
             , 'change:maxBuys': 'updateMaxBuys'
             , 'change:maxPerPurchase': 'updateMaxPerPurchase'
             , 'change:group': 'updateGroup'
@@ -95,19 +95,14 @@ define( [
         }
 
         , updateFolderForSingleItem: function() {
-            if( this.model.get( 'folderForSingleItem' ) ) {
-                this.ui.folderForSingleItemOff.removeClass( 'active' );
-                this.ui.folderForSingleItemOn.addClass( 'active' );
-            } else {
-                this.ui.folderForSingleItemOff.addClass( 'active' );
-                this.ui.folderForSingleItemOn.removeClass( 'active' );
-            }
+            this.ui.folderForSingleItemOff.toggleClass( 'active' , !this.model.get( 'folderForSingleItemDesired' ) );
+            this.ui.folderForSingleItemOn.toggleClass( 'active' , this.model.get( 'folderForSingleItemDesired' ) );
         }
 
         , setFolderForSingleItem: function( jEvent ) {
             var target = $( jEvent.currentTarget );
             var newValue = Boolean( parseInt( target.data( 'value' ) , 10 ) );
-            this.model.set( 'folderForSingleItem' , newValue );
+            this.model.set( 'folderForSingleItemDesired' , newValue );
         }
 
         , updateMaxBuys: function() {

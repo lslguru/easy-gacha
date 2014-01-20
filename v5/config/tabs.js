@@ -37,7 +37,8 @@ define( [
         template: template
 
         , ui: {
-            'items': '[href=#tab-items]'
+            'default': '[href=#tab-items]'
+            , 'items': '[href=#tab-items]'
             , 'price': '[href=#tab-price]'
             , 'payouts': '[href=#tab-payouts]'
             , 'comms': '[href=#tab-comms]'

@@ -37,6 +37,17 @@ define( [
             , nextPermissions: null
         }
 
+        , initialize: function() {
+            this.constructor.__super__.initialize.apply( this , arguments );
+            this.on( 'change:ownerPermissions' , this.applyNoCopyLimit , this );
+        }
+
+        , applyNoCopyLimit: function() {
+            if( null !== this.get( 'ownerPermissions' ) && !( CONSTANTS.PERM_COPY & this.get( 'ownerPermissions' ) ) ) {
+                this.set( 'limit' , 1 );
+            }
+        }
+
         , includeInNotecard: [
             'rarity'
             , 'limit'

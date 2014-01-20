@@ -52,6 +52,8 @@ define( [
             , 'btnOrderIgnore': '#ignore-buttons-out-of-order'
             , 'btnOrderFix': '#fix-button-order'
             , 'noPaymentsWarning': '#no-payment-options-warning'
+            , 'oneItemModeWarning': '#plays-fixed-because-no-copy'
+            , 'ackNoCopyWarning': '#ack-no-copy-items-means-single-item-play'
         }
 
         , modelEvents: {
@@ -70,6 +72,8 @@ define( [
             , 'change:suggestedButtonOrder': 'updateDisplay'
             , 'change:ignoreButtonsOutOfOrder': 'updateDisplay'
             , 'change:maxPerPurchase': 'updateDisplay'
+            , 'change:willHandOutNoCopyObjects': 'updateDisplay'
+            , 'change:ackNoCopyItemsMeansSingleItemPlay': 'updateDisplay'
         }
 
         , events: {
@@ -88,6 +92,7 @@ define( [
             , 'click @ui.payPriceZeroWarningClose': 'clearPayPriceWarning'
             , 'click @ui.btnOrderIgnore': 'clearButtonOrderWarning'
             , 'click @ui.btnOrderFix': 'fixButtonOrder'
+            , 'click @ui.ackNoCopyWarning': 'ackNoCopyWarning'
         }
 
         , onRender: function() {
@@ -99,24 +104,7 @@ define( [
 
             var img = $(payWindowImage).clone();
             this.ui.payPreviewBg.prepend( img );
-            this.setButtons();
             this.updateDisplay();
-        }
-
-        , effectiveCount: function( btn_val ) {
-            btn_val = parseInt( btn_val , 10 );
-
-            if( _.isNaN( btn_val ) ) {
-                return 0;
-            } else if( 0 > btn_val ) {
-                return 0;
-            } else if( CONSTANTS.MAX_PER_PURCHASE < btn_val ) {
-                return Math.min( CONSTANTS.MAX_PER_PURCHASE , this.model.get( 'maxPerPurchase' ) );
-            } else if( this.model.get( 'maxPerPurchase' ) < btn_val ) {
-                return Math.min( CONSTANTS.MAX_PER_PURCHASE , this.model.get( 'maxPerPurchase' ) );
-            }
-
-            return btn_val;
         }
 
         , updateDisplay: function() {
@@ -180,7 +168,7 @@ define( [
                         hasPaymentOptions = true;
                     }
 
-                    btn_val = this.effectiveCount( btn_val );
+                    btn_val = this.model.effectiveButtonCount( btn_val );
 
                     this.ui[ 'payPreview_' + btn ].text(
                         btn_val
@@ -223,6 +211,14 @@ define( [
                 fade( this.ui.btnOrderWarning , false );
             }
 
+            // Show or hide the limited play message
+            if( 0 !== this.model.get( 'btn_price' ) && this.model.get( 'willHandOutNoCopyObjects' ) && !this.model.get( 'ackNoCopyItemsMeansSingleItemPlay' ) ) {
+                fade( this.ui.oneItemModeWarning , true );
+                warningStatus = true;
+            } else {
+                fade( this.ui.oneItemModeWarning , false );
+            }
+
             // Update tab
             this.trigger( 'updateTabStatus' , (
                 dangerStatus
@@ -237,6 +233,10 @@ define( [
 
         , clearPayPriceWarning: function() {
             this.model.set( 'zeroPriceOkay' , true );
+        }
+
+        , ackNoCopyWarning: function() {
+            this.model.set( 'ackNoCopyItemsMeansSingleItemPlay' , true );
         }
 
         , clearButtonOrderWarning: function() {
@@ -263,45 +263,6 @@ define( [
             } else {
                 this.model.set( field , val );
             }
-
-            this.setButtons();
-            this.updateDisplay();
-        }
-
-        , setButtons: function() {
-            var btn_price = this.model.get( 'btn_price' );
-
-            this.model.set( {
-                payPrice: (
-                    btn_price && this.effectiveCount( this.model.get( 'btn_default' ) )
-                    ? btn_price * this.effectiveCount( this.model.get( 'btn_default' ) )
-                    : CONSTANTS.PAY_HIDE
-                )
-
-                , payPriceButton0: (
-                    btn_price && this.effectiveCount( this.model.get( 'btn_0' ) )
-                    ? btn_price * this.effectiveCount( this.model.get( 'btn_0' ) )
-                    : CONSTANTS.PAY_HIDE
-                )
-
-                , payPriceButton1: (
-                    btn_price && this.effectiveCount( this.model.get( 'btn_1' ) )
-                    ? btn_price * this.effectiveCount( this.model.get( 'btn_1' ) )
-                    : CONSTANTS.PAY_HIDE
-                )
-
-                , payPriceButton2: (
-                    btn_price && this.effectiveCount( this.model.get( 'btn_2' ) )
-                    ? btn_price * this.effectiveCount( this.model.get( 'btn_2' ) )
-                    : CONSTANTS.PAY_HIDE
-                )
-
-                , payPriceButton3: (
-                    btn_price && this.effectiveCount( this.model.get( 'btn_3' ) )
-                    ? btn_price * this.effectiveCount( this.model.get( 'btn_3' ) )
-                    : CONSTANTS.PAY_HIDE
-                )
-            } );
 
             this.updateDisplay();
         }

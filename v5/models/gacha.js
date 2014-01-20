@@ -41,7 +41,9 @@ define( [
             , agentsCache: agentsCache
             , overrideProgress: null
             , hasChangesToSave: false
-            , autoModified: true
+            , autoModified: null // TODO: On save, set to false
+            , ackAutoModified: false
+            , willHandOutNoCopyObjects: false
 
             // From models/info
             , isAdmin: null
@@ -83,6 +85,8 @@ define( [
             , zeroPriceOkay: false
             , suggestedButtonOrder: null
             , ignoreButtonsOutOfOrder: false
+            , ackNoCopyItemsMeansSingleItemPlay: false
+            , folderForSingleItemDesired: true
 
             // From models/config
             , folderForSingleItem: null
@@ -114,7 +118,8 @@ define( [
             , 'btn_3'
             , 'zeroPriceOkay'
             , 'ignoreButtonsOutOfOrder'
-            , 'folderForSingleItem'
+            , 'ackNoCopyItemsMeansSingleItemPlay'
+            , 'folderForSingleItemDesired'
             , 'rootClickAction'
             , 'group'
             , 'allowHover'
@@ -202,19 +207,39 @@ define( [
                 }
             } , this );
 
+            /////// Calculated values ///////
+
             this.on( 'all' , this.updateHasChangesToSave , this );
+
             this.on( 'change:overrideProgress' , this.updateProgress , this );
+
             this.on( 'change:btn_price' , this.recalculateOwnerAmount , this );
+
             this.on( 'change:btn_price' , this.updateZeroPriceOkay , this );
+
             this.on( 'change:btn_0' , this.updateButtonsOutOfOrder , this );
             this.on( 'change:btn_1' , this.updateButtonsOutOfOrder , this );
             this.on( 'change:btn_2' , this.updateButtonsOutOfOrder , this );
             this.on( 'change:btn_3' , this.updateButtonsOutOfOrder , this );
+
             this.on( 'change:scriptLinkNumber' , this.updateRootClickActionNeeded , this );
             this.on( 'change:rootClickAction' , this.updateRootClickActionNeeded , this );
+
             this.on( 'change:scriptLinkNumber' , this.updateIsRootOrOnlyPrim , this );
+
             this.on( 'change:email' , this.updateAckEmailSlowness , this );
+
+            this.on( 'change:btn_price' , this.updateBuyButtons , this );
+            this.on( 'change:btn_default' , this.updateBuyButtons , this );
+            this.on( 'change:btn_0' , this.updateBuyButtons , this );
+            this.on( 'change:btn_1' , this.updateBuyButtons , this );
+            this.on( 'change:btn_2' , this.updateBuyButtons , this );
+            this.on( 'change:btn_3' , this.updateBuyButtons , this );
+            this.on( 'change:folderForSingleItemDesired' , this.updateBuyButtons , this );
+            this.get( 'items' ).on( 'add remove reset change:rarity change:limit' , this.updateBuyButtons , this );
+
             this.get( 'payouts' ).on( 'add remove reset change:amount' , this.recalculateOwnerAmount , this );
+
             this.on( 'all' , this.updateConfigured , this );
         }
 
@@ -486,6 +511,74 @@ define( [
                 ? null
                 : buttonsOrdered
             ) );
+        }
+
+        , effectiveButtonCount: function( btn_val ) {
+            btn_val = parseInt( btn_val , 10 );
+
+            if( _.isNaN( btn_val ) ) {
+                return 0;
+            } else if( 0 > btn_val ) {
+                return 0;
+            } else if( CONSTANTS.MAX_PER_PURCHASE < btn_val ) {
+                return Math.min( CONSTANTS.MAX_PER_PURCHASE , this.get( 'maxPerPurchase' ) );
+            } else if( this.get( 'maxPerPurchase' ) < btn_val ) {
+                return Math.min( CONSTANTS.MAX_PER_PURCHASE , this.get( 'maxPerPurchase' ) );
+            }
+
+            return btn_val;
+        }
+
+        , updateBuyButtons: function() {
+            var btn_price = this.get( 'btn_price' );
+
+            if( this.get( 'items' ).totalLimit && this.get( 'items' ).willHandOutNoCopyObjects ) {
+                this.set( {
+                    payPrice: CONSTANTS.PAY_HIDE
+                    , payPriceButton0: btn_price
+                    , payPriceButton1: CONSTANTS.PAY_HIDE
+                    , payPriceButton2: CONSTANTS.PAY_HIDE
+                    , payPriceButton3: CONSTANTS.PAY_HIDE
+                    , willHandOutNoCopyObjects: this.get( 'items' ).willHandOutNoCopyObjects
+                    , folderForSingleItem: false
+                } );
+            } else {
+                this.set( {
+                    ackNoCopyItemsMeansSingleItemPlay: false
+                    , willHandOutNoCopyObjects: this.get( 'items' ).willHandOutNoCopyObjects
+                    , folderForSingleItem: this.get( 'folderForSingleItemDesired' )
+
+                    , payPrice: (
+                        btn_price && this.effectiveButtonCount( this.get( 'btn_default' ) )
+                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_default' ) )
+                        : CONSTANTS.PAY_HIDE
+                    )
+
+                    , payPriceButton0: (
+                        btn_price && this.effectiveButtonCount( this.get( 'btn_0' ) )
+                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_0' ) )
+                        : CONSTANTS.PAY_HIDE
+                    )
+
+                    , payPriceButton1: (
+                        btn_price && this.effectiveButtonCount( this.get( 'btn_1' ) )
+                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_1' ) )
+                        : CONSTANTS.PAY_HIDE
+                    )
+
+                    , payPriceButton2: (
+                        btn_price && this.effectiveButtonCount( this.get( 'btn_2' ) )
+                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_2' ) )
+                        : CONSTANTS.PAY_HIDE
+                    )
+
+                    , payPriceButton3: (
+                        btn_price && this.effectiveButtonCount( this.get( 'btn_3' ) )
+                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_3' ) )
+                        : CONSTANTS.PAY_HIDE
+                    )
+                } );
+            }
         }
 
         , updateAckEmailSlowness: function() {

@@ -80,10 +80,8 @@
     color: #b5dd78;
 }
 
-#page-config #prize-zero-okay {
-    float: right;
-}
-
-#page-config #buttons-not-ordered-warning .btn-group {
+#page-config #prize-zero-okay ,
+#page-config #buttons-not-ordered-warning .btn-group ,
+#page-config #plays-fixed-because-no-copy .btn {
     float: right;
 }

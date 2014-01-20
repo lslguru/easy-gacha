@@ -8,6 +8,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'lib/map-uri'
     , 'lib/is-sl-viewer'
+    , 'lib/fade'
 
 ] , function(
 
@@ -19,6 +20,7 @@ define( [
     , tooltipPlacement
     , mapUri
     , isSlViewer
+    , fade
 
 ) {
     'use strict';
@@ -38,6 +40,7 @@ define( [
             , 'saveButton': '#save'
             , 'dashboardBtn': '#dashboard'
             , 'firstRunMessage': '#first-run-message'
+            , 'firstRunMessageCloseButton': '#first-run-message .close'
         }
 
         , events: {
@@ -47,10 +50,13 @@ define( [
             , 'click @ui.reloadConfirmed': 'confirmReload'
             , 'click @ui.reloadSaveFirst': 'confirmReloadSaveFirst'
             , 'click @ui.saveButton': 'clickSave'
+            , 'click @ui.firstRunMessageCloseButton': 'hideAutoModifiedMessage'
         }
 
         , modelEvents: {
             'change:hasChangesToSave': 'updateSaveBtn'
+            , 'change:autoModified': 'toggleAutoModifiedMessage'
+            , 'change:ackAutoModified': 'toggleAutoModifiedMessage'
         }
 
         , initialize: function() {
@@ -167,10 +173,15 @@ define( [
             } );
 
             this.updateSaveBtn();
+            this.toggleAutoModifiedMessage();
+        }
 
-            if( ! this.model.get( 'autoModified' ) ) {
-                this.ui.firstRunMessage.remove();
-            }
+        , hideAutoModifiedMessage: function() {
+            this.model.set( 'ackAutoModified' , true );
+        }
+
+        , toggleAutoModifiedMessage: function() {
+            fade( this.ui.firstRunMessage , this.model.get( 'autoModified' ) && !this.model.get( 'ackAutoModified' ) );
         }
 
         , confirmReloadSaveFirst: function( jEvent ) {
