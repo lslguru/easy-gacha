@@ -8,6 +8,7 @@ define( [
     , 'bootstrap'
     , 'lib/constants'
     , 'lib/tooltip-placement'
+    , 'lib/fade'
 
 ] , function(
 
@@ -19,6 +20,7 @@ define( [
     , bootstrap
     , CONSTANTS
     , tooltipPlacement
+    , fade
 
 ) {
     'use strict';
@@ -78,24 +80,8 @@ define( [
                 }
             } );
 
-            var hideComplete = _.bind( function() {
-                this.ui.lineTooLongWarning.hide();
-            } , this );
-
-            if( longLines.length ) {
-                this.ui.lineTooLongWarning.show().addClass( 'in' );
-                this.ui.lineTooLong.text( longLines );
-            } else {
-                this.ui.lineTooLongWarning.removeClass( 'in' );
-                if( $.support.transition ) {
-                    this.ui.lineTooLongWarning
-                        .one( $.support.transition.end , hideComplete )
-                        .emulateTransitionEnd( 150 )
-                    ;
-                } else {
-                    hideComplete();
-                }
-            }
+            this.ui.lineTooLong.text( longLines );
+            fade( this.ui.lineTooLongWarning , longLines.length );
 
             this.ui.exportField.attr( 'rows' , jsonLines.length );
             this.ui.exportField.focus();

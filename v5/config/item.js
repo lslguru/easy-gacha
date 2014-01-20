@@ -8,6 +8,7 @@ define( [
     , 'lib/constants'
     , 'lib/tooltip-placement'
     , 'bootstrap'
+    , 'lib/fade'
 
 ] , function(
 
@@ -19,6 +20,7 @@ define( [
     , CONSTANTS
     , tooltipPlacement
     , bootstrap
+    , fade
 
 ) {
     'use strict';
@@ -44,16 +46,17 @@ define( [
             , 'limitField': '[data-column-contents=limit] input'
             , 'importBtn': '.config-import-btn'
             , 'deleteBtn': '.item-delete-btn'
+            , 'setLimitBtn': '.set-limit'
         }
 
         , events: {
-            'change [data-column-contents=rarity] input': 'setRarity'
-            , 'keyup [data-column-contents=rarity] input': 'setRarity'
-            , 'click .set-limit': 'setLimitMode'
-            , 'change [data-column-contents=limit] input': 'setLimit'
-            , 'keyup [data-column-contents=limit] input': 'setLimit'
-            , 'click .item-delete-btn': 'deleteItem'
-            , 'click .config-import-btn': 'importNotecard'
+            'change @ui.rarityField': 'setRarity'
+            , 'keyup @ui.rarityField': 'setRarity'
+            , 'click @ui.setLimitBtn': 'setLimitMode'
+            , 'change @ui.limitField': 'setLimit'
+            , 'keyup @ui.limitField': 'setLimit'
+            , 'click @ui.deleteBtn': 'deleteItem'
+            , 'click @ui.importBtn': 'importNotecard'
         }
 
         , modelEvents: {
@@ -138,16 +141,16 @@ define( [
             this.ui.rarityHigh.text( totalRarity ? Math.round( rarity / unlimitedRarity * 1000 ) / 10 : 0 );
 
             if( 0 === this.model.get( 'limit' ) ) {
-                this.ui.rarityNotSold.show();
-                this.ui.rarityAvailable.hide();
+                fade( this.ui.rarityNotSold , true );
+                fade( this.ui.rarityAvailable , false );
             } else {
-                this.ui.rarityAvailable.show();
+                fade( this.ui.rarityAvailable , true );
                 if( 0 === this.model.get( 'rarity' ) ) {
-                    this.ui.rarityCalculated.hide();
-                    this.ui.rarityNotSold.show();
+                    fade( this.ui.rarityCalculated , false );
+                    fade( this.ui.rarityNotSold , true );
                 } else {
-                    this.ui.rarityCalculated.show();
-                    this.ui.rarityNotSold.hide();
+                    fade( this.ui.rarityCalculated , true );
+                    fade( this.ui.rarityNotSold , false );
                 }
             }
         }
@@ -174,28 +177,27 @@ define( [
             var limit = this.model.get( 'limit' );
 
             if( ! ( CONSTANTS.PERM_TRANSFER & this.model.get( 'ownerPermissions' ) ) ) {
-                this.ui.noTransMessage.show();
-                this.ui.noCopyMessage.hide();
-                this.ui.limitInputs.css( 'display' , 'none' );
+                fade( this.ui.noTransMessage , true );
+                fade( this.ui.noCopyMessage , false );
+                fade( this.ui.limitInputs , false );
             } else if( ! ( CONSTANTS.PERM_COPY & this.model.get( 'ownerPermissions' ) ) ) {
-                this.ui.noTransMessage.hide();
-                this.ui.noCopyMessage.show();
-                this.ui.limitInputs.css( 'display' , 'none' );
+                fade( this.ui.noTransMessage , false );
+                fade( this.ui.noCopyMessage , true );
+                fade( this.ui.limitInputs , false );
             } else if( -1 === limit ) {
-                this.ui.noTransMessage.hide();
-                this.ui.noCopyMessage.hide();
-                this.ui.limitInputs.css( 'display' , '' );
+                fade( this.ui.noTransMessage , false );
+                fade( this.ui.noCopyMessage , false );
+                fade( this.ui.limitInputs , true );
                 this.ui.unlimitedBtn.addClass( 'active' );
                 this.ui.limitedBtn.removeClass( 'active' );
-                this.ui.limitField.hide();
+                fade( this.ui.limitField , false );
             } else {
-                this.ui.noTransMessage.hide();
-                this.ui.noCopyMessage.hide();
-                this.ui.limitInputs.css( 'display' , '' );
+                fade( this.ui.noTransMessage , false );
+                fade( this.ui.noCopyMessage , false );
+                fade( this.ui.limitInputs , true );
                 this.ui.unlimitedBtn.removeClass( 'active' );
                 this.ui.limitedBtn.addClass( 'active' );
-                this.ui.limitField.show();
-                this.ui.limitField.prop( 'disabled' , '' );
+                fade( this.ui.limitField , true );
                 this.ui.limitField.val( limit );
             }
         }

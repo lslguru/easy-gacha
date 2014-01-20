@@ -103,7 +103,7 @@
 </td>
 
 <td data-column-contents="rarity">
-    <span class="can-set-rarity">
+    <span class="can-set-rarity fade">
         <input
             type="number"
             class="form-control"
@@ -112,7 +112,7 @@
             data-toggle="tooltip"
             title="Any number &#x2265;0"
         />
-        <span class="show-calculated-rarity">
+        <span class="show-calculated-rarity fade">
             <span class="nowrap"> = between <span
             class="rarity-low"
             data-toggle="tooltip"
@@ -123,18 +123,18 @@
             title="This is the probability if all limited quantities are exhausted"
         ></span>%</span></span>
     </span>
-    <span class="not-sold">Not for sale</span>
+    <span class="not-sold fade">Not for sale</span>
 </td>
 
 <td data-column-contents="limit">
-    <span class="no-trans">Not transferable</span>
-    <span class="no-copy">Not copyable</span>
-    <div class="input-group">
+    <span class="no-trans fade">Not transferable</span>
+    <span class="no-copy fade">Not copyable</span>
+    <div class="input-group fade">
         <span class="input-group-btn">
             <button class="btn btn-primary active unlimited set-limit" type="button" data-limited="0">Unlimited</button>
             <button class="btn btn-primary limited set-limit" type="button" data-limited="1">Limited</button>
         </span>
-        <input class="form-control" type="number" placeholder="Max" data-aria-valuemin="0" />
+        <input class="form-control fade" type="number" placeholder="Max" data-aria-valuemin="0" />
     </div>
 </td>
 

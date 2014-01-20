@@ -82,10 +82,8 @@ define( [
             this.ui.imOff.removeClass( 'active' );
             this.ui.imOwner.removeClass( 'active' );
 
-            this.ui.imSelected
-                .removeClass( 'active' )
-                .hide()
-            ;
+            this.ui.imSelected.removeClass( 'active' );
+            fade( this.ui.imSelected , false );
 
             if( CONSTANTS.NULL_KEY === this.model.get( 'im' ) ) {
                 this.ui.imOff.addClass( 'active' );
@@ -94,9 +92,10 @@ define( [
             } else {
                 this.ui.imSelected
                     .addClass( 'active' )
-                    .show()
                     .text( this.model.get( 'imDisplayName' ) )
                 ;
+
+                fade( this.ui.imSelected , true );
             }
 
             this.ui.email.parent().removeClass( 'has-error' );

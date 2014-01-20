@@ -34,7 +34,7 @@ define( [
 
             var nlcFetchOptions = _.clone( options );
             nlcFetchOptions.success = _.bind( function() {
-                var lineCount = parseInt( notecardLineCount.get( 'result' ) , 10 );
+                var lineCount = parseInt( notecardLineCount.get( 'result' ) , 10 ) + 1;
                 this.set( 'lineCount' , lineCount );
 
                 if( ! this.get( 'lineCount' ) ) {
@@ -50,6 +50,23 @@ define( [
 
                 var nlFetchOptions = _.clone( options );
                 nlFetchOptions.success = _.bind( function() {
+                    var text = this.get( 'text' );
+                    var lineText = notecardLine.get( 'result' );
+
+                    if( CONSTANTS.EOF !== notecardLine.get( 'result' ) ) {
+                        this.set( {
+                            text: (
+                                text
+                                + ( text ? '\n' : '' )
+                                + lineText
+                            ).replace( /\n$/ , '' )
+
+                            , progressPercentage: (
+                                ( lineNumber + 1 ) / lineCount * 100
+                            )
+                        } );
+                    }
+
                     if( CONSTANTS.EOF === notecardLine.get( 'result' ) || lineCount === lineNumber + 1 ) {
                         this.set( 'progressPercentage' , 100 );
 
@@ -59,21 +76,6 @@ define( [
 
                         return;
                     }
-
-                    var text = this.get( 'text' );
-                    var lineText = notecardLine.get( 'result' );
-
-                    this.set( {
-                        text: (
-                            text
-                            + ( text ? '\n' : '' )
-                            + lineText
-                        )
-
-                        , progressPercentage: (
-                            ( lineNumber + 1 ) / lineCount * 100
-                        )
-                    } );
 
                     ++lineNumber;
                     next();

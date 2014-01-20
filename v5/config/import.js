@@ -10,6 +10,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'models/notecard'
     , 'lib/is-sl-viewer'
+    , 'lib/fade'
 
 ] , function(
 
@@ -23,6 +24,7 @@ define( [
     , tooltipPlacement
     , Notecard
     , isSlViewer
+    , fade
 
 ) {
     'use strict';
@@ -56,7 +58,6 @@ define( [
 
         , onTabShown: function() {
             this.ui.importField.focus(); // Make sure cursor is in the box
-            this.ui.importField.select(); // Make sure text is highlighted
         }
 
         , onRender: function() {
@@ -79,7 +80,7 @@ define( [
             } );
 
             this.onImportFieldChange();
-            this.ui.progressArea.hide();
+            fade( this.ui.progressArea , false );
         }
 
         , onImportFieldChange: function() {
@@ -119,12 +120,12 @@ define( [
         }
 
         , importNotecard: function( notecardName ) {
-            this.ui.progressArea.show();
-            this.ui.inputArea.hide();
+            fade( this.ui.progressArea , true );
+            fade( this.ui.inputArea , false );
 
             var onComplete = _.bind( function( alertType , message ) {
-                this.ui.progressArea.hide();
-                this.ui.inputArea.show();
+                fade( this.ui.progressArea , false );
+                fade( this.ui.inputArea , true );
 
                 this.ui.progressResultAlert.html(
                     '<div class="alert alert-' + alertType + ' alert-dismissable" xmlns="http://www.w3.org/1999/xhtml">'
