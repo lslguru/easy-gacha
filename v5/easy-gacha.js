@@ -46,7 +46,7 @@
     // uncaught but harmless errors.
     window.onerror = function( msg , url , lineNumber ) {
         document.body.innerHTML = (
-            'Something went wrong. Please refresh the page and try again.'
+            '<p>Something went wrong. Please refresh the page and try again.</p>'
         );
     };
 })();

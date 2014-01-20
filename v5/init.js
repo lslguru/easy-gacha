@@ -1,3 +1,9 @@
+require.onError = function( err ) {
+    document.body.innerHTML = (
+        '<p>Something went wrong. Please refresh the page and try again</p>\n<pre>' + err + '</pre>'
+    );
+};
+
 require( {
 
     paths: {

@@ -36,9 +36,10 @@ define( [
     var exports = Marionette.Layout.extend( {
         template: template
 
+        , defaultTab: 'items'
+
         , ui: {
-            'default': '[href=#tab-items]' // duplicate on purpose
-            , 'items': '[href=#tab-items]'
+            'items': '[href=#tab-items]'
             , 'price': '[href=#tab-price]'
             , 'payouts': '[href=#tab-payouts]'
             , 'comms': '[href=#tab-comms]'
@@ -94,11 +95,6 @@ define( [
             }
         }
 
-        , initialize: function() {
-            this.constructor.__super__.initialize.apply( this , arguments );
-            this.model = this.options.model;
-        }
-
         , showTab: function( jEvent ) {
             jEvent.preventDefault();
 
@@ -134,10 +130,14 @@ define( [
             } , this );
 
             this.options.app.vent.on( 'selectTab' , function( tabName ) {
+                if( 'default' === tabName ) {
+                    tabName = this.defaultTab;
+                }
+
                 this.ui[ tabName ].tab( 'show' );
             } , this );
 
-            this.ui.default.tab( 'show' );
+            this.ui[ this.defaultTab ].tab( 'show' );
         }
 
         , updateTabStatus: function( tabName , newStatus ) {
