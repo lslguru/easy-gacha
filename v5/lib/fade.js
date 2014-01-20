@@ -15,6 +15,7 @@ define( [
 
     var next = 0;
     var fading = {};
+    var force = false;
 
     function nextId() {
         return 'f' + next++;
@@ -28,7 +29,8 @@ define( [
 
     function endFade( id , show ) {
         if( show !== fading[ id ].show ) {
-            return fade( fading[ id ].el , fading[ id ].show , null , true );
+            force = true;
+            return fade( fading[ id ].el , fading[ id ].show , null );
         }
 
         _.each( fading[ id ].callbacks , function( callback ) {
@@ -53,7 +55,10 @@ define( [
     function resize( el , show , callback ) {
         var position = el.css( 'position' );
 
-        if( 'static' !== position && 'relative' !== position ) {
+        if(
+            ( 'static' !== position && 'relative' !== position )
+            || !el.hasClass( 'fade-resize' )
+        ) {
             callback();
             return;
         }
@@ -111,9 +116,16 @@ define( [
         } );
     }
 
-    function fade( el , show , callback , force ) {
+    function fade( el , show , callback , context ) {
+        var forceThisCall = force;
+        force = false;
+
         el = $( el );
         show = Boolean( show );
+
+        if( _.isFunction( callback ) && _.isObject( context ) ) {
+            callback = _.bind( callback , context );
+        }
 
         if( ! el.hasClass( 'fade' ) ) {
             el.toggleClass( 'hide' , !show );
@@ -126,7 +138,7 @@ define( [
 
         // There's already a transition in progress, record settings to deal
         // with it at the end of the current transition
-        if( fading[ id ] && !force ) {
+        if( fading[ id ] && !forceThisCall ) {
             fading[ id ].show = show;
 
             if( callback ) {
@@ -138,14 +150,16 @@ define( [
 
         // Already shown/hidden, nothing to do
         if( show && el.hasClass( 'in' ) ) {
-            return ifCallback( callback );
+            ifCallback( callback );
+            return;
         }
         if( !show && el.hasClass( 'hide' ) ) {
-            return ifCallback( callback );
+            ifCallback( callback );
+            return;
         }
 
         // If we're being forced, it's an internal call
-        if( !force ) {
+        if( !forceThisCall ) {
             fading[ id ] = {
                 el: el
                 , show: show

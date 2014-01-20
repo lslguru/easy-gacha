@@ -141,16 +141,22 @@ define( [
             this.ui.rarityHigh.text( totalRarity ? Math.round( rarity / unlimitedRarity * 1000 ) / 10 : 0 );
 
             if( 0 === this.model.get( 'limit' ) ) {
-                fade( this.ui.rarityNotSold , true );
-                fade( this.ui.rarityAvailable , false );
-            } else {
-                fade( this.ui.rarityAvailable , true );
-                if( 0 === this.model.get( 'rarity' ) ) {
-                    fade( this.ui.rarityCalculated , false );
+                fade( this.ui.rarityAvailable , false , function() {
                     fade( this.ui.rarityNotSold , true );
+                } , this );
+            } else {
+                if( 0 === this.model.get( 'rarity' ) ) {
+                    fade( this.ui.rarityCalculated , false , function() {
+                        fade( this.ui.rarityNotSold , true , function() {
+                            fade( this.ui.rarityAvailable , true );
+                        } , this );
+                    } , this );
                 } else {
-                    fade( this.ui.rarityCalculated , true );
-                    fade( this.ui.rarityNotSold , false );
+                    fade( this.ui.rarityNotSold , false , function() {
+                        fade( this.ui.rarityCalculated , true , function() {
+                            fade( this.ui.rarityAvailable , true );
+                        } , this );
+                    } , this );
                 }
             }
         }
@@ -177,28 +183,36 @@ define( [
             var limit = this.model.get( 'limit' );
 
             if( ! ( CONSTANTS.PERM_TRANSFER & this.model.get( 'ownerPermissions' ) ) ) {
-                fade( this.ui.noTransMessage , true );
-                fade( this.ui.noCopyMessage , false );
-                fade( this.ui.limitInputs , false );
+                fade( this.ui.noCopyMessage , false , function() {
+                    fade( this.ui.limitInputs , false , function() {
+                        fade( this.ui.noTransMessage , true );
+                    } , this );
+                } , this );
             } else if( ! ( CONSTANTS.PERM_COPY & this.model.get( 'ownerPermissions' ) ) ) {
-                fade( this.ui.noTransMessage , false );
-                fade( this.ui.noCopyMessage , true );
-                fade( this.ui.limitInputs , false );
+                fade( this.ui.noTransMessage , false , function() {
+                    fade( this.ui.limitInputs , false , function() {
+                        fade( this.ui.noCopyMessage , true );
+                    } , this );
+                } , this );
             } else if( -1 === limit ) {
-                fade( this.ui.noTransMessage , false );
-                fade( this.ui.noCopyMessage , false );
-                fade( this.ui.limitInputs , true );
-                this.ui.unlimitedBtn.addClass( 'active' );
-                this.ui.limitedBtn.removeClass( 'active' );
-                fade( this.ui.limitField , false );
+                fade( this.ui.noTransMessage , false , function() {
+                    fade( this.ui.noCopyMessage , false , function() {
+                        this.ui.unlimitedBtn.addClass( 'active' );
+                        this.ui.limitedBtn.removeClass( 'active' );
+                        fade( this.ui.limitInputs , true );
+                        fade( this.ui.limitField , false );
+                    } , this );
+                } , this );
             } else {
-                fade( this.ui.noTransMessage , false );
-                fade( this.ui.noCopyMessage , false );
-                fade( this.ui.limitInputs , true );
-                this.ui.unlimitedBtn.removeClass( 'active' );
-                this.ui.limitedBtn.addClass( 'active' );
-                fade( this.ui.limitField , true );
-                this.ui.limitField.val( limit );
+                fade( this.ui.noTransMessage , false , function() {
+                    fade( this.ui.noCopyMessage , false , function() {
+                        this.ui.unlimitedBtn.removeClass( 'active' );
+                        this.ui.limitedBtn.addClass( 'active' );
+                        this.ui.limitField.val( limit );
+                        fade( this.ui.limitInputs , true );
+                        fade( this.ui.limitField , true );
+                    } , this );
+                } , this );
             }
         }
 
