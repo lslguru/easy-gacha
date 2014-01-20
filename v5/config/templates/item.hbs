@@ -16,9 +16,9 @@
 >
     {{#if inventoryExists}}
         <span class="fa-stack">
-            <i class="fa fa-files-o fa-stack-1x text-{{#if ownerCanCopy}}success{{else}}danger{{/if}}"></i>
+            <i class="fa fa-files-o fa-stack-1x text-{{#if ownerCanCopy}}success{{else}}warning{{/if}}"></i>
             {{#if ownerCanCopy}}{{else}}
-                <i class="fa fa-ban fa-stack-2x text-danger"></i>
+                <i class="fa fa-ban fa-stack-2x text-warning"></i>
             {{/if}}
             <span class="sr-only">
                 {{#if ownerCanCopy}}
@@ -29,9 +29,9 @@
             </span>
         </span>
         <span class="fa-stack">
-            <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if ownerCanMod}}success{{else}}danger{{/if}}"></i>
+            <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if ownerCanMod}}success{{else}}warning{{/if}}"></i>
             {{#if ownerCanMod}}{{else}}
-                <i class="fa fa-ban fa-stack-2x text-danger"></i>
+                <i class="fa fa-ban fa-stack-2x text-warning"></i>
             {{/if}}
             <span class="sr-only">
                 {{#if ownerCanMod}}
@@ -42,9 +42,9 @@
             </span>
         </span>
         <span class="fa-stack">
-            <i class="fa fa-share fa-stack-1x text-{{#if ownerCanTrans}}success{{else}}danger{{/if}}"></i>
+            <i class="fa fa-share fa-stack-1x text-{{#if ownerCanTrans}}success{{else}}warning{{/if}}"></i>
             {{#if ownerCanTrans}}{{else}}
-                <i class="fa fa-ban fa-stack-2x text-danger"></i>
+                <i class="fa fa-ban fa-stack-2x text-warning"></i>
             {{/if}}
             <span class="sr-only">
                 {{#if ownerCanTrans}}
@@ -54,49 +54,6 @@
                 {{/if}}
             </span>
         </span>
-        {{#if ownerCanTrans}}
-            <i class="fa fa-arrow-right"></i>
-            <br />
-            <span class="fa-stack">
-                <i class="fa fa-files-o fa-stack-1x text-{{#if nextCanCopy}}success{{else}}danger{{/if}}"></i>
-                {{#if nextCanCopy}}{{else}}
-                    <i class="fa fa-ban fa-stack-2x text-danger"></i>
-                {{/if}}
-                <span class="sr-only">
-                    {{#if nextCanCopy}}
-                        The next owner of this object will be able to copy this object
-                    {{else}}
-                        The next owner of this object will not be able to copy this object
-                    {{/if}}
-                </span>
-            </span>
-            <span class="fa-stack">
-                <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if nextCanMod}}success{{else}}danger{{/if}}"></i>
-                {{#if nextCanMod}}{{else}}
-                    <i class="fa fa-ban fa-stack-2x text-danger"></i>
-                {{/if}}
-                <span class="sr-only">
-                    {{#if nextCanMod}}
-                        The next owner of this object will be able to modify this object
-                    {{else}}
-                        The next owner of this object will not be able to modify this object
-                    {{/if}}
-                </span>
-            </span>
-            <span class="fa-stack">
-                <i class="fa fa-share fa-stack-1x text-{{#if nextCanTrans}}success{{else}}danger{{/if}}"></i>
-                {{#if nextCanTrans}}{{else}}
-                    <i class="fa fa-ban fa-stack-2x text-danger"></i>
-                {{/if}}
-                <span class="sr-only">
-                    {{#if nextCanTrans}}
-                        The next owner of this object will be able to transfer this object
-                    {{else}}
-                        The next owner of this object will not be able to transfer this object
-                    {{/if}}
-                </span>
-            </span>
-        {{/if}}
     {{else}}
         Unknown
     {{/if}}
