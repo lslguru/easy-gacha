@@ -37,7 +37,7 @@ define( [
         template: template
 
         , ui: {
-            'default': '[href=#tab-items]'
+            'default': '[href=#tab-items]' // duplicate on purpose
             , 'items': '[href=#tab-items]'
             , 'price': '[href=#tab-price]'
             , 'payouts': '[href=#tab-payouts]'
@@ -66,7 +66,6 @@ define( [
             'items': {
                 view: ItemsView
                 , collectionFromAttribute: 'items'
-                , isDefault: true
             }
 
             , 'price': {
@@ -132,14 +131,13 @@ define( [
 
                 // UI
                 this.ui[ subviewName ].data( 'subviewName' , subviewName );
-                if( subviewConfig.isDefault ) {
-                    this.ui[ subviewName ].tab( 'show' );
-                }
             } , this );
 
             this.options.app.vent.on( 'selectTab' , function( tabName ) {
                 this.ui[ tabName ].tab( 'show' );
             } , this );
+
+            this.ui.default.tab( 'show' );
         }
 
         , updateTabStatus: function( tabName , newStatus ) {

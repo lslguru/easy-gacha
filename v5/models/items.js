@@ -21,42 +21,6 @@ define( [
 
         , initialize: function() {
             this.constructor.__super__.initialize.apply( this , arguments );
-
-            this.on( 'add' , this.updateTotals , this );
-            this.on( 'remove' , this.updateTotals , this );
-            this.on( 'reset' , this.updateTotals , this );
-            this.on( 'change:rarity' , this.updateTotals , this );
-            this.on( 'change:limit' , this.updateTotals , this );
-            this.on( 'change:bought' , this.updateTotals , this );
-            this.updateTotals();
-        }
-
-        , updateTotals: function() {
-            this.totalRarity = 0;
-            this.unlimitedRarity = 0;
-            this.totalBought = 0;
-            this.totalLimit = 0;
-            this.willHandOutNoCopyObjects = false;
-
-            _.each( this.models , function( model ) {
-                this.totalBought += model.get( 'bought' );
-
-                if( CONSTANTS.PERM_TRANSFER & model.get( 'ownerPermissions' ) ) {
-                    if( 0 !== model.get( 'limit' ) ) {
-                        this.totalRarity += model.get( 'rarity' );
-
-                        if( !( CONSTANTS.PERM_COPY & model.get( 'ownerPermissions' ) ) && model.get( 'rarity' ) ) {
-                            this.willHandOutNoCopyObjects = true;
-                        }
-                    }
-
-                    if( -1 === model.get( 'limit' ) ) {
-                        this.unlimitedRarity += model.get( 'rarity' );
-                    } else {
-                        this.totalLimit += model.get( 'limit' );
-                    }
-                }
-            } , this );
         }
 
         // Given an inventory list, create corresponding Item models

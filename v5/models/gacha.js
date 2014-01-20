@@ -43,7 +43,6 @@ define( [
             , hasChangesToSave: false
             , autoModified: null // TODO: On save, set to false
             , ackAutoModified: false
-            , willHandOutNoCopyObjects: false
 
             // From models/info
             , isAdmin: null
@@ -107,6 +106,15 @@ define( [
             , setFolderName: null
             , rootClickActionNeeded: false
             , ackEmailSlowness: false
+
+            // From models/items
+            , totalRarity: 0
+            , unlimitedRarity: 0
+            , totalBought: 0
+            , totalLimit: 0
+            , willHandOutNoCopyObjects: false
+
+            // Warnings and Dangers
         }
 
         , includeInNotecard: [
@@ -182,6 +190,8 @@ define( [
         }
 
         , initialize: function() {
+            /////// Sub-Models ///////
+
             this.submodels = {};
 
             _.each( this.Submodels , function( submodelConfig , name ) {
@@ -209,7 +219,7 @@ define( [
 
             /////// Calculated values ///////
 
-            this.on( 'all' , this.updateHasChangesToSave , this );
+            this.get( 'items' ).on( 'add remove reset change:rarity change:limit change:bought' , this.updateItemTotals , this );
 
             this.on( 'change:overrideProgress' , this.updateProgress , this );
 
@@ -217,30 +227,25 @@ define( [
 
             this.on( 'change:btn_price' , this.updateZeroPriceOkay , this );
 
-            this.on( 'change:btn_0' , this.updateButtonsOutOfOrder , this );
-            this.on( 'change:btn_1' , this.updateButtonsOutOfOrder , this );
-            this.on( 'change:btn_2' , this.updateButtonsOutOfOrder , this );
-            this.on( 'change:btn_3' , this.updateButtonsOutOfOrder , this );
+            this.on( 'change:btn_0 change:btn_1 change:btn_2 change:btn_3' , this.updateButtonsOutOfOrder , this );
 
-            this.on( 'change:scriptLinkNumber' , this.updateRootClickActionNeeded , this );
-            this.on( 'change:rootClickAction' , this.updateRootClickActionNeeded , this );
+            this.on( 'change:scriptLinkNumber change:rootClickAction' , this.updateRootClickActionNeeded , this );
 
             this.on( 'change:scriptLinkNumber' , this.updateIsRootOrOnlyPrim , this );
 
             this.on( 'change:email' , this.updateAckEmailSlowness , this );
 
-            this.on( 'change:btn_price' , this.updateBuyButtons , this );
-            this.on( 'change:btn_default' , this.updateBuyButtons , this );
-            this.on( 'change:btn_0' , this.updateBuyButtons , this );
-            this.on( 'change:btn_1' , this.updateBuyButtons , this );
-            this.on( 'change:btn_2' , this.updateBuyButtons , this );
-            this.on( 'change:btn_3' , this.updateBuyButtons , this );
-            this.on( 'change:folderForSingleItemDesired' , this.updateBuyButtons , this );
+            this.on( 'change:btn_price change:btn_default change:btn_0 change:btn_1 change:btn_2 change:btn_3 change:folderForSingleItemDesired' , this.updateBuyButtons , this );
             this.get( 'items' ).on( 'add remove reset change:rarity change:limit' , this.updateBuyButtons , this );
 
             this.get( 'payouts' ).on( 'add remove reset change:amount' , this.recalculateOwnerAmount , this );
 
+            this.on( 'all' , this.updateHasChangesToSave , this );
             this.on( 'all' , this.updateConfigured , this );
+
+            /////// Init ///////
+
+            this.updateItemTotals();
         }
 
         , recalculateOwnerAmount: function() {
@@ -424,7 +429,7 @@ define( [
             var configured = true;
 
             // If no items available
-            if( 0 === this.get( 'items' ).totalRarity ) {
+            if( 0 === this.get( 'totalRarity' ) ) {
                 configured = false;
             }
             // TODO: other items checks
@@ -532,20 +537,18 @@ define( [
         , updateBuyButtons: function() {
             var btn_price = this.get( 'btn_price' );
 
-            if( this.get( 'items' ).totalLimit && this.get( 'items' ).willHandOutNoCopyObjects ) {
+            if( this.get( 'totalLimit' ) && this.get( 'willHandOutNoCopyObjects' ) ) {
                 this.set( {
                     payPrice: CONSTANTS.PAY_HIDE
                     , payPriceButton0: btn_price
                     , payPriceButton1: CONSTANTS.PAY_HIDE
                     , payPriceButton2: CONSTANTS.PAY_HIDE
                     , payPriceButton3: CONSTANTS.PAY_HIDE
-                    , willHandOutNoCopyObjects: this.get( 'items' ).willHandOutNoCopyObjects
                     , folderForSingleItem: false
                 } );
             } else {
                 this.set( {
                     ackNoCopyItemsMeansSingleItemPlay: false
-                    , willHandOutNoCopyObjects: this.get( 'items' ).willHandOutNoCopyObjects
                     , folderForSingleItem: this.get( 'folderForSingleItemDesired' )
 
                     , payPrice: (
@@ -586,6 +589,46 @@ define( [
                 this.set( 'ackEmailSlowness' , false );
             }
         }
+
+        , updateItemTotals: function() {
+            var totalRarity = 0;
+            var unlimitedRarity = 0;
+            var totalBought = 0;
+            var totalLimit = 0;
+            var willHandOutNoCopyObjects = false;
+
+            _.each( this.get( 'items' ).models , function( item ) {
+                totalBought += item.get( 'bought' );
+
+                if( CONSTANTS.PERM_TRANSFER & item.get( 'ownerPermissions' ) ) {
+                    if( 0 !== item.get( 'limit' ) ) {
+                        totalRarity += item.get( 'rarity' );
+
+                        if( !( CONSTANTS.PERM_COPY & item.get( 'ownerPermissions' ) ) && item.get( 'rarity' ) ) {
+                            willHandOutNoCopyObjects = true;
+                        }
+                    }
+
+                    if( -1 === item.get( 'limit' ) ) {
+                        unlimitedRarity += item.get( 'rarity' );
+                    } else {
+                        totalLimit += item.get( 'limit' );
+                    }
+                }
+            } , this );
+
+            var set = {
+                totalRarity: totalRarity
+                , unlimitedRarity: unlimitedRarity
+                , totalBought: totalBought
+                , totalLimit: totalLimit
+                , willHandOutNoCopyObjects: willHandOutNoCopyObjects
+            };
+
+            this.set( set );
+            _.extend( this.get( 'items' ) , set );
+        }
+
     } );
 
     return exports;

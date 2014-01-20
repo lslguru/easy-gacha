@@ -11,7 +11,7 @@
     data-column-contents="permissions"
     {{#if inventoryExists}}
         data-toggle="tooltip"
-        title="Owner: {{#if ownerCanCopy}}+{{else}}-{{/if}}copy, {{#if ownerCanMod}}+{{else}}-{{/if}}mod, {{#if ownerCanTrans}}+{{else}}-{{/if}}trans&lt;br /&gt;Next: {{#if nextCanCopy}}+{{else}}-{{/if}}copy, {{#if nextCanMod}}+{{else}}-{{/if}}mod, {{#if nextCanTrans}}+{{else}}-{{/if}}trans"
+        title="Owner: {{#if ownerCanCopy}}+{{else}}-{{/if}}copy, {{#if ownerCanMod}}+{{else}}-{{/if}}mod, {{#if ownerCanTrans}}+{{else}}-{{/if}}trans{{#if ownerCanTrans}}&lt;br /&gt;Next: {{#if nextCanCopy}}+{{else}}-{{/if}}copy, {{#if nextCanMod}}+{{else}}-{{/if}}mod, {{#if nextCanTrans}}+{{else}}-{{/if}}trans{{/if}}"
     {{/if}}
 >
     {{#if inventoryExists}}
@@ -54,47 +54,49 @@
                 {{/if}}
             </span>
         </span>
-        <i class="fa fa-arrow-right"></i>
-        <br />
-        <span class="fa-stack">
-            <i class="fa fa-files-o fa-stack-1x text-{{#if nextCanCopy}}success{{else}}danger{{/if}}"></i>
-            {{#if nextCanCopy}}{{else}}
-                <i class="fa fa-ban fa-stack-2x text-danger"></i>
-            {{/if}}
-            <span class="sr-only">
-                {{#if nextCanCopy}}
-                    The next owner of this object will be able to copy this object
-                {{else}}
-                    The next owner of this object will not be able to copy this object
+        {{#if ownerCanTrans}}
+            <i class="fa fa-arrow-right"></i>
+            <br />
+            <span class="fa-stack">
+                <i class="fa fa-files-o fa-stack-1x text-{{#if nextCanCopy}}success{{else}}danger{{/if}}"></i>
+                {{#if nextCanCopy}}{{else}}
+                    <i class="fa fa-ban fa-stack-2x text-danger"></i>
                 {{/if}}
+                <span class="sr-only">
+                    {{#if nextCanCopy}}
+                        The next owner of this object will be able to copy this object
+                    {{else}}
+                        The next owner of this object will not be able to copy this object
+                    {{/if}}
+                </span>
             </span>
-        </span>
-        <span class="fa-stack">
-            <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if nextCanMod}}success{{else}}danger{{/if}}"></i>
-            {{#if nextCanMod}}{{else}}
-                <i class="fa fa-ban fa-stack-2x text-danger"></i>
-            {{/if}}
-            <span class="sr-only">
-                {{#if nextCanMod}}
-                    The next owner of this object will be able to modify this object
-                {{else}}
-                    The next owner of this object will not be able to modify this object
+            <span class="fa-stack">
+                <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if nextCanMod}}success{{else}}danger{{/if}}"></i>
+                {{#if nextCanMod}}{{else}}
+                    <i class="fa fa-ban fa-stack-2x text-danger"></i>
                 {{/if}}
+                <span class="sr-only">
+                    {{#if nextCanMod}}
+                        The next owner of this object will be able to modify this object
+                    {{else}}
+                        The next owner of this object will not be able to modify this object
+                    {{/if}}
+                </span>
             </span>
-        </span>
-        <span class="fa-stack">
-            <i class="fa fa-share fa-stack-1x text-{{#if nextCanTrans}}success{{else}}danger{{/if}}"></i>
-            {{#if nextCanTrans}}{{else}}
-                <i class="fa fa-ban fa-stack-2x text-danger"></i>
-            {{/if}}
-            <span class="sr-only">
-                {{#if nextCanTrans}}
-                    The next owner of this object will be able to transfer this object
-                {{else}}
-                    The next owner of this object will not be able to transfer this object
+            <span class="fa-stack">
+                <i class="fa fa-share fa-stack-1x text-{{#if nextCanTrans}}success{{else}}danger{{/if}}"></i>
+                {{#if nextCanTrans}}{{else}}
+                    <i class="fa fa-ban fa-stack-2x text-danger"></i>
                 {{/if}}
+                <span class="sr-only">
+                    {{#if nextCanTrans}}
+                        The next owner of this object will be able to transfer this object
+                    {{else}}
+                        The next owner of this object will not be able to transfer this object
+                    {{/if}}
+                </span>
             </span>
-        </span>
+        {{/if}}
     {{else}}
         Unknown
     {{/if}}
