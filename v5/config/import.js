@@ -91,6 +91,8 @@ define( [
         , importConfig: function() {
             var config = this.ui.importField.val();
 
+            this.ui.progressResultAlert.html( '' );
+
             if( !config ) {
                 return;
             }
@@ -148,7 +150,7 @@ define( [
                 success: _.bind( function() {
                     this.ui.importField.val( notecard.get( 'text' ) );
                     this.onImportFieldChange();
-                    onComplete( 'success' , 'Your notecard has been loaded. Please review the data, then press the "Import" button to continue.' );
+                    onComplete( 'success' , 'Your notecard has been loaded. Please review the data, then press the "' + this.ui.importButton.text() + '" button to continue.' );
                 } , this )
 
                 , error: _.bind( function( err ) {
