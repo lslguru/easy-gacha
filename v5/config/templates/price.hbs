@@ -20,32 +20,32 @@
         <div class="col-sm-6">
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #1">
                 <span class="input-group-addon">Button 1 Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-0" data-extra-field="btn_0" data-max-per-play="true" />
+                <input type="number" class="form-control pay-field" placeholder="Item Count" id="btn-0" data-extra-field="btn_0" data-max-per-play="true" data-preview-el="#pay-preview-button-0" />
             </div>
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #2">
                 <span class="input-group-addon">Button 2 Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-1" data-extra-field="btn_1" data-max-per-play="true" />
+                <input type="number" class="form-control pay-field" placeholder="Item Count" id="btn-1" data-extra-field="btn_1" data-max-per-play="true" data-preview-el="#pay-preview-button-1" />
             </div>
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #3">
                 <span class="input-group-addon">Button 3 Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-2" data-extra-field="btn_2" data-max-per-play="true" />
+                <input type="number" class="form-control pay-field" placeholder="Item Count" id="btn-2" data-extra-field="btn_2" data-max-per-play="true" data-preview-el="#pay-preview-button-2" />
             </div>
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in button #4">
                 <span class="input-group-addon">Button 4 Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-3" data-extra-field="btn_3" data-max-per-play="true" />
+                <input type="number" class="form-control pay-field" placeholder="Item Count" id="btn-3" data-extra-field="btn_3" data-max-per-play="true" data-preview-el="#pay-preview-button-3" />
             </div>
             <div class="input-group" data-toggle="tooltip" title="This is how many ITEMS should show up in the &quot;choose amount&quot; box by default">
                 <span class="input-group-addon">Default Count</span>
-                <input type="number" class="form-control" placeholder="Item Count" id="btn-default" data-extra-field="btn_default" data-max-per-play="true" />
+                <input type="number" class="form-control pay-field" placeholder="Item Count" id="btn-default" data-extra-field="btn_default" data-max-per-play="true" data-preview-el="#pay-preview-default" />
             </div>
         </div>
         <div class="col-sm-4">
             <div id="pay-preview-background">
-                <div id="pay-preview-default">L$1</div>
-                <div id="pay-preview-button-0">L$1</div>
-                <div id="pay-preview-button-1">L$1</div>
-                <div id="pay-preview-button-2">L$1</div>
-                <div id="pay-preview-button-3">L$1</div>
+                <div id="pay-preview-default" class="pay-preview-field" data-preview-of-field="#btn-default"></div>
+                <div id="pay-preview-button-0" class="pay-preview-field" data-preview-of-field="#btn-0"></div>
+                <div id="pay-preview-button-1" class="pay-preview-field" data-preview-of-field="#btn-1"></div>
+                <div id="pay-preview-button-2" class="pay-preview-field" data-preview-of-field="#btn-2"></div>
+                <div id="pay-preview-button-3" class="pay-preview-field" data-preview-of-field="#btn-3"></div>
                 <div id="pay-preview-name"></div>
             </div>
         </div>

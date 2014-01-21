@@ -38,7 +38,9 @@ define( [
             , 'btn_1': '#btn-1'
             , 'btn_2': '#btn-2'
             , 'btn_3': '#btn-3'
+            , 'payFields': '.pay-field'
             , 'priceButtonsContainer': '#price-buttons'
+            , 'payPreviewFields': '.pay-preview-field'
             , 'payPreviewBg': '#pay-preview-background'
             , 'payPreview_default': '#pay-preview-default'
             , 'payPreview_0': '#pay-preview-button-0'
@@ -77,22 +79,25 @@ define( [
         }
 
         , events: {
-            'change #btn-price': 'setField'
-            , 'keyup #btn-price': 'setField'
-            , 'change #btn-default': 'setField'
-            , 'keyup #btn-default': 'setField'
-            , 'change #btn-0': 'setField'
-            , 'keyup #btn-0': 'setField'
-            , 'change #btn-1': 'setField'
-            , 'keyup #btn-1': 'setField'
-            , 'change #btn-2': 'setField'
-            , 'keyup #btn-2': 'setField'
-            , 'change #btn-3': 'setField'
-            , 'keyup #btn-3': 'setField'
+            'change @ui.btn_price': 'setField'
+            , 'keyup @ui.btn_price': 'setField'
+            , 'change @ui.btn_default': 'setField'
+            , 'keyup @ui.btn_default': 'setField'
+            , 'change @ui.btn_0': 'setField'
+            , 'keyup @ui.btn_0': 'setField'
+            , 'change @ui.btn_1': 'setField'
+            , 'keyup @ui.btn_1': 'setField'
+            , 'change @ui.btn_2': 'setField'
+            , 'keyup @ui.btn_2': 'setField'
+            , 'change @ui.btn_3': 'setField'
+            , 'keyup @ui.btn_3': 'setField'
             , 'click @ui.payPriceZeroWarningClose': 'clearPayPriceWarning'
             , 'click @ui.btnOrderIgnore': 'clearButtonOrderWarning'
             , 'click @ui.btnOrderFix': 'fixButtonOrder'
             , 'click @ui.ackNoCopyWarning': 'ackNoCopyWarning'
+            , 'click @ui.payPreviewFields': 'focusOnPayField'
+            , 'focus @ui.payFields': 'onPayFieldFocus'
+            , 'blur @ui.payFields': 'onPayFieldBlur'
         }
 
         , onRender: function() {
@@ -265,6 +270,24 @@ define( [
             }
 
             this.updateDisplay();
+        }
+
+        , focusOnPayField: function( jEvent ) {
+            var target = $( jEvent.currentTarget );
+            var field = target.data( 'preview-of-field' );
+            this.$el.find( field ).focus();
+        }
+
+        , onPayFieldFocus: function( jEvent ) {
+            var target = $( jEvent.currentTarget );
+            var preview = target.data( 'preview-el' );
+            this.$el.find( preview ).addClass( 'focus' );
+        }
+
+        , onPayFieldBlur: function( jEvent ) {
+            var target = $( jEvent.currentTarget );
+            var preview = target.data( 'preview-el' );
+            this.$el.find( preview ).removeClass( 'focus' );
         }
 
     } );

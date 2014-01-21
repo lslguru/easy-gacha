@@ -17,8 +17,12 @@ define( [
         template: template
         , tagName: 'tr'
 
+        , ui: {
+            'reloadLink': '.trigger-reload'
+        }
+
         , events: {
-            'click .trigger-reload': 'reload'
+            'click @ui.reloadLink': 'reload'
         }
 
         , reload: function() {

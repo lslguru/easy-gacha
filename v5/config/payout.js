@@ -34,9 +34,9 @@ define( [
         }
 
         , events: {
-            'keyup .payout-amount': 'setAmount'
-            , 'change .payout-amount': 'setAmount'
-            , 'click .payout-delete-btn': 'deletePayout'
+            'keyup @ui.amount': 'setAmount'
+            , 'change @ui.amount': 'setAmount'
+            , 'click @ui.deleteBtn': 'deletePayout'
         }
 
         , modelEvents: {

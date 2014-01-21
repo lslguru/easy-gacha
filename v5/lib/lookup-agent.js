@@ -35,9 +35,9 @@ define( [
         }
 
         , events: {
-            'hidden.bs.modal #lookup-agent': 'onModalHidden'
-            , 'click a': 'selectAgent'
-            , 'click #lookup-agent-btn': 'lookupAgent'
+            'hidden.bs.modal @ui.lookupAgentDialog': 'onModalHidden'
+            , 'click @ui.knownAgentLink': 'selectAgent'
+            , 'click @ui.lookupAgentButton': 'lookupAgent'
         }
 
         , onRender: function() {

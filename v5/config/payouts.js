@@ -40,10 +40,11 @@ define( [
             'tooltips': '[data-toggle=tooltip]'
             , 'countPayouts': '#count-payouts'
             , 'totalPayouts': '#total-payouts'
+            , 'addNewPayoutButton': '#payouts-add-new'
         }
 
         , events: {
-            'click #payouts-add-new': 'addPayout'
+            'click @ui.addNewPayoutButton': 'addPayout'
         }
 
         , collectionEvents: {
