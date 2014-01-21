@@ -85,7 +85,6 @@ define( [
             , suggestedButtonOrder: null
             , ignoreButtonsOutOfOrder: false
             , ackNoCopyItemsMeansSingleItemPlay: false
-            , folderForSingleItemDesired: true
 
             // From models/config
             , folderForSingleItem: null
@@ -127,7 +126,7 @@ define( [
             , 'zeroPriceOkay'
             , 'ignoreButtonsOutOfOrder'
             , 'ackNoCopyItemsMeansSingleItemPlay'
-            , 'folderForSingleItemDesired'
+            , 'folderForSingleItem'
             , 'rootClickAction'
             , 'group'
             , 'allowHover'
@@ -235,7 +234,7 @@ define( [
 
             this.on( 'change:email' , this.updateAckEmailSlowness , this );
 
-            this.on( 'change:btn_price change:btn_default change:btn_0 change:btn_1 change:btn_2 change:btn_3 change:folderForSingleItemDesired' , this.updateBuyButtons , this );
+            this.on( 'change:btn_price change:btn_default change:btn_0 change:btn_1 change:btn_2 change:btn_3' , this.updateBuyButtons , this );
             this.get( 'items' ).on( 'add remove reset change:rarity change:limit' , this.updateBuyButtons , this );
 
             this.get( 'payouts' ).on( 'add remove reset change:amount' , this.recalculateOwnerAmount , this );
@@ -537,51 +536,41 @@ define( [
         , updateBuyButtons: function() {
             var btn_price = this.get( 'btn_price' );
 
-            if( this.get( 'totalLimit' ) && this.get( 'willHandOutNoCopyObjects' ) ) {
-                this.set( {
-                    payPrice: CONSTANTS.PAY_HIDE
-                    , payPriceButton0: btn_price
-                    , payPriceButton1: CONSTANTS.PAY_HIDE
-                    , payPriceButton2: CONSTANTS.PAY_HIDE
-                    , payPriceButton3: CONSTANTS.PAY_HIDE
-                    , folderForSingleItem: false
-                } );
-            } else {
-                this.set( {
-                    ackNoCopyItemsMeansSingleItemPlay: false
-                    , folderForSingleItem: this.get( 'folderForSingleItemDesired' )
-
-                    , payPrice: (
-                        btn_price && this.effectiveButtonCount( this.get( 'btn_default' ) )
-                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_default' ) )
-                        : CONSTANTS.PAY_HIDE
-                    )
-
-                    , payPriceButton0: (
-                        btn_price && this.effectiveButtonCount( this.get( 'btn_0' ) )
-                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_0' ) )
-                        : CONSTANTS.PAY_HIDE
-                    )
-
-                    , payPriceButton1: (
-                        btn_price && this.effectiveButtonCount( this.get( 'btn_1' ) )
-                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_1' ) )
-                        : CONSTANTS.PAY_HIDE
-                    )
-
-                    , payPriceButton2: (
-                        btn_price && this.effectiveButtonCount( this.get( 'btn_2' ) )
-                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_2' ) )
-                        : CONSTANTS.PAY_HIDE
-                    )
-
-                    , payPriceButton3: (
-                        btn_price && this.effectiveButtonCount( this.get( 'btn_3' ) )
-                        ? btn_price * this.effectiveButtonCount( this.get( 'btn_3' ) )
-                        : CONSTANTS.PAY_HIDE
-                    )
-                } );
+            if( !this.get( 'totalLimit' ) || !this.get( 'willHandOutNoCopyObjects' ) ) {
+                this.set( 'ackNoCopyItemsMeansSingleItemPlay' , false );
             }
+
+            this.set( {
+                payPrice: (
+                    btn_price && this.effectiveButtonCount( this.get( 'btn_default' ) )
+                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_default' ) )
+                    : CONSTANTS.PAY_HIDE
+                )
+
+                , payPriceButton0: (
+                    btn_price && this.effectiveButtonCount( this.get( 'btn_0' ) )
+                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_0' ) )
+                    : CONSTANTS.PAY_HIDE
+                )
+
+                , payPriceButton1: (
+                    btn_price && this.effectiveButtonCount( this.get( 'btn_1' ) )
+                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_1' ) )
+                    : CONSTANTS.PAY_HIDE
+                )
+
+                , payPriceButton2: (
+                    btn_price && this.effectiveButtonCount( this.get( 'btn_2' ) )
+                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_2' ) )
+                    : CONSTANTS.PAY_HIDE
+                )
+
+                , payPriceButton3: (
+                    btn_price && this.effectiveButtonCount( this.get( 'btn_3' ) )
+                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_3' ) )
+                    : CONSTANTS.PAY_HIDE
+                )
+            } );
         }
 
         , updateAckEmailSlowness: function() {
