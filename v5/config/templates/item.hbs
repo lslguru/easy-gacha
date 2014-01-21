@@ -16,9 +16,9 @@
 >
     {{#if inventoryExists}}
         <span class="fa-stack">
-            <i class="fa fa-files-o fa-stack-1x text-{{#if ownerCanCopy}}success{{else}}warning{{/if}}"></i>
+            <i class="fa fa-files-o fa-stack-1x text-{{#if ownerCanCopy}}success{{else}}default{{/if}}"></i>
             {{#if ownerCanCopy}}{{else}}
-                <i class="fa fa-ban fa-stack-2x text-warning"></i>
+                <i class="fa fa-ban fa-stack-2x text-default"></i>
             {{/if}}
             <span class="sr-only">
                 {{#if ownerCanCopy}}
@@ -29,9 +29,9 @@
             </span>
         </span>
         <span class="fa-stack">
-            <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if ownerCanMod}}success{{else}}warning{{/if}}"></i>
+            <i class="fa fa-pencil-square-o fa-stack-1x text-{{#if ownerCanMod}}success{{else}}default{{/if}}"></i>
             {{#if ownerCanMod}}{{else}}
-                <i class="fa fa-ban fa-stack-2x text-warning"></i>
+                <i class="fa fa-ban fa-stack-2x text-default"></i>
             {{/if}}
             <span class="sr-only">
                 {{#if ownerCanMod}}
@@ -42,9 +42,9 @@
             </span>
         </span>
         <span class="fa-stack">
-            <i class="fa fa-share fa-stack-1x text-{{#if ownerCanTrans}}success{{else}}warning{{/if}}"></i>
+            <i class="fa fa-share fa-stack-1x text-{{#if ownerCanTrans}}success{{else}}default{{/if}}"></i>
             {{#if ownerCanTrans}}{{else}}
-                <i class="fa fa-ban fa-stack-2x text-warning"></i>
+                <i class="fa fa-ban fa-stack-2x text-default"></i>
             {{/if}}
             <span class="sr-only">
                 {{#if ownerCanTrans}}
