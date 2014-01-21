@@ -18,6 +18,8 @@ integer AllowHover = TRUE;
 integer MaxBuys = -1;
 integer Configured;
 string Extra;
+integer ApiPurchasesEnabled;
+integer ApiItemsGivenEnabled;
 integer Ready;
 key AdminKey;
 string BaseUrl;
@@ -256,6 +258,14 @@ llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + llGetUse
 if( Email ) {
 llEmail( Email , llGetObjectName() + " - Easy Gacha Played" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) );
 }
+if( ApiPurchasesEnabled ) {
+llMessageLinked( LINK_SET , 3000168 , (string)countItemsToSend , buyerId );
+}
+if( ApiItemsGivenEnabled ) {
+for( itemIndex = 0 ; itemIndex < countItemsToSend ; ++itemIndex ) {
+llMessageLinked( LINK_SET , 3000169 , llList2String( itemsToSend , itemIndex ) , buyerId );
+}
+}
 }
 default {
 state_entry() {
@@ -437,6 +447,8 @@ PayPriceButton0 = llList2Integer( requestBodyParts , 7 );
 PayPriceButton1 = llList2Integer( requestBodyParts , 8 );
 PayPriceButton2 = llList2Integer( requestBodyParts , 9 );
 PayPriceButton3 = llList2Integer( requestBodyParts , 10 );
+ApiPurchasesEnabled = llList2Integer( requestBodyParts , 11 );
+ApiItemsGivenEnabled = llList2Integer( requestBodyParts , 12 );
 }
 }
 responseBody = llList2Json(
@@ -453,6 +465,8 @@ FolderForSingleItem
 , PayPriceButton1
 , PayPriceButton2
 , PayPriceButton3
+, ApiPurchasesEnabled
+, ApiItemsGivenEnabled
 ]
 );
 }

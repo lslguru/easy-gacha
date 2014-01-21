@@ -97,6 +97,8 @@
     integer MaxBuys = -1; // Infinite
     integer Configured; // boolean - web checks only
     string Extra; // extra data that the UI wants to store
+    integer ApiPurchasesEnabled; // If we should send signals on purchases
+    integer ApiItemsGivenEnabled; // If we should send signals for each item (floods object)
 
     ////////////////////////////////////////////////////////////////////////////
     // Runtime Values
@@ -184,6 +186,8 @@
         Debug( "    MaxBuys = " + (string)MaxBuys );
         Debug( "    Configured = " + (string)Configured );
         Debug( "    Extra = " + Extra );
+        Debug( "    ApiPurchasesEnabled = " + (string)ApiPurchasesEnabled );
+        Debug( "    ApiItemsGivenEnabled = " + (string)ApiItemsGivenEnabled );
         Debug( "    Ready = " + (string)Ready );
         Debug( "    AdminKey = " + (string)AdminKey );
         Debug( "    BaseUrl = " + BaseUrl );
@@ -531,6 +535,16 @@
             llEmail( Email , llGetObjectName() + " - Easy Gacha Played" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
         }
         // TODO: Ping registry
+
+        // API calls
+        if( ApiPurchasesEnabled ) {
+            llMessageLinked( LINK_SET , 3000168 , (string)countItemsToSend , buyerId );
+        }
+        if( ApiItemsGivenEnabled ) {
+            for( itemIndex = 0 ; itemIndex < countItemsToSend ; ++itemIndex ) {
+                llMessageLinked( LINK_SET , 3000169 , llList2String( itemsToSend , itemIndex ) , buyerId );
+            }
+        }
     }
 
 #end globalfunctions
@@ -792,6 +806,8 @@
                             PayPriceButton1 = llList2Integer( requestBodyParts , 8 );
                             PayPriceButton2 = llList2Integer( requestBodyParts , 9 );
                             PayPriceButton3 = llList2Integer( requestBodyParts , 10 );
+                            ApiPurchasesEnabled = llList2Integer( requestBodyParts , 11 );
+                            ApiItemsGivenEnabled = llList2Integer( requestBodyParts , 12 );
                         }
                     }
 
@@ -809,6 +825,8 @@
                             , PayPriceButton1
                             , PayPriceButton2
                             , PayPriceButton3
+                            , ApiPurchasesEnabled
+                            , ApiItemsGivenEnabled
                         ]
                     );
                 }
