@@ -12,8 +12,8 @@
             <label class="col-sm-2 control-label" data-toggle="tooltip" title="When Easy Gacha is the root prim in a linked set, setting the default click action affects the whole object. Therefore we must get your permission before doing so.">Set Root Prim Action</label>
             <div class="col-sm-10">
                 <div class="btn-group" data-toggle="tooltip" title="When Easy Gacha is the root prim in a linked set, setting the default click action affects the whole object. Therefore we must get your permission before doing so.">
-                    <button id="root-click-off" class="btn btn-primary" data-value="0">No</button>
-                    <button id="root-click-on" class="btn btn-primary" data-value="1">Yes</button>
+                    <button id="root-click-off" class="btn btn-default" data-value="0">No</button>
+                    <button id="root-click-on" class="btn btn-default" data-value="1">Yes</button>
                 </div>
             </div>
         </div>
@@ -32,8 +32,8 @@
             <div class="col-sm-10">
                 <div class="input-group">
                     <span class="input-group-btn">
-                        <button id="max-buys-unlimited" class="btn btn-primary" type="button" data-toggle="tooltip" title="No limit will be placed on the number of items given." data-limited="0">Unlimited</button>
-                        <button id="max-buys-limited" class="btn btn-primary" type="button" data-toggle="tooltip" title="Allows you to enter a maximum." data-limited="1">Limited</button>
+                        <button id="max-buys-unlimited" class="btn btn-default" type="button" data-toggle="tooltip" title="No limit will be placed on the number of items given." data-limited="0">Unlimited</button>
+                        <button id="max-buys-limited" class="btn btn-default" type="button" data-toggle="tooltip" title="Allows you to enter a maximum." data-limited="1">Limited</button>
                     </span>
                     <input class="form-control" id="max-buys-count" type="number" placeholder="Enter Maximum" data-aria-valuemin="0" data-toggle="tooltip" title="This is the maximum number of items this Easy Gacha may hand out" />
                 </div>
@@ -51,8 +51,8 @@
             <label class="col-sm-2 control-label" data-toggle="tooltip" title="Only people in the same group as this object may play this Easy Gacha">Group Play Only</label>
             <div class="col-sm-10">
                 <div class="btn-group" data-toggle="tooltip" title="Only people in the same group as this object may play this Easy Gacha">
-                    <button id="group-off" class="btn btn-primary" data-value="0">No</button>
-                    <button id="group-on" class="btn btn-primary" data-value="1">Yes</button>
+                    <button id="group-off" class="btn btn-default" data-value="0">No</button>
+                    <button id="group-on" class="btn btn-default" data-value="1">Yes</button>
                 </div>
             </div>
         </div>
@@ -88,8 +88,8 @@
             <label class="col-sm-2 control-label" data-toggle="tooltip" title="When a person plays this Easy Gacha and receives only one item, should it be in a folder?">Use Folder for Single Item</label>
             <div class="col-sm-10">
                 <div class="btn-group" data-toggle="tooltip" title="When a person plays this Easy Gacha and receives only one item, should it be in a folder?">
-                    <button id="always-folder-off" class="btn btn-primary" data-value="0">No</button>
-                    <button id="always-folder-on" class="btn btn-primary" data-value="1">Yes</button>
+                    <button id="always-folder-off" class="btn btn-default" data-value="0">No</button>
+                    <button id="always-folder-on" class="btn btn-default" data-value="1">Yes</button>
                 </div>
             </div>
         </div>
@@ -107,18 +107,18 @@
             <label class="col-sm-2 control-label" data-toggle="tooltip" title="When a person plays this Easy Gacha, the script will send llMessageLinked( LINK_SET , 3000168 , (string)Count_Of_Items_Given , Agent_Key );">Signal Per Play</label>
             <div class="col-sm-10">
                 <div class="btn-group" data-toggle="tooltip" title="When a person plays this Easy Gacha, the script will send llMessageLinked( LINK_SET , 3000168 , (string)Count_Of_Items_Given , Agent_Key );">
-                    <button id="api-signal-play-off" class="btn btn-primary" data-field="apiPurchasesEnabled" data-value="0">No</button>
-                    <button id="api-signal-play-on" class="btn btn-primary" data-field="apiPurchasesEnabled" data-value="1">Yes</button>
+                    <button id="api-signal-play-off" class="btn btn-default" data-field="apiPurchasesEnabled" data-value="0">No</button>
+                    <button id="api-signal-play-on" class="btn btn-default" data-field="apiPurchasesEnabled" data-value="1">Yes</button>
                 </div>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label" data-toggle="tooltip" title="When a person plays this Easy Gacha, the script will send llMessageLinked( LINK_SET , 3000169 , Name_Of_Item_Given , Agent_Key ); WARNING: THIS CAN FLOOD THE EVENT QUEUE">Signal Per Item</label>
+            <label class="col-sm-2 control-label text-danger" data-toggle="tooltip" title="When a person plays this Easy Gacha, the script will send llMessageLinked( LINK_SET , 3000169 , Name_Of_Item_Given , Agent_Key ); WARNING: THIS CAN FLOOD THE EVENT QUEUE">Signal Per Item</label>
             <div class="col-sm-10">
                 <div class="btn-group" data-toggle="tooltip" title="When a person plays this Easy Gacha, the script will send llMessageLinked( LINK_SET , 3000169 , Name_Of_Item_Given , Agent_Key ); WARNING: THIS CAN FLOOD THE EVENT QUEUE">
-                    <button id="api-signal-item-off" class="btn btn-primary" data-field="apiItemsGivenEnabled" data-value="0">No</button>
-                    <button id="api-signal-item-on" class="btn btn-danger" data-field="apiItemsGivenEnabled" data-value="1">Yes</button>
+                    <button id="api-signal-item-off" class="btn btn-default" data-field="apiItemsGivenEnabled" data-value="0">No</button>
+                    <button id="api-signal-item-on" class="btn btn-default" data-field="apiItemsGivenEnabled" data-value="1">Yes</button>
                 </div>
             </div>
         </div>

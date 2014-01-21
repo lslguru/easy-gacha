@@ -51,7 +51,10 @@ define( [
         }
 
         , onModalHidden: function() {
-            this.options.selected( this.agentSelected );
+            if( this.agentSelected ) {
+                this.options.selected( this.agentSelected );
+            }
+
             this.close();
         }
 
@@ -64,17 +67,25 @@ define( [
         }
 
         , lookupAgent: function() {
+            if( '' === this.ui.lookupAgentKey.val() ) {
+                return;
+            }
+
             agentsCache.fetch( {
                 id: this.ui.lookupAgentKey.val()
                 , context: this
                 , success: function( agent ) {
-                    this.agentSelected = agent;
-                    this.ui.lookupAgentDialog.modal( 'hide' );
+                    if( ! this.isClosed ) {
+                        this.agentSelected = agent;
+                        this.ui.lookupAgentDialog.modal( 'hide' );
+                    }
                 }
                 , error: function() {
-                    this.ui.lookupAgentKeyInputGroup.addClass( 'has-error' );
-                    this.ui.lookupAgentButton.button( 'reset' );
-                    this.ui.lookupAgentKey.prop( 'disabled' , '' );
+                    if( ! this.isClosed ) {
+                        this.ui.lookupAgentKeyInputGroup.addClass( 'has-error' );
+                        this.ui.lookupAgentButton.button( 'reset' );
+                        this.ui.lookupAgentKey.prop( 'disabled' , '' );
+                    }
                 }
             } );
 
