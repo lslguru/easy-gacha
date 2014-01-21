@@ -96,12 +96,12 @@ define( [
                 data[i] = JSON.parse( data[i] );
             } catch( e ) {
                 data[i] = {
-                    'btn_price': 0
-                    , 'btn_default': 1
-                    , 'btn_0': 1
-                    , 'btn_1': 5
-                    , 'btn_2': 10
-                    , 'btn_3': 25
+                    'button_price': 0
+                    , 'button_default': 1
+                    , 'button_0': 1
+                    , 'button_1': 5
+                    , 'button_2': 10
+                    , 'button_3': 25
                 };
             }
             parsed.extra = data[i++];

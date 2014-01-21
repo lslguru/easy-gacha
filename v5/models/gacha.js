@@ -75,12 +75,12 @@ define( [
             , isRootOrOnlyPrim: null
 
             // From models/info/extra
-            , btn_price: null
-            , btn_default: null
-            , btn_0: null
-            , btn_1: null
-            , btn_2: null
-            , btn_3: null
+            , button_price: null
+            , button_default: null
+            , button_0: null
+            , button_1: null
+            , button_2: null
+            , button_3: null
             , zeroPriceOkay: false
             , suggestedButtonOrder: null
             , ignoreButtonsOutOfOrder: false
@@ -117,12 +117,12 @@ define( [
         }
 
         , includeInNotecard: [
-            'btn_price'
-            , 'btn_default'
-            , 'btn_0'
-            , 'btn_1'
-            , 'btn_2'
-            , 'btn_3'
+            'button_price'
+            , 'button_default'
+            , 'button_0'
+            , 'button_1'
+            , 'button_2'
+            , 'button_3'
             , 'zeroPriceOkay'
             , 'ignoreButtonsOutOfOrder'
             , 'ackNoCopyItemsMeansSingleItemPlay'
@@ -222,11 +222,11 @@ define( [
 
             this.on( 'change:overrideProgress' , this.updateProgress , this );
 
-            this.on( 'change:btn_price' , this.recalculateOwnerAmount , this );
+            this.on( 'change:button_price' , this.recalculateOwnerAmount , this );
 
-            this.on( 'change:btn_price' , this.updateZeroPriceOkay , this );
+            this.on( 'change:button_price' , this.updateZeroPriceOkay , this );
 
-            this.on( 'change:btn_0 change:btn_1 change:btn_2 change:btn_3' , this.updateButtonsOutOfOrder , this );
+            this.on( 'change:button_0 change:button_1 change:button_2 change:button_3' , this.updateButtonsOutOfOrder , this );
 
             this.on( 'change:scriptLinkNumber change:rootClickAction' , this.updateRootClickActionNeeded , this );
 
@@ -234,7 +234,7 @@ define( [
 
             this.on( 'change:email' , this.updateAckEmailSlowness , this );
 
-            this.on( 'change:btn_price change:btn_default change:btn_0 change:btn_1 change:btn_2 change:btn_3' , this.updateBuyButtons , this );
+            this.on( 'change:button_price change:button_default change:button_0 change:button_1 change:button_2 change:button_3' , this.updateBuyButtons , this );
             this.get( 'items' ).on( 'add remove reset change:rarity change:limit' , this.updateBuyButtons , this );
 
             this.get( 'payouts' ).on( 'add remove reset change:amount' , this.recalculateOwnerAmount , this );
@@ -256,7 +256,7 @@ define( [
 
             ownerPayout.set( 'amount' , (
                 // The new price
-                this.get( 'btn_price' )
+                this.get( 'button_price' )
 
                 // Minus the total of all payouts
                 - this.get( 'payouts' ).totalPrice
@@ -417,7 +417,7 @@ define( [
         }
 
         , updateZeroPriceOkay: function() {
-            if( 0 !== this.get( 'btn_price' ) ) {
+            if( 0 !== this.get( 'button_price' ) ) {
                 this.set( 'zeroPriceOkay' , false );
             } else {
                 this.set( 'ignoreButtonsOutOfOrder' , false );
@@ -434,30 +434,30 @@ define( [
             // TODO: other items checks
 
             // Check price and buttons
-            var btn_price = parseInt( this.get( 'btn_price' ) , 10 );
-            if( _.isNaN( btn_price ) ) {
+            var button_price = parseInt( this.get( 'button_price' ) , 10 );
+            if( _.isNaN( button_price ) ) {
                 configured = false;
-            } else if( 0 > btn_price ) {
+            } else if( 0 > button_price ) {
                 configured = false;
-            } else if( 0 === btn_price && !this.get( 'zeroPriceOkay' ) ) {
+            } else if( 0 === button_price && !this.get( 'zeroPriceOkay' ) ) {
                 configured = false;
-            } else if( 0 !== btn_price ) {
+            } else if( 0 !== button_price ) {
                 var hasPaymentOptions = false;
 
-                _.each( [ 'default' , '0' , '1' , '2' , '3' ] , function( btn ) {
-                    var btn_val = parseInt( this.get( 'btn_' + btn ) , 10 );
+                _.each( [ 'default' , '0' , '1' , '2' , '3' ] , function( button ) {
+                    var button_val = parseInt( this.get( 'button_' + button ) , 10 );
 
-                    if( _.isNaN( btn_val ) ) {
+                    if( _.isNaN( button_val ) ) {
                         configured = false;
-                    } else if( 0 > btn_val ) {
+                    } else if( 0 > button_val ) {
                         configured = false;
-                    } else if( CONSTANTS.MAX_PER_PURCHASE < btn_val ) {
+                    } else if( CONSTANTS.MAX_PER_PURCHASE < button_val ) {
                         configured = false;
-                    } else if( this.get( 'maxPerPurchase' ) < btn_val ) {
+                    } else if( this.get( 'maxPerPurchase' ) < button_val ) {
                         configured = false;
                     }
 
-                    if( 0 < btn_val ) {
+                    if( 0 < button_val ) {
                         hasPaymentOptions = true;
                     }
                 } , this );
@@ -498,10 +498,10 @@ define( [
 
         , updateButtonsOutOfOrder: function() {
             var buttons = [
-                this.get( 'btn_0' )
-                , this.get( 'btn_1' )
-                , this.get( 'btn_2' )
-                , this.get( 'btn_3' )
+                this.get( 'button_0' )
+                , this.get( 'button_1' )
+                , this.get( 'button_2' )
+                , this.get( 'button_3' )
             ];
 
             var buttonsOrdered = _.clone( buttons ).sort( function( a , b ) {
@@ -517,24 +517,24 @@ define( [
             ) );
         }
 
-        , effectiveButtonCount: function( btn_val ) {
-            btn_val = parseInt( btn_val , 10 );
+        , effectiveButtonCount: function( button_val ) {
+            button_val = parseInt( button_val , 10 );
 
-            if( _.isNaN( btn_val ) ) {
+            if( _.isNaN( button_val ) ) {
                 return 0;
-            } else if( 0 > btn_val ) {
+            } else if( 0 > button_val ) {
                 return 0;
-            } else if( CONSTANTS.MAX_PER_PURCHASE < btn_val ) {
+            } else if( CONSTANTS.MAX_PER_PURCHASE < button_val ) {
                 return Math.min( CONSTANTS.MAX_PER_PURCHASE , this.get( 'maxPerPurchase' ) );
-            } else if( this.get( 'maxPerPurchase' ) < btn_val ) {
+            } else if( this.get( 'maxPerPurchase' ) < button_val ) {
                 return Math.min( CONSTANTS.MAX_PER_PURCHASE , this.get( 'maxPerPurchase' ) );
             }
 
-            return btn_val;
+            return button_val;
         }
 
         , updateBuyButtons: function() {
-            var btn_price = this.get( 'btn_price' );
+            var button_price = this.get( 'button_price' );
 
             if( !this.get( 'totalLimit' ) || !this.get( 'willHandOutNoCopyObjects' ) ) {
                 this.set( 'ackNoCopyItemsMeansSingleItemPlay' , false );
@@ -542,32 +542,32 @@ define( [
 
             this.set( {
                 payPrice: (
-                    btn_price && this.effectiveButtonCount( this.get( 'btn_default' ) )
-                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_default' ) )
+                    button_price && this.effectiveButtonCount( this.get( 'button_default' ) )
+                    ? button_price * this.effectiveButtonCount( this.get( 'button_default' ) )
                     : CONSTANTS.PAY_HIDE
                 )
 
                 , payPriceButton0: (
-                    btn_price && this.effectiveButtonCount( this.get( 'btn_0' ) )
-                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_0' ) )
+                    button_price && this.effectiveButtonCount( this.get( 'button_0' ) )
+                    ? button_price * this.effectiveButtonCount( this.get( 'button_0' ) )
                     : CONSTANTS.PAY_HIDE
                 )
 
                 , payPriceButton1: (
-                    btn_price && this.effectiveButtonCount( this.get( 'btn_1' ) )
-                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_1' ) )
+                    button_price && this.effectiveButtonCount( this.get( 'button_1' ) )
+                    ? button_price * this.effectiveButtonCount( this.get( 'button_1' ) )
                     : CONSTANTS.PAY_HIDE
                 )
 
                 , payPriceButton2: (
-                    btn_price && this.effectiveButtonCount( this.get( 'btn_2' ) )
-                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_2' ) )
+                    button_price && this.effectiveButtonCount( this.get( 'button_2' ) )
+                    ? button_price * this.effectiveButtonCount( this.get( 'button_2' ) )
                     : CONSTANTS.PAY_HIDE
                 )
 
                 , payPriceButton3: (
-                    btn_price && this.effectiveButtonCount( this.get( 'btn_3' ) )
-                    ? btn_price * this.effectiveButtonCount( this.get( 'btn_3' ) )
+                    button_price && this.effectiveButtonCount( this.get( 'button_3' ) )
+                    ? button_price * this.effectiveButtonCount( this.get( 'button_3' ) )
                     : CONSTANTS.PAY_HIDE
                 )
             } );

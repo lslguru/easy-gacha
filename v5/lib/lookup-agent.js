@@ -29,7 +29,7 @@ define( [
         , ui: {
             'lookupAgentDialog': '#lookup-agent'
             , 'lookupAgentKey': '#lookup-agent-key'
-            , 'lookupAgentButton': '#lookup-agent-btn'
+            , 'lookupAgentButton': '#lookup-agent-button'
             , 'lookupAgentKeyInputGroup': '#lookup-agent-key-input-group'
             , 'knownAgentLink': 'a'
         }

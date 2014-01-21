@@ -38,13 +38,13 @@ define( [
             , 'reloadConfirmed': '#reload-confirm'
             , 'reloadSaveFirst': '#reload-save-first'
             , 'saveButton': '#save'
-            , 'dashboardBtn': '#dashboard'
+            , 'dashboardButton': '#dashboard'
             , 'firstRunMessage': '#first-run-message'
             , 'firstRunMessageCloseButton': '#first-run-message .close'
         }
 
         , events: {
-            'click @ui.dashboardBtn': 'clickDashboard'
+            'click @ui.dashboardButton': 'clickDashboard'
             , 'click @ui.dashboardConfirmed': 'confirmDashboard'
             , 'click @ui.reloadButton': 'clickReload'
             , 'click @ui.reloadConfirmed': 'confirmReload'
@@ -54,7 +54,7 @@ define( [
         }
 
         , modelEvents: {
-            'change:hasChangesToSave': 'updateSaveBtn'
+            'change:hasChangesToSave': 'updateSaveButton'
             , 'change:autoModified': 'toggleAutoModifiedMessage'
             , 'change:ackAutoModified': 'toggleAutoModifiedMessage'
         }
@@ -172,7 +172,7 @@ define( [
                 , show: false
             } );
 
-            this.updateSaveBtn();
+            this.updateSaveButton();
             this.toggleAutoModifiedMessage();
         }
 
@@ -251,7 +251,7 @@ define( [
             }
         }
 
-        , updateSaveBtn: function() {
+        , updateSaveButton: function() {
             if( this.model.get( 'hasChangesToSave' ) ) {
                 this.ui.saveButton.removeClass( 'disabled' );
             } else {

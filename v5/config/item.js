@@ -41,27 +41,27 @@ define( [
             , 'noTransMessage': '[data-column-contents=limit] .no-trans'
             , 'noCopyMessage': '[data-column-contents=limit] .no-copy'
             , 'limitInputs': '[data-column-contents=limit] .input-group'
-            , 'unlimitedBtn': '[data-column-contents=limit] .unlimited'
-            , 'limitedBtn': '[data-column-contents=limit] .limited'
+            , 'unlimitedButton': '[data-column-contents=limit] .unlimited'
+            , 'limitedButton': '[data-column-contents=limit] .limited'
             , 'limitField': '[data-column-contents=limit] input'
-            , 'importBtn': '.config-import-btn'
-            , 'deleteBtn': '.item-delete-btn'
-            , 'setLimitBtn': '.set-limit'
+            , 'importButton': '.config-import-button'
+            , 'deleteButton': '.item-delete-button'
+            , 'setLimitButton': '.set-limit'
         }
 
         , events: {
             'change @ui.rarityField': 'setRarity'
             , 'keyup @ui.rarityField': 'setRarity'
-            , 'click @ui.setLimitBtn': 'setLimitMode'
+            , 'click @ui.setLimitButton': 'setLimitMode'
             , 'change @ui.limitField': 'setLimit'
             , 'keyup @ui.limitField': 'setLimit'
-            , 'click @ui.deleteBtn': 'deleteItem'
-            , 'click @ui.importBtn': 'importNotecard'
+            , 'click @ui.deleteButton': 'deleteItem'
+            , 'click @ui.importButton': 'importNotecard'
         }
 
         , modelEvents: {
-            'change:rarity': 'updateValues updateDeleteBtn'
-            , 'change:limit': 'updateValues updateLimit updateDeleteBtn'
+            'change:rarity': 'updateValues updateDeleteButton'
+            , 'change:limit': 'updateValues updateLimit updateDeleteButton'
         }
 
         , collectionEvents: {
@@ -106,17 +106,17 @@ define( [
 
             this.updateValues();
             this.updateLimit();
-            this.updateDeleteBtn();
+            this.updateDeleteButton();
 
             if( 'INVENTORY_NOTECARD' !== this.model.get( 'type' ) ) {
-                this.ui.importBtn.remove();
+                this.ui.importButton.remove();
             } else if(
                 CONSTANTS.NULL_KEY === this.model.get( 'key' )
                 || !( this.model.get( 'ownerPermissions' ) & CONSTANTS.PERM_COPY )
                 || !( this.model.get( 'ownerPermissions' ) & CONSTANTS.PERM_MODIFY )
                 || !( this.model.get( 'ownerPermissions' ) & CONSTANTS.PERM_TRANSFER )
             ) {
-                this.ui.importBtn.remove();
+                this.ui.importButton.remove();
             }
         }
 
@@ -197,8 +197,8 @@ define( [
             } else if( -1 === limit ) {
                 fade( this.ui.noTransMessage , false , function() {
                     fade( this.ui.noCopyMessage , false , function() {
-                        this.ui.unlimitedBtn.addClass( 'active' );
-                        this.ui.limitedBtn.removeClass( 'active' );
+                        this.ui.unlimitedButton.addClass( 'active' );
+                        this.ui.limitedButton.removeClass( 'active' );
                         fade( this.ui.limitInputs , true );
                         fade( this.ui.limitField , false );
                     } , this );
@@ -206,8 +206,8 @@ define( [
             } else {
                 fade( this.ui.noTransMessage , false , function() {
                     fade( this.ui.noCopyMessage , false , function() {
-                        this.ui.unlimitedBtn.removeClass( 'active' );
-                        this.ui.limitedBtn.addClass( 'active' );
+                        this.ui.unlimitedButton.removeClass( 'active' );
+                        this.ui.limitedButton.addClass( 'active' );
                         this.ui.limitField.val( limit );
                         fade( this.ui.limitInputs , true );
                         fade( this.ui.limitField , true );
@@ -244,12 +244,12 @@ define( [
             this.model.set( 'limit' , limit );
         }
 
-        , updateDeleteBtn: function() {
+        , updateDeleteButton: function() {
             if(
                 'INVENTORY_UNKNOWN' !== this.model.get( 'type' )
                 && 'INVENTORY_NONE' !== this.model.get( 'type' )
             ) {
-                this.ui.deleteBtn.remove();
+                this.ui.deleteButton.remove();
             }
         }
 

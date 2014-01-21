@@ -30,13 +30,13 @@ define( [
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
             , 'amount': '.payout-amount'
-            , 'deleteBtn': '.payout-delete-btn'
+            , 'deleteButton': '.payout-delete-button'
         }
 
         , events: {
             'keyup @ui.amount': 'setAmount'
             , 'change @ui.amount': 'setAmount'
-            , 'click @ui.deleteBtn': 'deletePayout'
+            , 'click @ui.deleteButton': 'deletePayout'
         }
 
         , modelEvents: {
@@ -53,7 +53,7 @@ define( [
             // If this record is the owner, they may not change it because it
             // is calculated on the fly based on the total price
             if( this.options.gacha.get( 'ownerKey' ) === this.model.get( 'agentKey' ) ) {
-                this.ui.deleteBtn.remove();
+                this.ui.deleteButton.remove();
                 this.ui.amount.attr( 'readonly' , 'readonly' );
             }
 

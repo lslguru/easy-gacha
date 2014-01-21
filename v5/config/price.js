@@ -32,12 +32,12 @@ define( [
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
-            , 'btn_price': '#btn-price'
-            , 'btn_default': '#btn-default'
-            , 'btn_0': '#btn-0'
-            , 'btn_1': '#btn-1'
-            , 'btn_2': '#btn-2'
-            , 'btn_3': '#btn-3'
+            , 'button_price': '#button-price'
+            , 'button_default': '#button-default'
+            , 'button_0': '#button-0'
+            , 'button_1': '#button-1'
+            , 'button_2': '#button-2'
+            , 'button_3': '#button-3'
             , 'payFields': '.pay-field'
             , 'priceButtonsContainer': '#price-buttons'
             , 'payPreviewFields': '.pay-preview-field'
@@ -50,9 +50,9 @@ define( [
             , 'payPreviewName': '#pay-preview-name'
             , 'payPriceZeroWarning': '#price-zero-warning'
             , 'payPriceZeroWarningClose': '#prize-zero-okay'
-            , 'btnOrderWarning': '#buttons-not-ordered-warning'
-            , 'btnOrderIgnore': '#ignore-buttons-out-of-order'
-            , 'btnOrderFix': '#fix-button-order'
+            , 'buttonOrderWarning': '#buttons-not-ordered-warning'
+            , 'buttonOrderIgnore': '#ignore-buttons-out-of-order'
+            , 'buttonOrderFix': '#fix-button-order'
             , 'noPaymentsWarning': '#no-payment-options-warning'
             , 'oneItemModeWarning': '#plays-fixed-because-no-copy'
             , 'ackNoCopyWarning': '#ack-no-copy-items-means-single-item-play'
@@ -64,12 +64,12 @@ define( [
             , 'change:payPriceButton1': 'updateDisplay'
             , 'change:payPriceButton2': 'updateDisplay'
             , 'change:payPriceButton3': 'updateDisplay'
-            , 'change:btn_price': 'updateDisplay'
-            , 'change:btn_default': 'updateDisplay'
-            , 'change:btn_0': 'updateDisplay'
-            , 'change:btn_1': 'updateDisplay'
-            , 'change:btn_2': 'updateDisplay'
-            , 'change:btn_3': 'updateDisplay'
+            , 'change:button_price': 'updateDisplay'
+            , 'change:button_default': 'updateDisplay'
+            , 'change:button_0': 'updateDisplay'
+            , 'change:button_1': 'updateDisplay'
+            , 'change:button_2': 'updateDisplay'
+            , 'change:button_3': 'updateDisplay'
             , 'change:zeroPriceOkay': 'updateDisplay'
             , 'change:suggestedButtonOrder': 'updateDisplay'
             , 'change:ignoreButtonsOutOfOrder': 'updateDisplay'
@@ -79,21 +79,21 @@ define( [
         }
 
         , events: {
-            'change @ui.btn_price': 'setField'
-            , 'keyup @ui.btn_price': 'setField'
-            , 'change @ui.btn_default': 'setField'
-            , 'keyup @ui.btn_default': 'setField'
-            , 'change @ui.btn_0': 'setField'
-            , 'keyup @ui.btn_0': 'setField'
-            , 'change @ui.btn_1': 'setField'
-            , 'keyup @ui.btn_1': 'setField'
-            , 'change @ui.btn_2': 'setField'
-            , 'keyup @ui.btn_2': 'setField'
-            , 'change @ui.btn_3': 'setField'
-            , 'keyup @ui.btn_3': 'setField'
+            'change @ui.button_price': 'setField'
+            , 'keyup @ui.button_price': 'setField'
+            , 'change @ui.button_default': 'setField'
+            , 'keyup @ui.button_default': 'setField'
+            , 'change @ui.button_0': 'setField'
+            , 'keyup @ui.button_0': 'setField'
+            , 'change @ui.button_1': 'setField'
+            , 'keyup @ui.button_1': 'setField'
+            , 'change @ui.button_2': 'setField'
+            , 'keyup @ui.button_2': 'setField'
+            , 'change @ui.button_3': 'setField'
+            , 'keyup @ui.button_3': 'setField'
             , 'click @ui.payPriceZeroWarningClose': 'clearPayPriceWarning'
-            , 'click @ui.btnOrderIgnore': 'clearButtonOrderWarning'
-            , 'click @ui.btnOrderFix': 'fixButtonOrder'
+            , 'click @ui.buttonOrderIgnore': 'clearButtonOrderWarning'
+            , 'click @ui.buttonOrderFix': 'fixButtonOrder'
             , 'click @ui.ackNoCopyWarning': 'ackNoCopyWarning'
             , 'click @ui.payPreviewFields': 'focusOnPayField'
             , 'focus @ui.payFields': 'onPayFieldFocus'
@@ -116,72 +116,72 @@ define( [
             var warningStatus = false;
             var dangerStatus = false;
 
-            var btn_price = this.model.get( 'btn_price' );
+            var button_price = this.model.get( 'button_price' );
 
-            if( '' === this.ui.btn_price.val() || btn_price != this.ui.btn_price.val() ) {
-                this.ui.btn_price.val( btn_price );
+            if( '' === this.ui.button_price.val() || button_price != this.ui.button_price.val() ) {
+                this.ui.button_price.val( button_price );
             }
 
-            btn_price = parseInt( btn_price , 10 );
+            button_price = parseInt( button_price , 10 );
 
-            var btn_price_has_error = false;
-            if( _.isNaN( btn_price ) ) {
-                btn_price_has_error = true;
-            } else if( 0 > btn_price ) {
-                btn_price_has_error = true;
+            var button_price_has_error = false;
+            if( _.isNaN( button_price ) ) {
+                button_price_has_error = true;
+            } else if( 0 > button_price ) {
+                button_price_has_error = true;
             }
 
-            if( btn_price_has_error ) {
+            if( button_price_has_error ) {
                 dangerStatus = true;
-                btn_price = 0;
+                button_price = 0;
             }
 
-            this.ui.btn_price.parent().toggleClass( 'has-error' , btn_price_has_error );
+            this.ui.button_price.parent().toggleClass( 'has-error' , button_price_has_error );
 
             // Placeholder
             var hasPaymentOptions = false;
 
             // If it should be shown
-            if( 0 !== btn_price ) {
-                _.each( [ 'default' , '0' , '1' , '2' , '3' ] , function( btn ) {
-                    var btn_val = this.model.get( 'btn_' + btn );
-                    var btn_el = this.ui[ 'btn_' + btn ];
+            if( 0 !== button_price ) {
+                _.each( [ 'default' , '0' , '1' , '2' , '3' ] , function( button ) {
+                    var button_val = this.model.get( 'button_' + button );
+                    var button_el = this.ui[ 'button_' + button ];
                     var hasError = false;
 
-                    if( '' === btn_el.val() || btn_val != btn_el.val() ) {
-                        btn_el.val( btn_val );
+                    if( '' === button_el.val() || button_val != button_el.val() ) {
+                        button_el.val( button_val );
                     }
 
-                    btn_val = parseInt( btn_val , 10 );
+                    button_val = parseInt( button_val , 10 );
 
-                    if( _.isNaN( btn_val ) ) {
+                    if( _.isNaN( button_val ) ) {
                         hasError = true;
-                    } else if( 0 > btn_val ) {
+                    } else if( 0 > button_val ) {
                         hasError = true;
-                    } else if( CONSTANTS.MAX_PER_PURCHASE < btn_val ) {
+                    } else if( CONSTANTS.MAX_PER_PURCHASE < button_val ) {
                         hasError = true;
-                    } else if( this.model.get( 'maxPerPurchase' ) < btn_val ) {
+                    } else if( this.model.get( 'maxPerPurchase' ) < button_val ) {
                         hasError = true;
                     }
 
-                    btn_el.parent().toggleClass( 'has-error' , hasError );
+                    button_el.parent().toggleClass( 'has-error' , hasError );
                     if( hasError ) {
                         dangerStatus = true;
                     }
 
-                    if( 0 < btn_val ) {
+                    if( 0 < button_val ) {
                         hasPaymentOptions = true;
                     }
 
-                    btn_val = this.model.effectiveButtonCount( btn_val );
+                    button_val = this.model.effectiveButtonCount( button_val );
 
-                    this.ui[ 'payPreview_' + btn ].text(
-                        btn_val
-                        ? 'L$' + ( btn_val * btn_price )
+                    this.ui[ 'payPreview_' + button ].text(
+                        button_val
+                        ? 'L$' + ( button_val * button_price )
                         : ''
                     );
 
-                    this.ui[ 'payPreview_' + btn ].toggleClass( 'pay-hide' , !btn_val );
+                    this.ui[ 'payPreview_' + button ].toggleClass( 'pay-hide' , !button_val );
 
                 } , this );
 
@@ -195,13 +195,13 @@ define( [
             }
 
             // If there are payment options
-            fade( this.ui.noPaymentsWarning , ( 0 !== btn_price && !hasPaymentOptions ) );
+            fade( this.ui.noPaymentsWarning , ( 0 !== button_price && !hasPaymentOptions ) );
 
             // If it should be hidden
-            fade( this.ui.priceButtonsContainer , ( 0 !== btn_price ) );
+            fade( this.ui.priceButtonsContainer , ( 0 !== button_price ) );
 
             // Show the zero-price message if needed
-            if( 0 === this.model.get( 'btn_price' ) && !this.model.get( 'zeroPriceOkay' ) ) {
+            if( 0 === this.model.get( 'button_price' ) && !this.model.get( 'zeroPriceOkay' ) ) {
                 fade( this.ui.payPriceZeroWarning , true );
                 dangerStatus = true;
             } else {
@@ -209,15 +209,15 @@ define( [
             }
 
             // Show or hide the button-out-of-order message
-            if( 0 !== this.model.get( 'btn_price' ) && null !== this.model.get( 'suggestedButtonOrder' ) && !this.model.get( 'ignoreButtonsOutOfOrder' ) ) {
-                fade( this.ui.btnOrderWarning , true );
+            if( 0 !== this.model.get( 'button_price' ) && null !== this.model.get( 'suggestedButtonOrder' ) && !this.model.get( 'ignoreButtonsOutOfOrder' ) ) {
+                fade( this.ui.buttonOrderWarning , true );
                 warningStatus = true;
             } else {
-                fade( this.ui.btnOrderWarning , false );
+                fade( this.ui.buttonOrderWarning , false );
             }
 
             // Show or hide the limited play message
-            if( 0 !== this.model.get( 'btn_price' ) && this.model.get( 'willHandOutNoCopyObjects' ) && !this.model.get( 'ackNoCopyItemsMeansSingleItemPlay' ) ) {
+            if( 0 !== this.model.get( 'button_price' ) && this.model.get( 'willHandOutNoCopyObjects' ) && !this.model.get( 'ackNoCopyItemsMeansSingleItemPlay' ) ) {
                 fade( this.ui.oneItemModeWarning , true );
                 warningStatus = true;
             } else {
@@ -251,10 +251,10 @@ define( [
         , fixButtonOrder: function() {
             var correctOrder = this.model.get( 'suggestedButtonOrder' );
             this.model.set( {
-                btn_0: correctOrder[ 0 ]
-                , btn_1: correctOrder[ 1 ]
-                , btn_2: correctOrder[ 2 ]
-                , btn_3: correctOrder[ 3 ]
+                button_0: correctOrder[ 0 ]
+                , button_1: correctOrder[ 1 ]
+                , button_2: correctOrder[ 2 ]
+                , button_3: correctOrder[ 3 ]
             } );
         }
 

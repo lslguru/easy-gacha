@@ -35,7 +35,7 @@ define( [
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
             , 'importField': '#import'
-            , 'importButton': '#import-btn'
+            , 'importButton': '#import-button'
             , 'importErrorModal': '#import-error'
             , 'importErrorMessage': '#import-error-message'
             , 'importSuccessModal': '#import-success'
