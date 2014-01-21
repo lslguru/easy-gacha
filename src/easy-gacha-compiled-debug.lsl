@@ -3,7 +3,7 @@ list Rarity;
 list Limit;
 list Bought;
 list Payouts;
-integer MaxPerPurchase = 50;
+integer MaxPerPurchase = 50 /*DEFAULT_MAX_PER_PURCHASE*/;
 integer PayPrice = PAY_HIDE;
 integer PayPriceButton0 = PAY_HIDE;
 integer PayPriceButton1 = PAY_HIDE;
@@ -42,7 +42,7 @@ float TotalEffectiveRarity;
 integer CountItems;
 integer CountPayouts;
 integer LastWhisperedUrl;
-Debug( string msg ) { if( INVENTORY_NONE != llGetInventoryType( "easy-gacha-debug" ) ) { llOwnerSay( "/me : " + llGetScriptName() + ": DEBUG: " + msg ); } }
+Debug( string msg ) { if( INVENTORY_NONE != llGetInventoryType( "easy-gacha-debug" /*DEBUG_INVENTORY*/ ) ) { llOwnerSay( "/me : " + llGetScriptName() + ": DEBUG: " + msg ); } }
 Whisper( string msg ) {
 Debug( "Whisper( \"" + msg + "\" );" );
 llWhisper( 0 , llGetScriptName() + ": " + msg );
@@ -59,10 +59,8 @@ llSetText( "" , ZERO_VECTOR , 1 );
 }
 Registry( list data ) {
 Debug( "Registry( [ " + llList2CSV( data ) + " ] );" );
-if( TRUE ) {
-return;
-}
-llHTTPRequest( "" , [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE , "X-EasyGacha-Version" , "5.0" ] , llList2Json( JSON_ARRAY , data ) );
+return; /*REGISTRY_DISABLED*/
+llHTTPRequest( "" /*REGISTRY_URL*/ , [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE , "X-EasyGacha-Version" , "5.0" /*VERSION*/ ] /*REGISTRY_HTTP_OPTIONS*/ , llList2Json( JSON_ARRAY , data ) );
 llSleep( 1.0 );
 }
 DebugGlobals() {
@@ -295,8 +293,8 @@ if( "" == objectName || "Object" == objectName ) {
 objectName = llGetObjectName();
 }
 string folderSuffix = ( " (Easy Gacha: " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
-if( llStringLength( objectName ) + llStringLength( folderSuffix ) > 63 ) {
-objectName = ( llGetSubString( objectName , 0 , 63 - llStringLength( folderSuffix ) - 4 ) + "..." );
+if( llStringLength( objectName ) + llStringLength( folderSuffix ) > 63 /*MAX_FOLDER_NAME_LENGTH*/ ) {
+objectName = ( llGetSubString( objectName , 0 , 63 /*MAX_FOLDER_NAME_LENGTH*/ - llStringLength( folderSuffix ) - 4 ) + "..." );
 }
 Debug( "    Truncated object name: " + objectName );
 string change = "";
@@ -378,7 +376,7 @@ llSetTimerEvent( 0.0 );
 DebugGlobals();
 integer requestIndex;
 for( requestIndex = 0 ; requestIndex < llGetListLength( DataServerRequests ) ; ++requestIndex ) {
-if( llList2Integer( DataServerRequestTimes , requestIndex ) + 15.0 < llGetUnixTime() ) {
+if( llList2Integer( DataServerRequestTimes , requestIndex ) + 15.0 /*ASSET_SERVER_TIMEOUT*/ < llGetUnixTime() ) {
 if( NULL_KEY != llList2Key( DataServerResponses , requestIndex ) ) {
 llHTTPResponse( llList2Key( DataServerResponses , requestIndex ) , 200 , "null" );
 }
@@ -417,8 +415,8 @@ responseBody = (
 "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
 + "<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n"
 + "    <head>\n"
-+ "        <script type=\"text/javascript\">document.easyGachaScriptVersion = 5.0;</script>\n"
-+ "        <script type=\"text/javascript\" src=\"" + "http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js" + "\"></script>\n"
++ "        <script type=\"text/javascript\">document.easyGachaScriptVersion = 5.0; /*VERSION*/</script>\n"
++ "        <script type=\"text/javascript\" src=\"http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js\"></script>\n" /*CONFIG_SCRIPT_URL*/
 + "        <script type=\"text/javascript\">\n"
 + "            if( !window.easyGachaLoaded )\n"
 + "                alert( 'Error loading scripts, please refresh page' );\n"
