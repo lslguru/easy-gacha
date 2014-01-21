@@ -38,7 +38,7 @@
     el = document.createElement( 'script' );
     el.setAttribute( 'type' , 'text/javascript' );
     el.setAttribute( 'data-main' , mydir + 'init' + ( dev ? '' : '.min' ) + '.js' );
-    el.setAttribute( 'src' , mydir + 'vendor/require.js' );
+    el.setAttribute( 'src' , mydir + 'vendor/require' + ( dev ? '' : '.min' ) + '.js' );
     document.head.appendChild( el );
 
     // A generic catch-all for errors to give us some idea what went wrong in
