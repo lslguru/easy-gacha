@@ -35,6 +35,7 @@ integer TotalPrice;
 integer TotalBought;
 integer TotalLimit;
 integer HasUnlimitedItems;
+integer HasNoCopyItemsForSale;
 float TotalEffectiveRarity;
 integer CountItems;
 integer CountPayouts;
@@ -101,6 +102,7 @@ Debug( "    TotalPrice = " + (string)TotalPrice );
 Debug( "    TotalBought = " + (string)TotalBought );
 Debug( "    TotalLimit = " + (string)TotalLimit );
 Debug( "    HasUnlimitedItems = " + (string)HasUnlimitedItems );
+Debug( "    HasNoCopyItemsForSale = " + (string)HasNoCopyItemsForSale );
 Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
 Debug( "    CountItems = " + (string)CountItems );
 Debug( "    CountPayouts = " + (string)CountPayouts );
@@ -139,12 +141,16 @@ HasUnlimitedItems = ( -1 != llListFindList( Limit , [ -1 ] ) );
 integer itemIndex;
 TotalLimit = 0;
 TotalEffectiveRarity = 0.0;
+HasNoCopyItemsForSale = FALSE;
 for( itemIndex = 0 ; itemIndex < CountItems ; ++itemIndex ) {
 if( 0 < llList2Integer( Limit , itemIndex ) ) {
 TotalLimit += llList2Integer( Limit , itemIndex );
 }
 if( ItemUsable( itemIndex ) ) {
 TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
+if( ! ( PERM_COPY & llGetInventoryPermMask( llList2String( Items , itemIndex ) , MASK_OWNER ) ) ) {
+HasNoCopyItemsForSale = TRUE;
+}
 }
 }
 Ready = FALSE;
@@ -164,7 +170,11 @@ Ready = FALSE;
 }
 }
 if( Ready && TotalPrice ) {
+if( HasNoCopyItemsForSale ) {
+llSetPayPrice( PAY_HIDE , [ TotalPrice , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
+} else {
 llSetPayPrice( PayPrice , [ PayPriceButton0 , PayPriceButton1 , PayPriceButton2 , PayPriceButton3 ] );
+}
 } else {
 llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
 }
@@ -224,6 +234,10 @@ if( TotalPrice ) {
 totalItems = lindensReceived / TotalPrice;
 } else {
 totalItems = 1;
+}
+if( HasNoCopyItemsForSale ) {
+totalItems = 1;
+Debug( "    HasNoCopyItemsForSale, set to: 1" );
 }
 if( totalItems > MaxPerPurchase ) {
 totalItems = MaxPerPurchase;
@@ -296,7 +310,7 @@ llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , pay
 }
 Whisper( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
 Hover( "Please wait, giving items to: " + displayName );
-if( 1 < countItemsToSend || FolderForSingleItem ) {
+if( 1 < countItemsToSend || ( FolderForSingleItem && !HasNoCopyItemsForSale ) ) {
 llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend );
 } else {
 llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) );

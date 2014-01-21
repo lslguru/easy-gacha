@@ -119,6 +119,7 @@
     integer TotalBought; // Updated when Bought is updated
     integer TotalLimit; // Updated when Limit is updated
     integer HasUnlimitedItems; // If ANY Limit is -1
+    integer HasNoCopyItemsForSale; // If ANY item with no-zero limit and rarity set is no-copy
     float TotalEffectiveRarity; // Updated when Rarity or Limit are updated
     integer CountItems; // Updated when Items is updated
     integer CountPayouts; // Updated when Payouts is updated - total elements, not stride elements
@@ -200,6 +201,7 @@
         Debug( "    TotalBought = " + (string)TotalBought );
         Debug( "    TotalLimit = " + (string)TotalLimit );
         Debug( "    HasUnlimitedItems = " + (string)HasUnlimitedItems );
+        Debug( "    HasNoCopyItemsForSale = " + (string)HasNoCopyItemsForSale );
         Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
         Debug( "    CountItems = " + (string)CountItems );
         Debug( "    CountPayouts = " + (string)CountPayouts );
@@ -254,6 +256,7 @@
         integer itemIndex;
         TotalLimit = 0;
         TotalEffectiveRarity = 0.0;
+        HasNoCopyItemsForSale = FALSE;
         for( itemIndex = 0 ; itemIndex < CountItems ; ++itemIndex ) {
             // If limit is -1 meaning unlimited, don't add it to the total
             if( 0 < llList2Integer( Limit , itemIndex ) ) {
@@ -264,6 +267,10 @@
             // transferable, etc...
             if( ItemUsable( itemIndex ) ) {
                 TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
+
+                if( ! ( PERM_COPY & llGetInventoryPermMask( llList2String( Items , itemIndex ) , MASK_OWNER ) ) ) {
+                    HasNoCopyItemsForSale = TRUE;
+                }
             }
         }
 
@@ -301,7 +308,11 @@
         // This should prevent any new purchases until a price has been
         // set.
         if( Ready && TotalPrice ) {
-            llSetPayPrice( PayPrice , [ PayPriceButton0 , PayPriceButton1 , PayPriceButton2 , PayPriceButton3 ] );
+            if( HasNoCopyItemsForSale ) {
+                llSetPayPrice( PAY_HIDE , [ TotalPrice , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
+            } else {
+                llSetPayPrice( PayPrice , [ PayPriceButton0 , PayPriceButton1 , PayPriceButton2 , PayPriceButton3 ] );
+            }
         } else {
             llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
         }
@@ -383,6 +394,12 @@
             totalItems = lindensReceived / TotalPrice;
         } else {
             totalItems = 1;
+        }
+
+        // If we can only hand out one at a time anyway
+        if( HasNoCopyItemsForSale ) {
+            totalItems = 1;
+            Debug( "    HasNoCopyItemsForSale, set to: 1" );
         }
 
         // If their order would exceed the hard-coded limit
@@ -500,7 +517,7 @@
 
         // Give the inventory
         Hover( "Please wait, giving items to: " + displayName );
-        if( 1 < countItemsToSend || FolderForSingleItem ) {
+        if( 1 < countItemsToSend || ( FolderForSingleItem && !HasNoCopyItemsForSale ) ) {
             llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend ); // FORCED_DELAY 3.0 seconds
         } else {
             llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) ); // FORCED_DELAY 2.0 seconds
