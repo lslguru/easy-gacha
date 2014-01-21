@@ -138,6 +138,8 @@ define( [
             , 'payouts'
             , 'items'
             , 'ackEmailSlowness'
+            , 'apiPurchasesEnabled'
+            , 'apiItemsGivenEnabled'
         ]
 
         , fetchedJSON: null

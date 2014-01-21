@@ -42,6 +42,10 @@ define( [
             , 'rootClickOff': '#root-click-off'
             , 'rootClickOn': '#root-click-on'
             , 'rootClickWarning': '#root-prim-choice-needed-warning'
+            , 'apiPerPlayOff': '#api-signal-play-off'
+            , 'apiPerPlayOn': '#api-signal-play-on'
+            , 'apiPerItemOff': '#api-signal-item-off'
+            , 'apiPerItemOn': '#api-signal-item-on'
         }
 
         , events: {
@@ -58,6 +62,10 @@ define( [
             , 'click @ui.groupOn': 'setGroup'
             , 'click @ui.rootClickOff': 'setRootClickAction'
             , 'click @ui.rootClickOn': 'setRootClickAction'
+            , 'click @ui.apiPerPlayOff': 'setBooleanField'
+            , 'click @ui.apiPerPlayOn': 'setBooleanField'
+            , 'click @ui.apiPerItemOff': 'setBooleanField'
+            , 'click @ui.apiPerItemOn': 'setBooleanField'
         }
 
         , modelEvents: {
@@ -67,6 +75,8 @@ define( [
             , 'change:group': 'updateGroup'
             , 'change:rootClickAction': 'updateRootClickAction'
             , 'change:scriptLinkNumber': 'updateRootClickAction'
+            , 'change:apiPurchasesEnabled': 'updateApiPerPlay'
+            , 'change:apiItemsGivenEnabled': 'updateApiPerItem'
         }
 
         , templateHelpers: function() {
@@ -88,6 +98,8 @@ define( [
             this.updateMaxPerPurchase();
             this.updateGroup();
             this.updateRootClickAction();
+            this.updateApiPerPlay();
+            this.updateApiPerItem();
         }
 
         , setFolderName: function() {
@@ -211,10 +223,27 @@ define( [
             ) );
         }
 
+        , updateApiPerPlay: function() {
+            this.ui.apiPerPlayOff.toggleClass( 'active' , !this.model.get( 'apiPurchasesEnabled' ) );
+            this.ui.apiPerPlayOn.toggleClass( 'active' , this.model.get( 'apiPurchasesEnabled' ) );
+        }
+
+        , updateApiPerItem: function() {
+            this.ui.apiPerItemOff.toggleClass( 'active' , !this.model.get( 'apiItemsGivenEnabled' ) );
+            this.ui.apiPerItemOn.toggleClass( 'active' , this.model.get( 'apiItemsGivenEnabled' ) );
+        }
+
         , setRootClickAction: function( jEvent ) {
             var target = $( jEvent.currentTarget );
             var newValue = parseInt( target.data( 'value' ) , 10 );
             this.model.set( 'rootClickAction' , newValue );
+        }
+
+        , setBooleanField: function( jEvent ) {
+            var target = $( jEvent.currentTarget );
+            var field = target.data( 'field' );
+            var newValue = Boolean( parseInt( target.data( 'value' ) , 10 ) );
+            this.model.set( field , newValue );
         }
 
     } );

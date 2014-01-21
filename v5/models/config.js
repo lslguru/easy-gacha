@@ -39,6 +39,8 @@ define( [
             , imUserName: null
             , imDisplayName: null
             , setFolderName: null
+            , apiPurchasesEnabled: null
+            , apiItemsGivenEnabled: null
         }
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
@@ -68,6 +70,8 @@ define( [
             parsed.payPriceButton1 = parseInt( data[i++] , 10 );
             parsed.payPriceButton2 = parseInt( data[i++] , 10 );
             parsed.payPriceButton3 = parseInt( data[i++] , 10 );
+            parsed.apiPurchasesEnabled = Boolean( parseInt( data[i++] , 10 ) );
+            parsed.apiItemsGivenEnabled = Boolean( parseInt( data[i++] , 10 ) );
 
             return parsed;
         }
