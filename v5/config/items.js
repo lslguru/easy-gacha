@@ -10,6 +10,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'config/item'
     , 'config/items-empty'
+    , 'lib/fade'
 
 ] , function(
 
@@ -23,6 +24,7 @@ define( [
     , tooltipPlacement
     , ItemView
     , EmptyView
+    , fade
 
 ) {
     'use strict';
@@ -41,6 +43,11 @@ define( [
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
+            , 'noItemsWarning': '#no-items-selected-warning'
+        }
+
+        , modelEvents: {
+            'change:totalRarity': 'updateDisplay'
         }
 
         , onRender: function() {
@@ -49,6 +56,22 @@ define( [
                 , container: 'body'
                 , placement: tooltipPlacement
             } );
+
+            this.updateDisplay();
+        }
+
+        , updateDisplay: function() {
+            var dangerStatus = false;
+
+            fade( this.ui.noItemsWarning , !Boolean( this.model.get( 'totalRarity' ) ) );
+            dangerStatus = dangerStatus || !Boolean( this.model.get( 'totalRarity' ) );
+
+            // Update tab
+            this.trigger( 'updateTabStatus' , (
+                dangerStatus
+                ? 'danger'
+                : null
+            ) );
         }
 
     } );
