@@ -30,7 +30,13 @@
 // Notes
 ////////////////////////////////////////////////////////////////////////////////
 
-//  DataServerRequestTypes
+//  DataServerRequests Strided list of:
+//      x+0:    request key
+//      x+1:    http response key if request was via http server
+//      x+2:    unixtime request was made
+//      x+3:    integer type of request that was made
+
+//  DataServerRequests Types
 //      1   goo.gl for info URL
 //      2   goo.gl for admin URL
 //      3   user name lookup
@@ -47,6 +53,7 @@
 //      MAX_FOLDER_NAME_LENGTH      63
 //      DEFAULT_MAX_PER_PURCHASE    50
 //      ASSET_SERVER_TIMEOUT        15.0
+//      ASSET_SERVER_TIMEOUT_CHECK  5.0
 //      PING_INTERVAL               86400
 //      DEBUG_INVENTORY             "easy-gacha-debug"
 
@@ -99,9 +106,6 @@ key Owner; // More memory efficient to only update when it could be changed
 string ScriptName; // More memory efficent to only update when it could be changed
 integer HasPermission; // More memory efficent to only update when it could be changed
 list DataServerRequests; // List of the requests we have pending
-list DataServerRequestTimes; // List of the unixtimes these requests were made
-list DataServerRequestTypes; // List of the type of request that was made
-list DataServerResponses; // List of the response key if this came from the outside
 integer LastPing; // UnixTime
 integer TotalPrice; // Updated when Payouts is updated, sum
 integer TotalBought; // Updated when Bought is updated
@@ -264,7 +268,7 @@ Update() {
 
     // Far more simplistic config statement
     if( Ready ) {
-        if( -1 != llListFindList( DataServerRequestTypes , [ 1 ] ) || -1 != llListFindList( DataServerRequestTypes , [ 2 ] ) ) {
+        if( -1 != llListFindList( DataServerRequests , [ 1 ] ) || -1 != llListFindList( DataServerRequests , [ 2 ] ) ) {
             Hover( "Working, please wait..." );
         } else {
             Hover( "" );
@@ -281,20 +285,23 @@ Update() {
     }
 }
 
-Shorten( string url ) {
-    DataServerRequests += [ llHTTPRequest(
-        "https:\/\/www.googleapis.com/urlshortener/v1/url"
-        , [
-            HTTP_METHOD , "POST"
-            , HTTP_MIMETYPE , "application/json"
-            , HTTP_BODY_MAXLENGTH , 16384
-            , HTTP_VERIFY_CERT , TRUE
-            , HTTP_VERBOSE_THROTTLE , FALSE
-        ]
-        , llJsonSetValue( "{}" , [ "longUrl" ] , url )
-    ) ];
-    DataServerRequestTimes += [ llGetUnixTime() ];
-    DataServerResponses += [ NULL_KEY ];
+Shorten( string url , integer typeId ) {
+    DataServerRequests += [
+        llHTTPRequest(
+            "https:\/\/www.googleapis.com/urlshortener/v1/url"
+            , [
+                HTTP_METHOD , "POST"
+                , HTTP_MIMETYPE , "application/json"
+                , HTTP_BODY_MAXLENGTH , 16384
+                , HTTP_VERIFY_CERT , TRUE
+                , HTTP_VERBOSE_THROTTLE , FALSE
+            ]
+            , llJsonSetValue( "{}" , [ "longUrl" ] , url )
+        )
+        , NULL_KEY
+        , llGetUnixTime()
+        , typeId
+    ];
 }
 
 Play( key buyerId , integer lindensReceived ) {
@@ -497,22 +504,19 @@ default {
 
         // For each pending request
         integer requestIndex;
-        for( requestIndex = 0 ; requestIndex < llGetListLength( DataServerRequests ) ; ++requestIndex ) {
+        for( requestIndex = 0 ; requestIndex < llGetListLength( DataServerRequests ) ; requestIndex += 4 ) {
             // If it has expired
-            if( llList2Integer( DataServerRequestTimes , requestIndex ) + 15.0 /*ASSET_SERVER_TIMEOUT*/ < llGetUnixTime() ) {
-                if( NULL_KEY != llList2Key( DataServerResponses , requestIndex ) ) {
-                    llHTTPResponse( llList2Key( DataServerResponses , requestIndex ) , 200 , "null" );
+            if( llList2Integer( DataServerRequests , requestIndex + 2 ) + 15.0 /*ASSET_SERVER_TIMEOUT*/ < llGetUnixTime() ) {
+                if( NULL_KEY != llList2Key( DataServerRequests , requestIndex + 1 ) ) {
+                    llHTTPResponse( llList2Key( DataServerRequests , requestIndex + 1 ) , 200 , "null" );
                 }
 
-                DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex );
-                DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
-                DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
-                DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
+                DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 3 );
             }
         }
 
         if( llGetListLength( DataServerRequests ) ) {
-            llSetTimerEvent( 5.0 );
+            llSetTimerEvent( 5.0 /*ASSET_SERVER_TIMEOUT_CHECK*/ );
         } else {
             // TODO: llSetTimerEvent( LastPing + 86400 /*PING_INTERVAL*/ - llGetUnixTime() );
         }
@@ -528,11 +532,8 @@ default {
             ShortenedInfoUrl = ( BaseUrl + "/" );
             ShortenedAdminUrl = ( BaseUrl + "/#admin/" + (string)AdminKey );
 
-            Shorten( ShortenedInfoUrl );
-            DataServerRequestTypes += [ 1 ];
-
-            Shorten( ShortenedAdminUrl );
-            DataServerRequestTypes += [ 2 ];
+            Shorten( ShortenedInfoUrl , 1 );
+            Shorten( ShortenedAdminUrl , 2 );
         }
 
         if( URL_REQUEST_DENIED == httpMethod ) {
@@ -811,29 +812,43 @@ default {
 
             if( "lookup" == subject ) {
                 subject = llList2String( path , 2 );
-                DataServerResponses += [ requestId ];
-                DataServerRequestTimes += [ llGetUnixTime() ];
                 llSetContentType( requestId , responseContentType );
-                llSetTimerEvent( 5.0 );
+                llSetTimerEvent( 5.0 /*ASSET_SERVER_TIMEOUT_CHECK*/ );
 
                 if( "username" == subject ) {
-                    DataServerRequests += [ llRequestUsername( llList2Key( requestBodyParts , 0 ) ) ];
-                    DataServerRequestTypes += [ 3 ];
+                    DataServerRequests += [
+                        llRequestUsername( llList2Key( requestBodyParts , 0 ) )
+                        , requestId
+                        , llGetUnixTime()
+                        , 3
+                    ];
                 }
 
                 if( "displayname" == subject ) {
-                    DataServerRequests += [ llRequestDisplayName( llList2Key( requestBodyParts , 0 ) ) ];
-                    DataServerRequestTypes += [ 4 ];
+                    DataServerRequests += [
+                        llRequestDisplayName( llList2Key( requestBodyParts , 0 ) )
+                        , requestId
+                        , llGetUnixTime()
+                        , 4
+                    ];
                 }
 
                 if( "notecard-line-count" == subject ) {
-                    DataServerRequests += [ llGetNumberOfNotecardLines( llList2String( requestBodyParts , 0 ) ) ];
-                    DataServerRequestTypes += [ 5 ];
+                    DataServerRequests += [
+                        llGetNumberOfNotecardLines( llList2String( requestBodyParts , 0 ) )
+                        , requestId
+                        , llGetUnixTime()
+                        , 5
+                    ];
                 }
 
                 if( "notecard-line" == subject ) {
-                    DataServerRequests += [ llGetNotecardLine( llList2String( requestBodyParts , 0 ) , llList2Integer( requestBodyParts , 1 ) ) ];
-                    DataServerRequestTypes += [ 6 ];
+                    DataServerRequests += [
+                        llGetNotecardLine( llList2String( requestBodyParts , 0 ) , llList2Integer( requestBodyParts , 1 ) )
+                        , requestId
+                        , llGetUnixTime()
+                        , 6
+                    ];
                 }
 
                 return;
@@ -872,17 +887,14 @@ default {
 
     dataserver( key queryId , string data ) {
         integer requestIndex = llListFindList( DataServerRequests , [ queryId ] );
-        if( -1 == requestIndex ) {
+        if( -1 == requestIndex || 0 != requestIndex % 4 ) {
             return;
         }
 
-        if( NULL_KEY != llList2Key( DataServerResponses , requestIndex ) ) {
-            llHTTPResponse( llList2Key( DataServerResponses , requestIndex ) , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
+        if( NULL_KEY != llList2Key( DataServerRequests , requestIndex + 1 ) ) {
+            llHTTPResponse( llList2Key( DataServerRequests , requestIndex + 1 ) , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
 
-            DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex );
-            DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
-            DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
-            DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
+            DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 3 );
         }
 
         llSetTimerEvent( 0.0 );
@@ -890,31 +902,28 @@ default {
 
     http_response( key requestId , integer responseStatus , list metadata , string responseBody ) {
         integer requestIndex = llListFindList( DataServerRequests , [ requestId ] );
-        if( -1 == requestIndex ) {
+        if( -1 == requestIndex || 0 != requestIndex % 4 ) {
             return;
         }
 
         // goo.gl URL shortener parsing
         string shortened = llJsonGetValue( responseBody , [ "id" ] );
         if( JSON_INVALID != shortened && JSON_NULL != shortened ) {
-            if( 1 == llList2Integer( DataServerRequestTypes , requestIndex ) ) {
+            if( 1 == llList2Integer( DataServerRequests , requestIndex + 3 ) ) {
                 ShortenedInfoUrl = shortened;
                 // TODO: Ping registry
             }
-            if( 2 == llList2Integer( DataServerRequestTypes , requestIndex ) ) {
+            if( 2 == llList2Integer( DataServerRequests , requestIndex + 3 ) ) {
                 ShortenedAdminUrl = shortened;
                 llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
                 // TODO: Ping registry
             }
-        } else if( 2 == llList2Integer( DataServerRequestTypes , requestIndex ) ) {
+        } else if( 2 == llList2Integer( DataServerRequests , requestIndex + 3 ) ) {
             llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
             // TODO: Ping registry
         }
 
-        DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex );
-        DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
-        DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
-        DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
+        DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 3 );
     }
 
     touch_end( integer detected ) {
