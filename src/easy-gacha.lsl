@@ -47,15 +47,10 @@
 //  CONSTANTS
 //      VERSION                     5.0
 //      CONFIG_SCRIPT_URL           http:\/\/lslguru.github.io/easy-gacha/v5/easy-gacha.js
-//      REGISTRY_DISABLED           return;
-//      REGISTRY_URL                ""
-//      REGISTRY_HTTP_OPTIONS       [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE , "X-EasyGacha-Version" , "5.0" /*VERSION*/ ]
 //      MAX_FOLDER_NAME_LENGTH      63
 //      DEFAULT_MAX_PER_PURCHASE    50
 //      ASSET_SERVER_TIMEOUT        15.0
 //      ASSET_SERVER_TIMEOUT_CHECK  5.0
-//      PING_INTERVAL               86400
-//      DEBUG_INVENTORY             "easy-gacha-debug"
 
 //  DEFAULT_MAX_PER_PURCHASE: We have to build a list in memory of the items to
 //      be given in a folder. To prevent out of memory errors and exceedlingly
@@ -106,34 +101,28 @@ key Owner; // More memory efficient to only update when it could be changed
 string ScriptName; // More memory efficent to only update when it could be changed
 integer HasPermission; // More memory efficent to only update when it could be changed
 list DataServerRequests; // List of the requests we have pending
-integer LastPing; // UnixTime
 integer TotalPrice; // Updated when Payouts is updated, sum
 integer TotalBought; // Updated when Bought is updated
 integer TotalLimit; // Updated when Limit is updated
-integer HasUnlimitedItems; // If ANY Limit is -1
 integer HasNoCopyItemsForSale; // If ANY item with no-zero limit and rarity set is no-copy
 float TotalEffectiveRarity; // Updated when Rarity or Limit are updated
 integer CountItems; // Updated when Items is updated
 integer CountPayouts; // Updated when Payouts is updated - total elements, not stride elements
-integer LastWhisperedUrl; // When were we last touched
+
+////////////////////////////////////////////////////////////////////////////
+// Application
+////////////////////////////////////////////////////////////////////////////
+
+Registry( list data ){} // Stub, gets replaced in official copy
 
 Hover( string msg ) {
     if( AllowHover ) {
         if( msg ) {
-            llSetText( llGetObjectName() + ": " + ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
+            llSetText( llGetObjectName() + ": " + ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0> , 1 );
         } else {
             llSetText( "" , ZERO_VECTOR , 1 );
         }
     }
-}
-
-Registry( list data ) {
-    return; /*REGISTRY_DISABLED*/
-
-    // Note: Request ID not stored, so response will be safely skipped
-    llHTTPRequest( "" /*REGISTRY_URL*/ , [ HTTP_METHOD , "POST" , HTTP_MIMETYPE , "text/json;charset=utf-8" , HTTP_BODY_MAXLENGTH , 16384 , HTTP_VERIFY_CERT , FALSE , HTTP_VERBOSE_THROTTLE , FALSE , "X-EasyGacha-Version" , "5.0" /*VERSION*/ ] /*REGISTRY_HTTP_OPTIONS*/ , llList2Json( JSON_ARRAY , data ) );
-
-    llSleep( 1.0 ); // FORCED_DELAY 1.0 seconds
 }
 
 RequestUrl() {
@@ -174,7 +163,6 @@ Update() {
     TotalBought = (integer)llListStatistics( LIST_STAT_SUM , Bought );
     CountItems = llGetListLength( Items );
     CountPayouts = llGetListLength( Payouts );
-    HasUnlimitedItems = ( -1 != llListFindList( Limit , [ -1 ] ) );
 
     // Build total rarity and limit
     integer itemIndex;
@@ -182,15 +170,16 @@ Update() {
     TotalEffectiveRarity = 0.0;
     HasNoCopyItemsForSale = FALSE;
     for( itemIndex = 0 ; itemIndex < CountItems ; ++itemIndex ) {
-        // If limit is -1 meaning unlimited, don't add it to the total
-        if( 0 < llList2Integer( Limit , itemIndex ) ) {
-            TotalLimit += llList2Integer( Limit , itemIndex );
-        }
-
         // If the item is usable, meaning exists and has rarity and is
         // transferable, etc...
         if( ItemUsable( itemIndex ) ) {
             TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
+
+            // If limit is -1 meaning unlimited, don't add it to the total,
+            // otherwise add the qty remaining for this item
+            if( 0 < llList2Integer( Limit , itemIndex ) ) {
+                TotalLimit += llList2Integer( Limit , itemIndex ) - llList2Integer( Bought , itemIndex );
+            }
 
             if( ! ( PERM_COPY & llGetInventoryPermMask( llList2String( Items , itemIndex ) , MASK_OWNER ) ) ) {
                 HasNoCopyItemsForSale = TRUE;
@@ -213,7 +202,7 @@ Update() {
             // debit permission to be able to give change
             Ready = FALSE;
         }
-        if( TotalBought >= MaxBuys ) {
+        if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
             // This can occur even if all items are unlimited in quantity
             Ready = FALSE;
         }
@@ -226,6 +215,8 @@ Update() {
             // If we're in group-only mode but no group was set...
             Ready = FALSE;
         }
+
+        // TODO: Low memory check
     }
 
     // Default values of these variables are to not show pay buttons.
@@ -283,6 +274,14 @@ Update() {
     } else {
         Hover( "Configuration needed, please touch this object" );
     }
+
+    // Ping registry
+    Registry( [
+        "update"
+        , BaseUrl
+        , AdminKey
+        , Ready
+    ] );
 }
 
 Shorten( string url , integer typeId ) {
@@ -311,6 +310,9 @@ Play( key buyerId , integer lindensReceived ) {
     // Visually note that we're now in the middle of something
     Hover( "Please wait, getting random items for: " + displayName );
 
+    // This is only used when playing
+    integer hasUnlimitedItems = ( -1 != llListFindList( Limit , [ -1 ] ) );
+
     // Figure out how many objects we need to give
     integer totalItems;
     if( TotalPrice ) {
@@ -335,8 +337,8 @@ Play( key buyerId , integer lindensReceived ) {
     }
 
     // If their order would exceed the total available supply
-    if( !HasUnlimitedItems && totalItems > TotalLimit - TotalBought ) {
-        totalItems = TotalLimit - TotalBought;
+    if( !hasUnlimitedItems && totalItems > TotalLimit ) {
+        totalItems = TotalLimit;
     }
 
     // If it's set to group-only play and they're not in the right group
@@ -347,12 +349,11 @@ Play( key buyerId , integer lindensReceived ) {
     // Iterate until we've met our total, because it should now be
     // guaranteed to happen
     list itemsToSend = [];
-    integer countItemsToSend = 0;
     float random;
     integer itemIndex;
-    while( countItemsToSend < totalItems ) {
+    while( llGetListLength( itemsToSend ) < totalItems ) {
         // Indicate our progress
-        Hover( "Please wait, getting random item " + (string)( countItemsToSend + 1 ) + " of " + (string)totalItems + " for: " + displayName );
+        Hover( "Please wait, getting random item " + (string)llGetListLength( itemsToSend ) + " of " + (string)totalItems + " for: " + displayName );
 
         // Generate a random number which is between [ TotalEffectiveRarity , 0.0 )
         random = TotalEffectiveRarity - llFrand( TotalEffectiveRarity );
@@ -372,10 +373,6 @@ Play( key buyerId , integer lindensReceived ) {
         // llGiveInventoryList uses the inventory names
         itemsToSend += [ llList2String( Items , itemIndex ) ];
 
-        // Mark that we found a valid thing to give, otherwise we'll loop
-        // through again until we do find one
-        ++countItemsToSend;
-
         // Mark this item as bought, increasing the count
         Bought = llListReplaceList( Bought , [ llList2Integer( Bought , itemIndex ) + 1 ] , itemIndex , itemIndex );
         ++TotalBought;
@@ -390,7 +387,7 @@ Play( key buyerId , integer lindensReceived ) {
     // Fix verbage, just because it bothers me
     string itemPlural = " items ";
     string hasHave = "have ";
-    if( 1 == countItemsToSend ) {
+    if( 1 == totalItems ) {
         itemPlural = " item ";
         hasHave = "has ";
     }
@@ -401,7 +398,7 @@ Play( key buyerId , integer lindensReceived ) {
     if( "" == objectName || "Object" == objectName ) {
         objectName = llGetObjectName();
     }
-    string folderSuffix = ( " (Easy Gacha: " + (string)countItemsToSend + itemPlural + llGetDate() + ")" );
+    string folderSuffix = ( " (Easy Gacha: " + (string)totalItems + itemPlural + llGetDate() + ")" );
     if( llStringLength( objectName ) + llStringLength( folderSuffix ) > 63 /*MAX_FOLDER_NAME_LENGTH*/ ) {
         // 4 == 3 for ellipses + 1 because this is end index, not count
         objectName = ( llGetSubString( objectName , 0 , 63 /*MAX_FOLDER_NAME_LENGTH*/ - llStringLength( folderSuffix ) - 4 ) + "..." );
@@ -424,35 +421,44 @@ Play( key buyerId , integer lindensReceived ) {
         }
     }
 
-    // Thank them for their purchase
-    llWhisper( 0 , ScriptName + ": Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
-
     // Give the inventory
     Hover( "Please wait, giving items to: " + displayName );
-    if( 1 < countItemsToSend || ( FolderForSingleItem && !HasNoCopyItemsForSale ) ) {
+    if( 1 < totalItems || ( FolderForSingleItem && !HasNoCopyItemsForSale ) ) {
         llGiveInventoryList( buyerId , objectName + folderSuffix , itemsToSend ); // FORCED_DELAY 3.0 seconds
     } else {
         llGiveInventory( buyerId , llList2String( itemsToSend , 0 ) ); // FORCED_DELAY 2.0 seconds
     }
 
+    // Thank them for their purchase
+    llWhisper( 0 , ScriptName + ": Thank you for your purchase, " + displayName + "! Your " + (string)totalItems + itemPlural + hasHave + "been sent." + change );
+
+    // Ping registry with play info
+    Registry( [
+        "play"
+        , buyerId
+        , totalItems
+    ] + itemsToSend );
+
     // Reports
     if( Im ) {
-        llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + llGetUsername(buyerId) + ") just received " + (string)countItemsToSend + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
+        llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + llGetUsername(buyerId) + ") just received " + (string)totalItems + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
     }
     if( Email ) {
         llEmail( Email , llGetObjectName() + " - Easy Gacha Played" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
     }
-    // TODO: Ping registry
 
     // API calls
     if( ApiPurchasesEnabled ) {
-        llMessageLinked( LINK_SET , 3000168 , (string)countItemsToSend , buyerId );
+        llMessageLinked( LINK_SET , 3000168 , (string)totalItems , buyerId );
     }
     if( ApiItemsGivenEnabled ) {
-        for( itemIndex = 0 ; itemIndex < countItemsToSend ; ++itemIndex ) {
+        for( itemIndex = 0 ; itemIndex < totalItems ; ++itemIndex ) {
             llMessageLinked( LINK_SET , 3000169 , llList2String( itemsToSend , itemIndex ) , buyerId );
         }
     }
+
+    // Double check everything before we allow anyone else to play
+    Update();
 }
 
 default {
@@ -495,8 +501,6 @@ default {
         llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
 
         Play( buyerId , lindensReceived );
-
-        Update();
     }
 
     timer() {
@@ -517,8 +521,6 @@ default {
 
         if( llGetListLength( DataServerRequests ) ) {
             llSetTimerEvent( 5.0 /*ASSET_SERVER_TIMEOUT_CHECK*/ );
-        } else {
-            // TODO: llSetTimerEvent( LastPing + 86400 /*PING_INTERVAL*/ - llGetUnixTime() );
         }
     }
 
@@ -534,31 +536,18 @@ default {
 
             Shorten( ShortenedInfoUrl , 1 );
             Shorten( ShortenedAdminUrl , 2 );
+
+            Update();
         }
 
         if( URL_REQUEST_DENIED == httpMethod ) {
-            llOwnerSay( "Unable to get a URL. This Easy Gacha cannot be configured until one becomes available: " + requestBody );
+            llOwnerSay( ScriptName + ": Unable to get a URL. This Easy Gacha cannot be configured until one becomes available: " + requestBody );
         }
 
         if( "get" == llToLower( httpMethod ) ) {
             if( "/" == llGetHTTPHeader( requestId , "x-path-info" ) ) {
                 responseStatus = 200;
-                responseBody = ( 
-                    "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
-                    + "<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n"
-                    + "    <head>\n"
-                    + "        <script type=\"text/javascript\">document.easyGachaScriptVersion = 5.0; /*VERSION*/</script>\n"
-                    + "        <script type=\"text/javascript\" src=\"http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js\"></script>\n" /*CONFIG_SCRIPT_URL*/
-                    + "        <script type=\"text/javascript\">\n"
-                    + "            if( !window.easyGachaLoaded )\n"
-                    + "                alert( 'Error loading scripts, please refresh page' );\n"
-                    + "        </script>\n"
-                    + "    </head>\n"
-                    + "    <body>\n"
-                    + "        <noscript>Please load this in your normal web browser with JavaScript enabled.</noscript>\n"
-                    + "    </body>\n"
-                    + "</html>"
-                );
+                responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n<head>\n<script type=\"text/javascript\">document.easyGachaScriptVersion = 5.0; // VERSION</script>\n<script type=\"text/javascript\" src=\"http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js\"></script><!-- CONFIG_SCRIPT_URL -->\n<script type=\"text/javascript\">\nif( !window.easyGachaLoaded )\nalert( 'Error loading scripts, please refresh page' );\n</script>\n</head>\n<body>\n<noscript>Please load this in your normal web browser with JavaScript enabled.</noscript>\n</body>\n</html>\n";
                 responseContentType = CONTENT_TYPE_XHTML;
             }
         }
@@ -749,7 +738,6 @@ default {
                         ScriptName
                         , llGetFreeMemory()
                         , HasPermission
-                        , LastPing
                         , llGetInventoryNumber( INVENTORY_ALL )
                         , llGetListLength( Items )
                         , llGetListLength( Payouts ) / 2
@@ -911,16 +899,13 @@ default {
         if( JSON_INVALID != shortened && JSON_NULL != shortened ) {
             if( 1 == llList2Integer( DataServerRequests , requestIndex + 3 ) ) {
                 ShortenedInfoUrl = shortened;
-                // TODO: Ping registry
             }
             if( 2 == llList2Integer( DataServerRequests , requestIndex + 3 ) ) {
                 ShortenedAdminUrl = shortened;
-                llOwnerSay( "Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
-                // TODO: Ping registry
+                llOwnerSay( ScriptName + ": Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
             }
         } else if( 2 == llList2Integer( DataServerRequests , requestIndex + 3 ) ) {
-            llOwnerSay( "Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
-            // TODO: Ping registry
+            llOwnerSay( ScriptName + ": Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
         }
 
         DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 3 );
@@ -934,17 +919,18 @@ default {
             // If admin, send IM with link
             if( detectedKey == Owner ) {
                 if( ShortenedAdminUrl ) {
-                    llOwnerSay( "To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
+                    llOwnerSay( ScriptName + ": To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
                 } else if( "" == BaseUrl && llGetFreeURLs() ) {
                     // If URL not set but URLs available, request one
-                    llOwnerSay( "Trying to get a new URL now... please wait" );
+                    llOwnerSay( ScriptName + ": Retrying to get a new URL now... please wait" );
                     RequestUrl();
+                    Update();
                 } else {
                     llDialog( Owner , "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." , [ ] , -1 ); // FORCED_DELAY 1.0 seconds
                 }
 
                 if( TotalPrice && !HasPermission ) {
-                    llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
+                    Update(); // Will request permission from owner
                 }
             }
 
@@ -954,16 +940,10 @@ default {
         }
 
         // Whisper info link
-        if( llGetUnixTime() != LastWhisperedUrl ) {
-            if( ShortenedInfoUrl ) {
-                llWhisper( 0 , ScriptName + ": For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
-            } else {
-                llWhisper( 0 , ScriptName + ": Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
-            }
-
-            LastWhisperedUrl = llGetUnixTime();
+        if( ShortenedInfoUrl ) {
+            llWhisper( 0 , ScriptName + ": For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+        } else {
+            llWhisper( 0 , ScriptName + ": Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
         }
-
-        Update();
     }
 }
