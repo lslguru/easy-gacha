@@ -113,14 +113,10 @@ integer CountItems; // Updated when Items is updated
 integer CountPayouts; // Updated when Payouts is updated - total elements, not stride elements
 integer LastWhisperedUrl; // When were we last touched
 
-Whisper( string msg ) {
-    llWhisper( 0 , llGetScriptName() + ": " + msg );
-}
-
 Hover( string msg ) {
     if( AllowHover ) {
         if( msg ) {
-            llSetText( llGetObjectName() + ": " + llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
+            llSetText( llGetObjectName() + ": " + ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
         } else {
             llSetText( "" , ZERO_VECTOR , 1 );
         }
@@ -422,7 +418,7 @@ Play( key buyerId , integer lindensReceived ) {
     }
 
     // Thank them for their purchase
-    Whisper( "Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
+    llWhisper( 0 , ScriptName + ": Thank you for your purchase, " + displayName + "! Your " + (string)countItemsToSend + itemPlural + hasHave + "been sent." + change );
 
     // Give the inventory
     Hover( "Please wait, giving items to: " + displayName );
@@ -951,9 +947,9 @@ default {
         // Whisper info link
         if( llGetUnixTime() != LastWhisperedUrl ) {
             if( ShortenedInfoUrl ) {
-                Whisper( "For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+                llWhisper( 0 , ScriptName + ": For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
             } else {
-                Whisper( "Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+                llWhisper( 0 , ScriptName + ": Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
             }
 
             LastWhisperedUrl = llGetUnixTime();
