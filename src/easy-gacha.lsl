@@ -113,17 +113,11 @@ integer CountItems; // Updated when Items is updated
 integer CountPayouts; // Updated when Payouts is updated - total elements, not stride elements
 integer LastWhisperedUrl; // When were we last touched
 
-Debug( string msg ) { if( INVENTORY_NONE != llGetInventoryType( "easy-gacha-debug" /*DEBUG_INVENTORY*/ ) ) { llOwnerSay( "/me : " + llGetScriptName() + ": DEBUG: " + msg ); } }
-
 Whisper( string msg ) {
-    Debug( "Whisper( \"" + msg + "\" );" );
-
     llWhisper( 0 , llGetScriptName() + ": " + msg );
 }
 
 Hover( string msg ) {
-    Debug( "Hover( \"" + msg + "\" );" );
-
     if( AllowHover ) {
         if( msg ) {
             llSetText( llGetObjectName() + ": " + llGetScriptName() + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0>, 1 );
@@ -134,8 +128,6 @@ Hover( string msg ) {
 }
 
 Registry( list data ) {
-    Debug( "Registry( [ " + llList2CSV( data ) + " ] );" );
-
     return; /*REGISTRY_DISABLED*/
 
     // Note: Request ID not stored, so response will be safely skipped
@@ -144,57 +136,7 @@ Registry( list data ) {
     llSleep( 1.0 ); // FORCED_DELAY 1.0 seconds
 }
 
-DebugGlobals() {
-    Debug( "DebugGlobals()" );
-    Debug( "    Items = " + llList2CSV( Items ) );
-    Debug( "    Rarity = " + llList2CSV( Rarity ) );
-    Debug( "    Limit = " + llList2CSV( Limit ) );
-    Debug( "    Bought = " + llList2CSV( Bought ) );
-    Debug( "    Payouts = " + llList2CSV( Payouts ) );
-    Debug( "    MaxPerPurchase = " + (string)MaxPerPurchase );
-    Debug( "    PayPrice = " + (string)PayPrice );
-    Debug( "    PayPriceButton0 = " + (string)PayPriceButton0 );
-    Debug( "    PayPriceButton1 = " + (string)PayPriceButton1 );
-    Debug( "    PayPriceButton2 = " + (string)PayPriceButton2 );
-    Debug( "    PayPriceButton3 = " + (string)PayPriceButton3 );
-    Debug( "    FolderForSingleItem = " + (string)FolderForSingleItem );
-    Debug( "    RootClickAction = " + (string)RootClickAction );
-    Debug( "    Group = " + (string)Group );
-    Debug( "    Email = " + Email );
-    Debug( "    Im = " + (string)Im );
-    Debug( "    AllowHover = " + (string)AllowHover );
-    Debug( "    MaxBuys = " + (string)MaxBuys );
-    Debug( "    Configured = " + (string)Configured );
-    Debug( "    Extra = " + Extra );
-    Debug( "    ApiPurchasesEnabled = " + (string)ApiPurchasesEnabled );
-    Debug( "    ApiItemsGivenEnabled = " + (string)ApiItemsGivenEnabled );
-    Debug( "    Ready = " + (string)Ready );
-    Debug( "    AdminKey = " + (string)AdminKey );
-    Debug( "    BaseUrl = " + BaseUrl );
-    Debug( "    ShortenedInfoUrl = " + ShortenedInfoUrl );
-    Debug( "    ShortenedAdminUrl = " + ShortenedAdminUrl );
-    Debug( "    Owner = " + (string)Owner );
-    Debug( "    ScriptName = " + ScriptName );
-    Debug( "    HasPermission = " + (string)HasPermission );
-    Debug( "    DataServerRequests = " + llList2CSV( DataServerRequests ) );
-    Debug( "    DataServerRequestTimes = " + llList2CSV( DataServerRequestTimes ) );
-    Debug( "    DataServerRequestTypes = " + llList2CSV( DataServerRequestTypes ) );
-    Debug( "    DataServerResponses = " + llList2CSV( DataServerResponses ) );
-    Debug( "    LastPing = " + (string)LastPing );
-    Debug( "    TotalPrice = " + (string)TotalPrice );
-    Debug( "    TotalBought = " + (string)TotalBought );
-    Debug( "    TotalLimit = " + (string)TotalLimit );
-    Debug( "    HasUnlimitedItems = " + (string)HasUnlimitedItems );
-    Debug( "    HasNoCopyItemsForSale = " + (string)HasNoCopyItemsForSale );
-    Debug( "    TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
-    Debug( "    CountItems = " + (string)CountItems );
-    Debug( "    CountPayouts = " + (string)CountPayouts );
-    Debug( "    Last whispered URL unixtime: " + (string)LastWhisperedUrl );
-    Debug( "    Free memory: " + (string)llGetFreeMemory() );
-"Debug";}
-
 RequestUrl() {
-    Debug( "RequestUrl()" );
     llReleaseURL( BaseUrl );
 
     AdminKey = llGenerateKey();
@@ -223,8 +165,6 @@ integer ItemUsable( integer itemIndex ) {
 }
 
 Update() {
-    Debug( "Update()" );
-
     Owner = llGetOwner();
     ScriptName = llGetScriptName();
     HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
@@ -346,8 +286,6 @@ Update() {
 }
 
 Shorten( string url ) {
-    Debug( "Shorten( \"" + url + "\" )" );
-
     DataServerRequests += [ llHTTPRequest(
         "https:\/\/www.googleapis.com/urlshortener/v1/url"
         , [
@@ -364,8 +302,6 @@ Shorten( string url ) {
 }
 
 Play( key buyerId , integer lindensReceived ) {
-    Debug( "Play( " + (string)buyerId + " , " + (string)lindensReceived + " )" );
-
     // Cache this because it's used several times
     string displayName = llGetDisplayName( buyerId );
 
@@ -383,31 +319,26 @@ Play( key buyerId , integer lindensReceived ) {
     // If we can only hand out one at a time anyway
     if( HasNoCopyItemsForSale ) {
         totalItems = 1;
-        Debug( "    HasNoCopyItemsForSale, set to: 1" );
     }
 
     // If their order would exceed the hard-coded limit
     if( totalItems > MaxPerPurchase ) {
         totalItems = MaxPerPurchase;
-        Debug( "    totalItems > MaxPerPurchase, set to: " + (string)totalItems );
     }
 
     // If their order would exceed the total allowed purchases
     if( -1 != MaxBuys && totalItems > MaxBuys - TotalBought ) {
         totalItems = MaxBuys - TotalBought;
-        Debug( "    totalItems > MaxBuysRemaining, set to: " + (string)totalItems );
     }
 
     // If their order would exceed the total available supply
     if( !HasUnlimitedItems && totalItems > TotalLimit - TotalBought ) {
         totalItems = TotalLimit - TotalBought;
-        Debug( "    totalItems > RemainingInventory, set to: " + (string)totalItems );
     }
 
     // If it's set to group-only play and they're not in the right group
     if( Group && !llSameGroup( buyerId ) ) {
         totalItems = 0;
-        Debug( "    Not in same group, totalItems = 0" );
     }
 
     // Iterate until we've met our total, because it should now be
@@ -422,7 +353,6 @@ Play( key buyerId , integer lindensReceived ) {
 
         // Generate a random number which is between [ TotalEffectiveRarity , 0.0 )
         random = TotalEffectiveRarity - llFrand( TotalEffectiveRarity );
-        Debug( "    random = " + (string)random );
 
         // Find the item's index
         for( itemIndex = 0 ; itemIndex < CountItems && random > 0.0 ; ++itemIndex ) {
@@ -435,11 +365,9 @@ Play( key buyerId , integer lindensReceived ) {
 
         // Last iteration of the loop increments the index past where we want
         --itemIndex;
-        Debug( "    index of item = " + (string)itemIndex );
 
         // llGiveInventoryList uses the inventory names
         itemsToSend += [ llList2String( Items , itemIndex ) ];
-        Debug( "    Item picked: " + llList2String( Items , itemIndex ) );
 
         // Mark that we found a valid thing to give, otherwise we'll loop
         // through again until we do find one
@@ -453,7 +381,6 @@ Play( key buyerId , integer lindensReceived ) {
         if( ! ItemUsable( itemIndex ) ) {
             // Reduce rarity total
             TotalEffectiveRarity -= llList2Float( Rarity , itemIndex );
-            Debug( "    Inventory has run out for item! TotalEffectiveRarity = " + (string)TotalEffectiveRarity );
         }
     }
 
@@ -476,7 +403,6 @@ Play( key buyerId , integer lindensReceived ) {
         // 4 == 3 for ellipses + 1 because this is end index, not count
         objectName = ( llGetSubString( objectName , 0 , 63 /*MAX_FOLDER_NAME_LENGTH*/ - llStringLength( folderSuffix ) - 4 ) + "..." );
     }
-    Debug( "    Truncated object name: " + objectName );
 
     // If too much money was given or they weren't able to play
     string change = "";
@@ -491,7 +417,6 @@ Play( key buyerId , integer lindensReceived ) {
     for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) { // Strided list
         // Only if the payment isn't to the owner and is more than L$0
         if( llList2Key( Payouts , payoutIndex ) != Owner && 0 < llList2Integer( Payouts , payoutIndex + 1 ) ) {
-            Debug( "    Giving L$" + (string)(llList2Integer( Payouts , payoutIndex + 1 ) * totalItems) + " to " + llList2String( Payouts , payoutIndex ) );
             llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
         }
     }
@@ -529,42 +454,24 @@ Play( key buyerId , integer lindensReceived ) {
 
 default {
     state_entry() {
-        Debug( "default::state_entry()" );
-
         Update();
         RequestUrl();
-
-        DebugGlobals();
     }
 
     attach( key avatarId ) {
-        Debug( "default::attach( " + (string)avatarId + " )" );
-
         Update();
-
-        DebugGlobals();
     }
 
     on_rez( integer rezParam ) {
-        Debug( "default::on_rez( " + (string)rezParam + " )" );
-
         Update();
         RequestUrl();
-
-        DebugGlobals();
     }
 
     run_time_permissions( integer permissionMask ) {
-        Debug( "default::run_time_permissions( " + (string)permissionMask + " )" );
-
         Update();
-
-        DebugGlobals();
     }
 
     changed( integer changeMask ) {
-        Debug( "default::changed( " + (string)changeMask + " )" );
-
         // If they change the inventory and remove something that was
         // configured, we'll count that as alright and just recalculate the
         // probabilities
@@ -575,13 +482,9 @@ default {
         }
 
         Update();
-
-        DebugGlobals();
     }
 
     money( key buyerId , integer lindensReceived ) {
-        Debug( "default::money( " + (string)buyerId + ", " + (string)lindensReceived + " )" );
-
         // During handout, there is still a "money" event which can capture
         // any successful transactions (so none are missed), but by setting
         // ALL the pay buttons to PAY_HIDE, which should prevent any new
@@ -591,16 +494,10 @@ default {
         Play( buyerId , lindensReceived );
 
         Update();
-
-        DebugGlobals();
     }
 
     timer() {
-        Debug( "default::timer()" );
-
         llSetTimerEvent( 0.0 ); // reset
-
-        DebugGlobals();
 
         // For each pending request
         integer requestIndex;
@@ -626,8 +523,6 @@ default {
     }
 
     http_request( key requestId , string httpMethod , string requestBody ) {
-        Debug( "default::http_request( " + llList2CSV( [ requestId , httpMethod , requestBody ] )+ " )" );
-
         integer responseStatus = 400;
         string responseBody = "Bad request";
         integer responseContentType = CONTENT_TYPE_TEXT;
@@ -975,19 +870,11 @@ default {
             }
         }
 
-        Debug( "    responseContentType = " + (string)responseContentType );
-        Debug( "    responseStatus = " + (string)responseStatus );
-        Debug( "    responseBody = " + (string)responseBody );
-
         llSetContentType( requestId , responseContentType );
         llHTTPResponse( requestId , responseStatus , responseBody );
-
-        DebugGlobals();
     }
 
     dataserver( key queryId , string data ) {
-        Debug( "default::dataserver( " + (string)queryId + ", " + data + " )" );
-
         integer requestIndex = llListFindList( DataServerRequests , [ queryId ] );
         if( -1 == requestIndex ) {
             return;
@@ -1003,13 +890,9 @@ default {
         }
 
         llSetTimerEvent( 0.0 );
-
-        DebugGlobals();
     }
 
     http_response( key requestId , integer responseStatus , list metadata , string responseBody ) {
-        Debug( "default::http_response( " + llList2CSV( [ requestId , responseStatus ] + metadata + [ responseBody ] )+ " )" );
-
         integer requestIndex = llListFindList( DataServerRequests , [ requestId ] );
         if( -1 == requestIndex ) {
             return;
@@ -1036,18 +919,12 @@ default {
         DataServerRequestTimes = llDeleteSubList( DataServerRequestTimes , requestIndex , requestIndex );
         DataServerRequestTypes = llDeleteSubList( DataServerRequestTypes , requestIndex , requestIndex );
         DataServerResponses = llDeleteSubList( DataServerResponses , requestIndex , requestIndex );
-
-        DebugGlobals();
     }
 
     touch_end( integer detected ) {
-        Debug( "default::touch_end( " + (string)detected + " )" );
-
         // For each person that touched
         while( 0 <= ( detected -= 1 ) ) {
             key detectedKey = llDetectedKey( detected );
-
-            Debug( "    Touched by: " + llDetectedName( detected ) + " (" + (string)detectedKey + ")" );
 
             // If admin, send IM with link
             if( detectedKey == Owner ) {
@@ -1083,7 +960,5 @@ default {
         }
 
         Update();
-
-        DebugGlobals();
     }
 }
