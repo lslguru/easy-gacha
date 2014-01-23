@@ -19,7 +19,7 @@ define( [
         }
 
         , url: function() {
-            return 'lookup/' + this.subject;
+            return 'lookup/' + this.subject + '/';
         }
 
         , toPostJSON: function() {

@@ -32,7 +32,6 @@ define( [
             , scriptName: null
             , freeMemory: null
             , debitPermission: null
-            , lastPing: null
             , inventoryCount: null
             , itemCount: null
             , payoutCount: null
@@ -83,7 +82,6 @@ define( [
             parsed.scriptName = data[i++];
             parsed.freeMemory = parseInt( data[i++] , 10 );
             parsed.debitPermission = Boolean( parseInt( data[i++] , 10 ) );
-            parsed.lastPing = moment( parseInt( data[i++] , 10 ) , 'X' );
             parsed.inventoryCount = parseInt( data[i++] , 10 );
             parsed.itemCount = parseInt( data[i++] , 10 );
             parsed.payoutCount = parseInt( data[i++] , 10 );

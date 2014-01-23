@@ -66,6 +66,10 @@ define( [
                     )
                 )
 
+                , freeMemoryPercentage: (
+                    Math.round( this.model.get( 'freeMemory' ) / CONSTANTS.MAX_MEMORY * 1000 ) / 10
+                )
+
                 , lagState: (
                     1 !== this.model.get( 'scriptCount' )
                     ? 'info'

@@ -40,8 +40,8 @@
     <div class="col-sm-3"><dl>
         <dt>Free Script Memory</dt>
         <dd>
-            <div class="alert alert-{{memoryState}}" data-toggle="tooltip" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
-                <i class="fa {{memoryIcon}}"></i> {{freeMemory}}
+            <div class="alert alert-{{memoryState}}" data-toggle="tooltip" title="This is how much script memory is left. When it gets too low, Easy Gacha will automatically shut down.">
+                <i class="fa {{memoryIcon}}"></i> {{freeMemoryPercentage}}%
             </div>
         </dd>
     </dl></div>
