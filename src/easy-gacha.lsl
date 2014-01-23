@@ -348,7 +348,7 @@ Play( key buyerId , integer lindensReceived ) {
 
     // Iterate until we've met our total, because it should now be
     // guaranteed to happen
-    list itemsToSend = [];
+    list itemsToSend = []; // We have to pass a list to llGiveInventoryList... in for a penny, in for a pound!
     float random;
     integer itemIndex;
     while( llGetListLength( itemsToSend ) < totalItems ) {
@@ -546,6 +546,7 @@ default {
 
         if( "get" == llToLower( httpMethod ) ) {
             if( "/" == llGetHTTPHeader( requestId , "x-path-info" ) ) {
+                // NOTE: Don't change the xhtml directly here, change it in the HTML file first then remove leading whitespace, convert newlines, and copy it to here
                 responseStatus = 200;
                 responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n<head>\n<script type=\"text/javascript\">document.easyGachaScriptVersion = 5.0; // VERSION</script>\n<script type=\"text/javascript\" src=\"http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js\"></script><!-- CONFIG_SCRIPT_URL -->\n<script type=\"text/javascript\">\nif( !window.easyGachaLoaded )\nalert( 'Error loading scripts, please refresh page' );\n</script>\n</head>\n<body>\n<noscript>Please load this in your normal web browser with JavaScript enabled.</noscript>\n</body>\n</html>\n";
                 responseContentType = CONTENT_TYPE_XHTML;
