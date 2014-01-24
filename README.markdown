@@ -229,6 +229,20 @@ Space separated fields
 
 --------------------------------------------------------------------------------
 
+# Features to NOT implement #
+
+## Default rarity ##
+
+Setting a default rarity means we'd have to add to the items list every time a
+non-configured item was chosen. That would definitely run out of memory
+eventually, and would also add an unreasonable level of additional complexity.
+Instead, I'm going to make it as easy as possible to configure a batch of items
+at the same time. That way you could drop in 10,000 items (would take a while
+to load...) and configure them ~100 at a time. Memory testing will indicate
+where the limits to number of configured items is.
+
+--------------------------------------------------------------------------------
+
 # gh-pages volo #
 
     $ grunt volo:add:-amd:underscore:exports=_:v5/vendor/underscore

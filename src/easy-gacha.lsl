@@ -115,10 +115,14 @@ integer CountPayouts; // Updated when Payouts is updated - total elements, not s
 
 Registry( list data ){} // Stub, gets replaced in official copy
 
+string RootObjectName() {
+    return llList2String( llGetLinkPrimitiveParams( (!!llGetLinkNumber()) , [ PRIM_NAME ] ) , 0 );
+}
+
 Hover( string msg ) {
     if( AllowHover ) {
         if( msg ) {
-            llSetText( llGetObjectName() + ": " + ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0> , 1 );
+            llSetText( RootObjectName() + ": " + ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0> , 1 );
         } else {
             llSetText( "" , ZERO_VECTOR , 1 );
         }
@@ -158,12 +162,6 @@ Update() {
     ScriptName = llGetScriptName();
     HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
 
-    // Calculated values
-    TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
-    TotalBought = (integer)llListStatistics( LIST_STAT_SUM , Bought );
-    CountItems = llGetListLength( Items );
-    CountPayouts = llGetListLength( Payouts );
-
     // Build total rarity and limit
     integer itemIndex;
     TotalLimit = 0;
@@ -173,6 +171,7 @@ Update() {
         // If the item is usable, meaning exists and has rarity and is
         // transferable, etc...
         if( ItemUsable( itemIndex ) ) {
+            // Add to total rarity
             TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
 
             // If limit is -1 meaning unlimited, don't add it to the total,
@@ -181,6 +180,7 @@ Update() {
                 TotalLimit += llList2Integer( Limit , itemIndex ) - llList2Integer( Bought , itemIndex );
             }
 
+            // Mark if we're in the special no-copy mode (any eligible item causes this)
             if( ! ( PERM_COPY & llGetInventoryPermMask( llList2String( Items , itemIndex ) , MASK_OWNER ) ) ) {
                 HasNoCopyItemsForSale = TRUE;
             }
@@ -197,20 +197,24 @@ Update() {
 
         // Conditions which make it go offline. If any of these fail, fall
         // back to false
+
         if( TotalPrice && !HasPermission ) {
             // If we're collecting any amount of money, we need to get
             // debit permission to be able to give change
             Ready = FALSE;
         }
+
         if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
             // This can occur even if all items are unlimited in quantity
             Ready = FALSE;
         }
+
         if( 0.0 == TotalEffectiveRarity ) {
             // If no items are effective, they've either run out of
             // inventory, don't exist, or are not transferable...
             Ready = FALSE;
         }
+
         if( Group && llSameGroup( NULL_KEY ) ) {
             // If we're in group-only mode but no group was set...
             Ready = FALSE;
@@ -270,6 +274,8 @@ Update() {
     } else if( Group && llSameGroup( NULL_KEY ) ) {
         Hover( "Please set a group for this object" );
     } else if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
+        Hover( "No more items to give, sorry" );
+    } else if( 0.0 == TotalEffectiveRarity ) {
         Hover( "No more items to give, sorry" );
     } else {
         Hover( "Configuration needed, please touch this object" );
@@ -396,7 +402,7 @@ Play( key buyerId , integer lindensReceived ) {
     // the prim, or barring that, the name of the object
     string objectName = llList2String( llGetLinkPrimitiveParams( LINK_THIS , [ PRIM_NAME ] ) , 0 );
     if( "" == objectName || "Object" == objectName ) {
-        objectName = llGetObjectName();
+        objectName = RootObjectName();
     }
     string folderSuffix = ( " (Easy Gacha: " + (string)totalItems + itemPlural + llGetDate() + ")" );
     if( llStringLength( objectName ) + llStringLength( folderSuffix ) > 63 /*MAX_FOLDER_NAME_LENGTH*/ ) {
@@ -444,7 +450,7 @@ Play( key buyerId , integer lindensReceived ) {
         llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + llGetUsername(buyerId) + ") just received " + (string)totalItems + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
     }
     if( Email ) {
-        llEmail( Email , llGetObjectName() + " - Easy Gacha Played" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
+        llEmail( Email , "Easy Gacha Played" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
     }
 
     // API calls
@@ -558,72 +564,60 @@ default {
             responseContentType = CONTENT_TYPE_JSON;
             responseBody = "null";
 
-            list path = llParseString2List( llGetHTTPHeader( requestId , "x-path-info" ) , [ "/" ] , [ ] );
+            integer isAdmin = FALSE;
+
+            // Get input
+            string verb = llGetHTTPHeader( requestId , "x-path-info" );
+            list requestBodyParts = llJson2List( requestBody );
 
             // Determine if the user is an admin by the presence of the
             // key, and strip it off the front
-            integer isAdmin = ( llList2Key( path , 0 ) == AdminKey );
-            if( isAdmin ) {
-                path = llList2List( path , 1 , -1 );
+            if( "/" + (string)AdminKey + "/" == llGetSubString( verb , 0 , 37 ) ) {
+                isAdmin = TRUE;
+                verb = llDeleteSubString( verb , 0 , 37 );
             }
 
-            string verb = llList2String( path , 0 );
-            string subject = llList2String( path , 1 );
-            list requestBodyParts = llJson2List( requestBody );
+            // Separate the verb and subject on input
+            string subject = llGetSubString( verb , llSubStringIndex( verb , "/" ) + 1 , -1 );
+            verb = llGetSubString( verb , 0 , llSubStringIndex( verb , "/" ) - 1 );
+
+            // Strip trailing slash
+            if( -1 != llSubStringIndex( subject , "/" ) ) {
+                subject = llDeleteSubString( subject , llSubStringIndex( subject , "/" ) , -1 );
+            }
 
             if( "item" == subject ) {
                 if( isAdmin ) {
                     if( "post" == verb ) {
-                        Rarity += [ llList2Float( requestBodyParts , 0 ) ];
-                        Limit += [ llList2Integer( requestBodyParts , 1 ) ];
-                        Bought += [ llList2Integer( requestBodyParts , 2 ) ];
-                        Items += [ llList2String( requestBodyParts , 3 ) ];
+                        Items += [ llList2String( requestBodyParts , 0 ) ];
+                        Rarity += [ llList2Float( requestBodyParts , 1 ) ];
+                        Limit += [ llList2Integer( requestBodyParts , 2 ) ];
+                        Bought += [ 0 ]; // Placeholder for counter
+                        ++CountItems;
                     }
 
                     if( "delete" == verb ) {
+                        Items = [];
                         Rarity = [];
                         Limit = [];
                         Bought = [];
-                        Items = [];
                         CountItems = 0;
                     }
                 }
 
                 if( llList2Integer( requestBodyParts , 0 ) < CountItems ) {
                     string inventoryName = llList2String( Items , llList2Integer( requestBodyParts , 0 ) );
-                    integer inventoryType = llGetInventoryType( inventoryName );
-                    list values = [
-                        llList2Integer( requestBodyParts , 0 ) , // index
-                        llList2Float( Rarity , llList2Integer( requestBodyParts , 0 ) ) , // rarity
-                        llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) , // limit
-                        llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) , // count bought
-                        inventoryName , // name
-                        inventoryType // type
-                    ];
-
-                    if( INVENTORY_NONE != inventoryType ) {
-                        values += [
-                            llGetInventoryCreator( inventoryName ) , // creator
-                            llGetInventoryKey( inventoryName ) != NULL_KEY , // can get key (key not passed for security)
-                            llGetInventoryPermMask( inventoryName , MASK_OWNER ) , // owner permissions mask
-                            llGetInventoryPermMask( inventoryName , MASK_GROUP ) , // group permissions mask
-                            llGetInventoryPermMask( inventoryName , MASK_EVERYONE ) , // public permissions mask
-                            llGetInventoryPermMask( inventoryName , MASK_NEXT ) // next permissions mask
-                        ];
-                    } else {
-                        values += [
-                            NULL_KEY , // creator
-                            FALSE , // can get key (key not passed for security)
-                            0 , // owner permissions mask
-                            0 , // group permissions mask
-                            0 , // public permissions mask
-                            0 // next permissions mask
-                        ];
-                    }
 
                     responseBody = llList2Json(
                         JSON_ARRAY
-                        , values
+                        , [
+                            llList2Integer( requestBodyParts , 0 ) , // index
+                            llList2Float( Rarity , llList2Integer( requestBodyParts , 0 ) ) , // rarity
+                            llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) , // limit
+                            llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) , // count bought
+                            inventoryName , // name
+                            llGetInventoryType( inventoryName ) // type
+                        ]
                     );
                 }
             }
@@ -635,10 +629,13 @@ default {
                             llList2Key( requestBodyParts , 0 )
                             , llList2Integer( requestBodyParts , 1 )
                         ];
+
+                        CountPayouts += 2;
                     }
 
                     if( "delete" == verb ) {
                         Payouts = [];
+                        CountPayouts = 0;
                     }
                 }
 
@@ -666,6 +663,7 @@ default {
                         PayPriceButton3 = llList2Integer( requestBodyParts , 10 );
                         ApiPurchasesEnabled = llList2Integer( requestBodyParts , 11 );
                         ApiItemsGivenEnabled = llList2Integer( requestBodyParts , 12 );
+                        TotalPrice = llList2Integer( requestBodyParts , 13 );
                     }
                 }
 
@@ -724,6 +722,7 @@ default {
                     if( "post" == verb ) {
                         Configured = llList2Integer( requestBodyParts , 0 );
                         Extra = llList2String( requestBodyParts , 1 );
+                        TotalBought = 0;
                     }
                 }
 
@@ -757,7 +756,6 @@ default {
                     ] )
                 );
             }
-
 
             if( "prim" == subject ) {
                 responseBody = llList2Json(
@@ -800,13 +798,13 @@ default {
             }
 
             if( "lookup" == subject ) {
-                subject = llList2String( path , 2 );
+                subject = llList2String( requestBodyParts , 0 );
                 llSetContentType( requestId , responseContentType );
                 llSetTimerEvent( 5.0 /*ASSET_SERVER_TIMEOUT_CHECK*/ );
 
                 if( "username" == subject ) {
                     DataServerRequests += [
-                        llRequestUsername( llList2Key( requestBodyParts , 0 ) )
+                        llRequestUsername( llList2Key( requestBodyParts , 1 ) )
                         , requestId
                         , llGetUnixTime()
                         , 3
@@ -815,7 +813,7 @@ default {
 
                 if( "displayname" == subject ) {
                     DataServerRequests += [
-                        llRequestDisplayName( llList2Key( requestBodyParts , 0 ) )
+                        llRequestDisplayName( llList2Key( requestBodyParts , 1 ) )
                         , requestId
                         , llGetUnixTime()
                         , 4
@@ -824,7 +822,7 @@ default {
 
                 if( "notecard-line-count" == subject ) {
                     DataServerRequests += [
-                        llGetNumberOfNotecardLines( llList2String( requestBodyParts , 0 ) )
+                        llGetNumberOfNotecardLines( llList2String( requestBodyParts , 1 ) )
                         , requestId
                         , llGetUnixTime()
                         , 5
@@ -833,7 +831,7 @@ default {
 
                 if( "notecard-line" == subject ) {
                     DataServerRequests += [
-                        llGetNotecardLine( llList2String( requestBodyParts , 0 ) , llList2Integer( requestBodyParts , 1 ) )
+                        llGetNotecardLine( llList2String( requestBodyParts , 1 ) , llList2Integer( requestBodyParts , 2 ) )
                         , requestId
                         , llGetUnixTime()
                         , 6
@@ -846,21 +844,20 @@ default {
             if( "inv" == subject && isAdmin ) {
                 if( llList2Integer( requestBodyParts , 0 ) < llGetInventoryNumber( INVENTORY_ALL ) ) {
                     string inventoryName = llGetInventoryName( INVENTORY_ALL , llList2Integer( requestBodyParts , 0 ) );
-                    list values = [
-                        llList2Integer( requestBodyParts , 0 ) , // index
-                        inventoryName , // name
-                        llGetInventoryType( inventoryName ) , // type
-                        llGetInventoryCreator( inventoryName ) , // creator
-                        llGetInventoryKey( inventoryName ) , // key
-                        llGetInventoryPermMask( inventoryName , MASK_OWNER ) , // owner permissions mask
-                        llGetInventoryPermMask( inventoryName , MASK_GROUP ) , // group permissions mask
-                        llGetInventoryPermMask( inventoryName , MASK_EVERYONE ) , // public permissions mask
-                        llGetInventoryPermMask( inventoryName , MASK_NEXT ) // next permissions mask
-                    ];
 
                     responseBody = llList2Json(
                         JSON_ARRAY
-                        , values
+                        , [
+                            llList2Integer( requestBodyParts , 0 ) , // index
+                            inventoryName , // name
+                            llGetInventoryType( inventoryName ) , // type
+                            llGetInventoryCreator( inventoryName ) , // creator
+                            llGetInventoryKey( inventoryName ) , // key
+                            llGetInventoryPermMask( inventoryName , MASK_OWNER ) , // owner permissions mask
+                            llGetInventoryPermMask( inventoryName , MASK_GROUP ) , // group permissions mask
+                            llGetInventoryPermMask( inventoryName , MASK_EVERYONE ) , // public permissions mask
+                            llGetInventoryPermMask( inventoryName , MASK_NEXT ) // next permissions mask
+                        ]
                     );
                 }
             }
@@ -913,12 +910,12 @@ default {
     }
 
     touch_end( integer detected ) {
+        integer nonOwnerTouched = FALSE;
+
         // For each person that touched
         while( 0 <= ( detected -= 1 ) ) {
-            key detectedKey = llDetectedKey( detected );
-
             // If admin, send IM with link
-            if( detectedKey == Owner ) {
+            if( llDetectedKey( detected ) == Owner ) {
                 if( ShortenedAdminUrl ) {
                     llOwnerSay( ScriptName + ": To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
                 } else if( "" == BaseUrl && llGetFreeURLs() ) {
@@ -930,21 +927,31 @@ default {
                     llDialog( Owner , "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." , [ ] , -1 ); // FORCED_DELAY 1.0 seconds
                 }
 
+                // If the owner accidentally ignored the permissions request
+                // (not denied) and touches the object again, then re-ask for
+                // permission
                 if( TotalPrice && !HasPermission ) {
                     Update(); // Will request permission from owner
                 }
+            } else {
+                nonOwnerTouched = TRUE;
             }
 
+            // If we're up and running and free-to-play, then call play
             if( Ready && !TotalPrice ) {
-                Play( detectedKey , 0 );
+                Play( llDetectedKey( detected ) , 0 );
             }
         }
 
-        // Whisper info link
-        if( ShortenedInfoUrl ) {
-            llWhisper( 0 , ScriptName + ": For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
-        } else {
-            llWhisper( 0 , ScriptName + ": Information about this Easy Gacha is not yet available, please wait a few minutes and try again." );
+        // Owner can get to dashboard from admin screen, so don't spam them
+        // with two links
+        if( nonOwnerTouched || Ready ) {
+            // Whisper info link
+            if( "" != ShortenedInfoUrl && Ready ) {
+                llWhisper( 0 , ScriptName + ": For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+            } else {
+                llWhisper( 0 , ScriptName + ": Information about this Easy Gacha is not currently available, please wait a few minutes and try again." );
+            }
         }
     }
 }
