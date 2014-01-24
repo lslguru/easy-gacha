@@ -51,11 +51,15 @@ define( [
             , prim: null
         }
 
-        , toPostJSON: function() {
-            return [
-                this.get( 'configured' )
-                , JSON.stringify( this.get( 'extra' ) )
-            ];
+        , toPostJSON: function( options , method , type ) {
+            if( 'post' === type ) {
+                return [
+                    this.get( 'configured' )
+                    , JSON.stringify( this.get( 'extra' ) )
+                ];
+            } else {
+                return [];
+            }
         }
 
         , parse: function( data ) {

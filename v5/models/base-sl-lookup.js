@@ -19,14 +19,14 @@ define( [
         }
 
         , url: function() {
-            return 'lookup/' + this.subject + '/';
+            return 'lookup/';
         }
 
         , toPostJSON: function() {
             if( _.isArray( this.get( 'lookup' ) ) ) {
-                return this.get( 'lookup' );
+                return [ this.subject ].concat( this.get( 'lookup' ) );
             } else {
-                return [ this.get( 'lookup' ) ];
+                return [ this.subject , this.get( 'lookup' ) ];
             }
         }
 

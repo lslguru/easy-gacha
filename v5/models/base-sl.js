@@ -21,11 +21,11 @@ define( [
         // Stripped down and specialized for our comm protocol
         , sync: function( method , model , options ) {
             var type = {
-                'create': 'POST'
-                , 'update': 'PUT'
-                , 'patch':  'PATCH'
-                , 'delete': 'DELETE'
-                , 'read':   'GET'
+                'create': 'post'
+                , 'update': 'put'
+                , 'patch':  'patch'
+                , 'delete': 'delete'
+                , 'read':   'get'
             }[ method ];
 
             // Default options, unless specified.
@@ -50,7 +50,7 @@ define( [
                         ? adminKey + '/'
                         : ''
                     )
-                    + type.toLowerCase()
+                    + type
                     + '/'
                     + _.result( model , 'url' )
                 )

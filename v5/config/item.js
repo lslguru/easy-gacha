@@ -47,6 +47,8 @@ define( [
             , 'importButton': '.config-import-button'
             , 'deleteButton': '.item-delete-button'
             , 'setLimitButton': '.set-limit'
+            , 'startProbability': '.start-probability'
+            , 'endProbability': '.end-probability'
         }
 
         , events: {
@@ -137,8 +139,11 @@ define( [
                 unlimitedRarity += rarity;
             }
 
-            this.ui.rarityLow.text( totalRarity ? Math.round( rarity / totalRarity * 1000 ) / 10 : 0 );
-            this.ui.rarityHigh.text( totalRarity ? Math.round( rarity / unlimitedRarity * 1000 ) / 10 : 0 );
+            var lowRarityPercentage = ( totalRarity ? Math.round( rarity / totalRarity * 1000 ) / 10 : 0 );
+            var highRarityPercentage = ( unlimitedRarity ? Math.round( rarity / unlimitedRarity * 1000 ) / 10 : 0 );
+            this.ui.rarityLow.text( lowRarityPercentage );
+            this.ui.rarityHigh.text( highRarityPercentage );
+            fade( this.ui.endProbability , ( lowRarityPercentage !== highRarityPercentage ) );
 
             if( 0 === this.model.get( 'limit' ) ) {
                 fade( this.ui.rarityAvailable , false , function() {
