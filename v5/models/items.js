@@ -28,15 +28,20 @@ define( [
             var hadItemsAtStart = Boolean( this.length );
 
             invs.each( function( inv ) {
-                if( ! this.get( inv.id ) && inv.id !== scriptName ) {
-                    var model = new this.model();
+                // Never add the script
+                if( inv.id === scriptName ) {
+                    return;
+                }
 
-                    _.each( inv.attributes , function( value , key ) {
-                        if( key in model.attributes ) {
-                            model.set( key , value );
-                        }
-                    } , this );
+                // Use existing, otherwise create
+                var model = this.get( inv.id ) || new this.model();
 
+                // Import all inv settings
+                model.set( inv.attributes );
+
+                // If it's new
+                if( ! this.get( inv.id ) ) {
+                    // Set first-seen values
                     model.set( {
                         rarity: (
                             hadItemsAtStart
@@ -57,6 +62,7 @@ define( [
                         , bought: 0
                     } );
 
+                    // Add to collection because it's new
                     this.add( model );
                 }
             } , this );

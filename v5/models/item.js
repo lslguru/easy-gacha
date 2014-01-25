@@ -26,16 +26,17 @@ define( [
             , bought: 0
             , name: null
             , type: 'INVENTORY_UNKNOWN'
+            , selectedForBatchOperation: false
+
+            // From: models/inv
             , creator: null
             , creatorUserName: null
             , creatorDisplayName: null
             , key: null
-            , keyAvailable: false
             , ownerPermissions: null
             , groupPermissions: null
             , publicPermissions: null
             , nextPermissions: null
-            , selectedForBatchOperation: false
         }
 
         , initialize: function() {
@@ -51,6 +52,12 @@ define( [
         }
 
         , applyEffectiveLimit: function() {
+            // Cannot apply until we know this
+            if( null === this.get( 'ownerPermissions' ) ) {
+                return;
+            }
+
+            // Overrides
             if( !( CONSTANTS.PERM_TRANSFER & this.get( 'ownerPermissions' ) ) ) {
                 this.set( 'limit' , 0 );
             } else if( !( CONSTANTS.PERM_COPY & this.get( 'ownerPermissions' ) ) ) {
@@ -66,7 +73,17 @@ define( [
         ]
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
-            // TODO: Save
+            if( 'delete' === syncMethod ) {
+                return [];
+            }
+            
+            if( 'read' !== syncMethod ) {
+                return [
+                    this.get( 'name' )
+                    , this.get( 'rarity' )
+                    , this.get( 'limit' )
+                ];
+            }
 
             return [
                 this.get( 'index' )
@@ -87,47 +104,12 @@ define( [
             parsed.bought = parseInt( data[i++] , 10 );
             parsed.name = data[i++];
             parsed.type = CONSTANTS.INVENTORY_NUMBER_TO_TYPE[ parseInt( data[i++] , 10 ) ] || 'INVENTORY_UNKNOWN';
-            parsed.creator = data[i++];
-            parsed.key = CONSTANTS.NULL_KEY;
-            parsed.keyAvailable = Boolean( parseInt( data[i++] , 10 ) );
-            parsed.ownerPermissions = parseInt( data[i++] , 10 );
-            parsed.groupPermissions = parseInt( data[i++] , 10 );
-            parsed.publicPermissions = parseInt( data[i++] , 10 );
-            parsed.nextPermissions = parseInt( data[i++] , 10 );
 
             return parsed;
         }
 
-        , fetch: function( options ) {
-            var success = options.success;
-            var fetchOptions = _.clone( options );
-
-            fetchOptions.success = _.bind( function( model , resp ) {
-                if( CONSTANTS.NULL_KEY == model.get( 'creator' ) ) {
-                    if( success ) {
-                        success.call( this , model , resp , options );
-                    }
-
-                    return;
-                }
-
-                agentsCache.fetch( {
-                    id: model.get( 'creator' )
-                    , context: this
-                    , success: function( agent ) {
-                        this.set( {
-                            creatorUserName: agent.get( 'username' )
-                            , creatorDisplayName: agent.get( 'displayname' )
-                        } );
-
-                        if( success ) {
-                            options.success.call( this , model , resp , options );
-                        }
-                    }
-                } );
-            } , this );
-
-            BaseModel.prototype.fetch.call( this , fetchOptions );
+        , shouldIncludeInSave: function() {
+            return Boolean( this.get( 'rarity' ) && 0 !== this.get( 'limit' ) );
         }
     } );
 

@@ -28,7 +28,7 @@ define( [
                         collection.add( model );
 
                         if( _.isFunction( options.progress ) ) {
-                            options.progress( model );
+                            options.progress( collection.length );
                         }
 
                         fetchNext( index + 1 );
@@ -48,7 +48,7 @@ define( [
         }
 
         , fromNotecardJSON: function( json ) {
-            this.set( json );
+            this.set( json , { remove: true } );
             return true;
         }
 
@@ -66,6 +66,48 @@ define( [
             } , this );
 
             return json;
+        }
+
+        // No base function for collections, so use just options as our
+        // implementation
+        , save: function( valuesToSet , options ) {
+            options = options || {};
+            var success = options.success;
+
+            var index = -1; // Will be incremented before use
+            var next = _.bind( function() {
+                ++index; // Before processing next model, increment
+
+                if( index >= this.length ) {
+                    if( _.isFunction( success ) ) {
+                        success.apply( this , arguments );
+                    }
+
+                    return;
+                }
+
+                if( _.isFunction( options.progress ) ) {
+                    options.progress( index );
+                }
+
+                var shouldIncludeInSave = true;
+                if( _.isFunction( this.models[ index ].shouldIncludeInSave ) ) {
+                    shouldIncludeInSave = this.models[ index ].shouldIncludeInSave();
+                }
+
+                if( shouldIncludeInSave ) {
+                    this.models[ index ].save( {} , options );
+                } else {
+                    next();
+                }
+            } , this );
+
+            // After each successful call, start the next one
+            options.success = next;
+
+            // Empty the list first
+            var reset = new this.model();
+            reset.destroy( options );
         }
     } ) );
 

@@ -27,6 +27,7 @@ define( [
             , ownerKey: null
             , ownerUserName: null
             , ownerDisplayName: null
+            , ready: null
             , objectName: null
             , objectDesc: null
             , scriptName: null
@@ -38,7 +39,6 @@ define( [
             , payoutCount: null
             , regionName: null
             , position: null
-            , configured: null
             , price: null
             , extra: null
             , numberOfPrims: null
@@ -53,14 +53,7 @@ define( [
         }
 
         , toPostJSON: function( options , method , type ) {
-            if( 'post' === type ) {
-                return [
-                    this.get( 'configured' )
-                    , JSON.stringify( this.get( 'extra' ) )
-                ];
-            } else {
-                return [];
-            }
+            return [];
         }
 
         , parse: function( data ) {
@@ -73,6 +66,7 @@ define( [
 
             parsed.isAdmin = Boolean( parseInt( data[i++] , 10 ) );
             parsed.ownerKey = data[i++] || CONSTANTS.NULL_KEY;
+            parsed.ready = Boolean( parseInt( data[i++] , 10 ) );
 
             if( 'Object' == data[i] ) {
                 data[i] = 'Unnamed';
@@ -93,19 +87,20 @@ define( [
             parsed.payoutCount = parseInt( data[i++] , 10 );
             parsed.regionName = data[i++];
             parsed.position = new Vector( data[i++] );
-            parsed.configured = Boolean( parseInt( data[i++] , 10 ) );
             parsed.price = parseInt( data[i++] , 10 );
 
             try {
-                data[i] = JSON.parse( data[i] );
+                if( _.isString( data[i] ) || !_.isObject( data[i] ) || _.isEmpty( data[i] ) ) {
+                    data[i] = JSON.parse( data[i] );
+                }
             } catch( e ) {
                 data[i] = {
-                    'button_price': 0
-                    , 'button_default': 1
-                    , 'button_0': 1
-                    , 'button_1': 5
-                    , 'button_2': 10
-                    , 'button_3': 25
+                    'button_price': CONSTANTS.DEFAULT_PRICE
+                    , 'button_default': CONSTANTS.DEFAULT_PAY_ANY_COUNT
+                    , 'button_0': CONSTANTS.DEFAULT_BUTTON_0_COUNT
+                    , 'button_1': CONSTANTS.DEFAULT_BUTTON_1_COUNT
+                    , 'button_2': CONSTANTS.DEFAULT_BUTTON_2_COUNT
+                    , 'button_3': CONSTANTS.DEFAULT_BUTTON_3_COUNT
                 };
             }
             parsed.extra = data[i++];

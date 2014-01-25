@@ -2,11 +2,13 @@ define( [
 
     'models/base-sl-model'
     , 'lib/constants'
+    , 'models/agents-cache'
 
 ] , function(
 
     BaseModel
     , CONSTANTS
+    , agentsCache
 
 ) {
     'use strict';
@@ -15,13 +17,19 @@ define( [
         url: 'im'
 
         , defaults: {
-            key: null
+            im: null
+            , imUserName: null
+            , imDisplayName: null
         }
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
-            return [
-                this.get( 'key' ) || CONSTANTS.NULL_KEY
-            ];
+            if( 'read' !== syncMethod ) {
+                return [
+                    this.get( 'im' ) || CONSTANTS.NULL_KEY
+                ];
+            } else {
+                return [];
+            }
         }
 
         , parse: function( data ) {
@@ -30,8 +38,44 @@ define( [
             }
 
             return {
-                key: data[0] || CONSTANTS.NULL_KEY
+                im: data[0] || CONSTANTS.NULL_KEY
             };
+        }
+
+        , fetch: function( options ) {
+            var success = options.success;
+            var fetchOptions = _.clone( options );
+
+            if( success ) {
+                success = _.bind( success , this );
+            }
+
+            fetchOptions.success = function( model , resp ) {
+                if( CONSTANTS.NULL_KEY === model.get( 'im' ) ) {
+                    if( success ) {
+                        success( model , resp , options );
+                    }
+
+                    return;
+                }
+
+                agentsCache.fetch( {
+                    id: model.get( 'im' )
+                    , context: this
+                    , success: function( agent ) {
+                        this.set( {
+                            imUserName: agent.get( 'username' )
+                            , imDisplayName: agent.get( 'displayname' )
+                        } );
+
+                        if( success ) {
+                            success( model , resp , options );
+                        }
+                    }
+                } );
+            };
+
+            this.constructor.__super__.fetch.call( this , fetchOptions );
         }
     } );
 

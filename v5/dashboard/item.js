@@ -39,11 +39,10 @@ define( [
             var bought = this.model.get( 'bought' );
             var limit = this.model.get( 'limit' );
             var type = this.model.get( 'type' );
-            var totalRarity = this.model.collection.totalRarity;
-            var totalBought = this.model.collection.totalBought;
 
             // Inventory
             var inventory = limit - bought;
+            var inventoryLeft = true;
 
             // Human formatting
             if( -1 === limit ) {
@@ -52,11 +51,15 @@ define( [
             } else {
                 // Add thousands commas
                 inventory = inventory.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+                if( 0 >= limit - bought ) {
+                    inventoryLeft = false;
+                }
             }
 
             // Initialize probability numbers
-            var rarityPercentage = ( totalRarity ? ( rarity * 100 / totalRarity ) : 0 );
-            var boughtPercentage = ( totalBought ? ( bought * 100 / totalBought ) : 0 );
+            var rarityPercentage = this.model.get( 'lowRarityPercentage' );
+            var boughtPercentage = this.model.get( 'boughtPercentage' );
             var successBarPercentage = 0;
             var dangerBarPercentage = 0;
             var rarityDisparityTargetSide = '';
@@ -78,6 +81,7 @@ define( [
 
             return {
                 inventory: inventory
+                , inventoryLeft: inventoryLeft
                 , rarityPercentage: rarityPercentage
                 , boughtPercentage: boughtPercentage
                 , successBarPercentage: successBarPercentage

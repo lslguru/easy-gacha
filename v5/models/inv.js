@@ -20,8 +20,7 @@ define( [
         , idAttribute: 'name'
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
-            // TODO: Save
-
+            // Used for GET
             return [
                 this.get( 'index' )
             ];

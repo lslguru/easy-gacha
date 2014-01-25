@@ -22,7 +22,7 @@
 }
 
 #page-config .pay-preview-field.pay-hide {
-    background-color: rgba( 62 , 62 , 62 , 0.7 );
+    background-color: rgba( 62 , 62 , 62 , 0 );
 }
 
 #page-config .pay-preview-field.focus {

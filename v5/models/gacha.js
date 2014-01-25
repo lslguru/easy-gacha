@@ -6,6 +6,9 @@ define( [
     , 'models/items'
     , 'models/payouts'
     , 'models/invs'
+    , 'models/email'
+    , 'models/im'
+    , 'models/configured'
     , 'lib/admin-key'
     , 'models/agents-cache'
     , 'models/base-sl-model'
@@ -19,6 +22,9 @@ define( [
     , Items
     , Payouts
     , Invs
+    , Email
+    , Im
+    , Configured
     , adminKey
     , agentsCache
     , BaseSlModel
@@ -27,9 +33,9 @@ define( [
 ) {
     'use strict';
 
-    var submodelProgress = function( submodelName , gachaInfoProperty , gacha , submodel ) {
+    var submodelProgress = function( submodelName , gachaInfoProperty , gacha , length ) {
         var submodelExpectedCount = ( gacha.get( gachaInfoProperty ) + 1 );
-        var submodelProgressPercentage = ( submodel.length / submodelExpectedCount * 100 );
+        var submodelProgressPercentage = ( length / submodelExpectedCount * 100 );
         gacha.submodels[ submodelName ].progressPercentage = submodelProgressPercentage;
         gacha.updateProgress();
     };
@@ -38,10 +44,10 @@ define( [
         defaults: {
             isValid: false
             , progressPercentage: 0
+            , progressStep: ''
             , agentsCache: agentsCache
-            , overrideProgress: null
             , hasChangesToSave: false
-            , autoModified: null // TODO: On save, set to false
+            , autoModified: null
             , ackAutoModified: false
 
             // From models/info
@@ -49,6 +55,7 @@ define( [
             , ownerKey: null
             , ownerUserName: null
             , ownerDisplayName: null
+            , ready: null
             , objectName: null
             , objectDesc: null
             , scriptName: null
@@ -62,7 +69,6 @@ define( [
             , position: null
             , configured: null
             , price: null
-            , extra: null
             , numberOfPrims: null
             , scriptLinkNumber: null
             , creatorKey: null
@@ -98,13 +104,17 @@ define( [
             , payPriceButton1: null
             , payPriceButton2: null
             , payPriceButton3: null
-            , email: null
-            , im: null
-            , imUserName: null
-            , imDisplayName: null
             , setFolderName: null
             , rootClickActionNeeded: false
             , ackEmailSlowness: false
+
+            // From models/email
+            , email: null
+
+            // From models/im
+            , im: null
+            , imUserName: null
+            , imDisplayName: null
 
             // From models/items
             , totalItems: 0
@@ -160,42 +170,113 @@ define( [
             info: {
                 model: Info
                 , type: 'merge'
-                , weight: 10
+                , weight: 5
                 , adminOnly: false
-                , success: function( gacha , info ) {
+                , fetchSuccess: function( gacha , info ) {
                     gacha.set( info.get( 'extra' ) );
+
+                    // Nice smooth progress bar
+                    var totalCalls = (
+                        1 // info
+                        + 1 // config
+                        + 1 // email
+                        + 1 // im
+                        + 1 + info.get( 'payoutCount' ) // payouts
+                        + 1 + info.get( 'itemCount' ) // items
+                        + 1 + info.get( 'inventoryCount' ) // invs
+                        + 1 // configured
+                    );
+                    gacha.submodels.info.weight = 1 / totalCalls * 100;
+                    gacha.submodels.config.weight = 1 / totalCalls * 100;
+                    gacha.submodels.email.weight = 1 / totalCalls * 100;
+                    gacha.submodels.im.weight = 1 / totalCalls * 100;
+                    gacha.submodels.payouts.weight = ( 1 + info.get( 'payoutCount' ) ) / totalCalls * 100;
+                    gacha.submodels.items.weight = ( 1 + info.get( 'itemCount' ) ) / totalCalls * 100;
+                    gacha.submodels.invs.weight = ( 1 + info.get( 'inventoryCount' ) ) / totalCalls * 100;
+                    gacha.submodels.configured.weight = 1 / totalCalls * 100;
                 }
+                , save: false
+                , name: 'Object Info'
             }
 
             , config: {
                 model: Config
                 , type: 'merge'
-                , weight: 10
+                , weight: 5
                 , adminOnly: true
+                , save: true
+                , preSave: function( gacha , config ) {
+                    config.set( 'extra' , {
+                        button_price: gacha.get( 'button_price' )
+                        , button_default: gacha.get( 'button_default' )
+                        , button_0: gacha.get( 'button_0' )
+                        , button_1: gacha.get( 'button_1' )
+                        , button_2: gacha.get( 'button_2' )
+                        , button_3: gacha.get( 'button_3' )
+                        , zeroPriceOkay: gacha.get( 'zeroPriceOkay' )
+                        , suggestedButtonOrder: gacha.get( 'suggestedButtonOrder' )
+                        , ignoreButtonsOutOfOrder: gacha.get( 'ignoreButtonsOutOfOrder' )
+                        , ackNoCopyItemsMeansSingleItemPlay: gacha.get( 'ackNoCopyItemsMeansSingleItemPlay' )
+                    } );
+                }
+                , name: 'Configuration'
+            }
+
+            , email: {
+                model: Email
+                , type: 'merge'
+                , weight: 5
+                , adminOnly: true
+                , save: true
+                , name: 'Email Setting'
+            }
+
+            , im: {
+                model: Im
+                , type: 'merge'
+                , weight: 5
+                , adminOnly: true
+                , save: true
+                , name: 'IM Setting'
             }
 
             , payouts: {
                 model: Payouts
                 , type: 'attribute'
-                , weight: 20
+                , weight: 5
                 , adminOnly: true
                 , progressCallback: _.partial( submodelProgress , 'payouts' , 'payoutCount' )
+                , save: true
+                , name: 'Payouts'
             }
 
             , items: {
                 model: Items
                 , type: 'attribute'
-                , weight: 30
+                , weight: 20
                 , adminOnly: false
                 , progressCallback: _.partial( submodelProgress , 'items' , 'itemCount' )
+                , save: true
+                , name: 'Item Configuration'
             }
 
             , invs: {
                 model: Invs
                 , type: 'attribute'
-                , weight: 30
+                , weight: 45
                 , adminOnly: true
                 , progressCallback: _.partial( submodelProgress , 'invs' , 'inventoryCount' )
+                , save: false
+                , name: 'Inventory'
+            }
+
+            , configured: {
+                model: Configured
+                , type: 'merge'
+                , weight: 5
+                , adminOnly: true
+                , save: true
+                , name: 'Configuration'
             }
 
         }
@@ -231,8 +312,6 @@ define( [
             /////// Calculated values ///////
 
             this.get( 'items' ).on( 'add remove reset change' , this.updateItemAggregates , this );
-
-            this.on( 'change:overrideProgress' , this.updateProgress , this );
 
             this.on( 'change:button_price' , this.updateZeroPriceOkay , this );
 
@@ -283,9 +362,9 @@ define( [
                 progressPercentage += ( submodelConfig.progressPercentage / 100 * submodelConfig.weight );
             } , this );
 
-            if( null !== this.get( 'overrideProgress' ) ) {
-                progressPercentage = this.get( 'overrideProgress' );
-            }
+            // This method should never quite reach 100%, that should always be
+            // explicitly set when complete
+            progressPercentage *= 0.999;
 
             this.set( 'progressPercentage' , progressPercentage );
         }
@@ -347,10 +426,9 @@ define( [
 
                     // Now tell everyone that we're done
                     this.set( 'progressPercentage' , 100 );
-                    this.updateProgress();
 
                     // And call any specific completion request
-                    if( success ) {
+                    if( _.isFunction( success ) ) {
                         success();
                     }
 
@@ -360,6 +438,9 @@ define( [
                 // Cache
                 var submodelConfig = this.submodels[ submodelName ];
                 var submodel = submodelConfig.instance;
+
+                // Update display
+                this.set( 'progressStep' , 'Loading ' + submodelConfig.name );
 
                 // Skip admin-only if we're not admin
                 if(
@@ -375,12 +456,12 @@ define( [
                 // Override success with next callback
                 var fetchOptions = _.clone( options );
                 fetchOptions.success = _.bind( function() {
-                    if( submodelConfig.success ) {
-                        submodelConfig.success( this , submodel );
+                    if( submodelConfig.fetchSuccess ) {
+                        submodelConfig.fetchSuccess( this , submodel );
                     }
 
                     if( 'merge' === submodelConfig.type ) {
-                        this.set( submodel.attributes );
+                        this.set( submodel.pick.apply( submodel , this.keys() ) );
                     }
 
                     submodelConfig.progressPercentage = 100;
@@ -389,7 +470,7 @@ define( [
                     next();
                 } , this );
                 if( submodelConfig.progressCallback ) {
-                    fetchOptions.progress = _.partial( submodelConfig.progressCallback , this , submodel );
+                    fetchOptions.progress = _.partial( submodelConfig.progressCallback , this );
                 }
 
                 // And start the fetch
@@ -399,11 +480,96 @@ define( [
             next();
         }
 
-        , save: function() {
-            console.log( 'TODO: save' );
-            // TODO: fetch updated memory stat between each post
-            // TODO: re-fetch all settings after complete
-            // TODO: set autoModified to false
+        , save: function( attributes , options ) {
+            // This shouldn't be called unless we're admin
+            if( ! adminKey.load() ) {
+                return;
+            }
+
+            // Store any changes, just keeping the original method pattern
+            this.set( attributes || {} );
+
+            // Input normalization
+            options = options || {};
+
+            // Get list of submodels to fetch
+            var submodelNames = _.keys( this.submodels );
+            var success = options.success;
+
+            // Reset all progress
+            _.each( this.submodels , function( submodelConfig ) {
+                submodelConfig.progressPercentage = 0;
+            } , this );
+            this.set( 'progressPercentage' , 0 );
+            this.updateProgress();
+
+            // Method to process one submodel
+            var next = _.bind( function() {
+                // Get next submodelName or we're done
+                var submodelName = submodelNames.shift();
+                if( ! submodelName ) {
+                    // Restore original success callback
+                    options.success = success;
+
+                    // Automatic changes have now been saved
+                    this.set( 'autoModified' , false );
+
+                    if( options.fetchAfter ) {
+                        // Refresh all data
+                        options.loadAdmin = true;
+                        this.fetch( options );
+                    } else if( _.isFunction( success ) ) {
+                        success();
+                    }
+
+                    return;
+                }
+
+                // Cache
+                var submodelConfig = this.submodels[ submodelName ];
+                var submodel = submodelConfig.instance;
+
+                // Update display
+                this.set( 'progressStep' , 'Saving ' + submodelConfig.name );
+
+                // Skip non-saving submodels
+                if( !submodelConfig.save ) {
+                    submodelConfig.progressPercentage = 100;
+                    this.updateProgress();
+                    next();
+                    return;
+                }
+
+                // Cache
+                var submodelConfig = this.submodels[ submodelName ];
+                var submodel = submodelConfig.instance;
+
+                // Override success with next callback
+                var saveOptions = _.clone( options );
+                saveOptions.success = _.bind( function() {
+                    submodelConfig.progressPercentage = 100;
+                    this.updateProgress();
+
+                    next();
+                } , this );
+                if( submodelConfig.progressCallback ) {
+                    saveOptions.progress = _.partial( submodelConfig.progressCallback , this , submodel );
+                }
+
+                // If there's work to be done before the save
+                if( submodelConfig.preSave ) {
+                    submodelConfig.preSave( this , submodel );
+                }
+
+                // And start the save
+                if( 'merge' === submodelConfig.type ) {
+                    submodel.save( this.pick.apply( this , submodel.keys() ) , saveOptions );
+                } else {
+                    submodel.save( {} , saveOptions );
+                }
+            } , this );
+
+            next();
         }
 
         , toJSON: function() {
@@ -430,9 +596,7 @@ define( [
         }
 
         , updateZeroPriceOkay: function() {
-            if( 0 !== this.get( 'button_price' ) ) {
-                this.set( 'zeroPriceOkay' , false );
-            } else {
+            if( 0 === this.get( 'button_price' ) ) {
                 this.set( 'ignoreButtonsOutOfOrder' , false );
             }
         }
@@ -548,10 +712,6 @@ define( [
         , updateBuyButtons: function() {
             var button_price = this.get( 'button_price' );
 
-            if( !this.get( 'totalLimit' ) || !this.get( 'willHandOutNoCopyObjects' ) ) {
-                this.set( 'ackNoCopyItemsMeansSingleItemPlay' , false );
-            }
-
             this.set( {
                 payPrice: (
                     button_price && this.effectiveButtonCount( this.get( 'button_default' ) )
@@ -614,7 +774,7 @@ define( [
 
                 totalBought += item.get( 'bought' );
 
-                if( trans ) {
+                if( trans || ( 0 !== item.get( 'limit' ) && 0 !== item.get( 'rarity' ) ) ) {
                     if( 0 !== item.get( 'limit' ) ) {
                         ++totalItemsAvailable;
                         totalRarity += item.get( 'rarity' );
@@ -679,10 +839,12 @@ define( [
 
                 var lowRarityPercentage = ( totalRarity ? rarity / totalRarity * 100 : 0 );
                 var highRarityPercentage = ( myUnlimitedRarity ? rarity / myUnlimitedRarity * 100 : 0 );
+                var boughtPercentage = ( totalBought ? item.get( 'bought' ) / totalBought * 100 : 0 );
 
                 item.set( {
                     lowRarityPercentage: lowRarityPercentage
                     , highRarityPercentage: highRarityPercentage
+                    , boughtPercentage: boughtPercentage
                 } );
             } , this );
         }

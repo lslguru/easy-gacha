@@ -22,8 +22,8 @@ define( [
         , sync: function( method , model , options ) {
             var type = {
                 'create': 'post'
-                , 'update': 'put'
-                , 'patch':  'patch'
+                , 'update': 'post'
+                , 'patch':  'post'
                 , 'delete': 'delete'
                 , 'read':   'get'
             }[ method ];
@@ -57,8 +57,10 @@ define( [
             };
             options.success = function( resp ) {
                 if( null === resp ) {
-                    if( error ) {
+                    if( _.isFunction( error ) ) {
                         error.apply( this , arguments );
+                    } else {
+                        throw 'There was an error talking with the object: ' + resp;
                     }
                 } else {
                     if( success ) {
@@ -66,6 +68,11 @@ define( [
                     }
                 }
             };
+            if( ! _.isFunction( error ) ) {
+                options.error = function( resp ) {
+                    throw 'There was an error talking with the object: ' + resp;
+                };
+            }
 
             // Ensure that we have the appropriate request data.
             params.contentType = 'application/json';

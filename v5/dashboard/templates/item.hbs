@@ -8,6 +8,6 @@
         <div class="progress-bar progress-bar-info disparity-border-{{rarityDisparityTargetSide}}" role="progressbar" aria-valuenow="{{dangerBarPercentage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{dangerBarPercentage}}%"></div>
     </div>
 </td>
-<td class="nowrap-this-element" data-column-contents="inventory">
+<td class="nowrap-this-element text-{{#if inventoryLeft}}info{{else}}danger{{/if}}" data-column-contents="inventory">
     {{{inventory}}}
 </td>

@@ -1,39 +1,33 @@
 define( [
 
-    'models/base-sl-model'
+    'underscore'
+    , 'models/base-sl-model'
+    , 'lib/constants'
 
 ] , function(
 
-    BaseModel
+    _
+    , BaseModel
+    , CONSTANTS
 
 ) {
     'use strict';
 
     var exports = BaseModel.extend( {
-        url: 'email'
+        url: 'configured'
 
         , defaults: {
-            email: null
+            configured: null
         }
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
             if( 'read' !== syncMethod ) {
                 return [
-                    this.get( 'email' )
+                    Number( this.get( 'configured' ) )
                 ];
             } else {
                 return [];
             }
-        }
-
-        , parse: function( data ) {
-            if( null === data ) {
-                return {};
-            }
-
-            return {
-                email: data[0]
-            };
         }
     } );
 

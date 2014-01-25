@@ -120,4 +120,11 @@ define( [
 
     , EOF: '\n\n\n'
 
+    , DEFAULT_PRICE: 0
+    , DEFAULT_PAY_ANY_COUNT: 1
+    , DEFAULT_BUTTON_0_COUNT: 1
+    , DEFAULT_BUTTON_1_COUNT: 5
+    , DEFAULT_BUTTON_2_COUNT: 10
+    , DEFAULT_BUTTON_3_COUNT: 25
+
 } ; } );

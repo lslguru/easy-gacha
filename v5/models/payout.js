@@ -29,9 +29,19 @@ define( [
         ]
 
         , toPostJSON: function( options , syncMethod , xhrType ) {
+            if( 'delete' === syncMethod ) {
+                return [];
+            }
+
+            if( 'read' !== syncMethod ) {
+                return [
+                    this.get( 'agentKey' )
+                    , this.get( 'amount' )
+                ];
+            }
+
             return [
-                this.get( 'agentKey' )
-                , this.get( 'amount' )
+                this.get( 'index' )
             ];
         }
 
@@ -51,7 +61,6 @@ define( [
             var i = 0;
             var parsed = {};
 
-            parsed.index = parseInt( data[i++] , 10 );
             parsed.agentKey = data[i++] || CONSTANTS.NULL_KEY;
             parsed.amount = parseInt( data[i++] , 10 );
 

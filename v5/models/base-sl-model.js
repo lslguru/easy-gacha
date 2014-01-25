@@ -51,6 +51,11 @@ define( [
 
             return json;
         }
+
+        , destroy: function() {
+            this.id = true;
+            return Backbone.Model.prototype.destroy.apply( this , arguments );
+        }
         
     } ) );
 

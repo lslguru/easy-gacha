@@ -197,6 +197,7 @@ define( [
         }
 
         , toggleAutoModifiedMessage: function() {
+            // TODO: Switch close button on element to use fade so it can be re-shown
             fade( this.ui.firstRunMessage , this.model.get( 'autoModified' ) && !this.model.get( 'ackAutoModified' ) );
         }
 
@@ -283,18 +284,26 @@ define( [
         }
 
         , clickSave: function() {
-            if( ! this.ui.saveButton.hasClass( 'disabled' ) ) {
-                this.model.save();
-                this.model.set( 'overrideProgress' , 0 );
+            if( this.model.get( 'configured' ) ) {
+                this.model.save( {
+                    success: _.bind( function() {
+                        this.options.app.router.navigate( 'dashboard' , { trigger: true } );
+                    } , this )
+                } );
+            } else {
+                this.model.save( { fetchAfter: true } );
             }
         }
 
         , updateSaveButton: function() {
-            if( this.model.get( 'hasChangesToSave' ) ) {
-                this.ui.saveButton.removeClass( 'disabled' );
-            } else {
-                this.ui.saveButton.addClass( 'disabled' );
-            }
+            var enable = this.model.get( 'hasChangesToSave' );
+
+            // TODO: If there are warnings change save button to btn-warning
+            // TODO: If there are errors, change save button to btn-danger and disable
+            // TODO: Update button message appropriately
+
+            this.ui.saveButton.toggleClass( 'disabled' , !enable );
+            this.ui.saveButton.prop( 'disabled' , !enable );
         }
     } );
 

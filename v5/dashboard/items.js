@@ -25,7 +25,7 @@ define( [
 ) {
     'use strict';
 
-    var exports = Marionette.CollectionView.extend( {
+    var exports = Marionette.CompositeView.extend( {
         template: template
         , itemView: ItemView
         , itemViewContainer: 'tbody'
