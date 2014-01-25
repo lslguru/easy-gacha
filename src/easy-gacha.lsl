@@ -33,8 +33,7 @@
 //  DataServerRequests Strided list of:
 //      x+0:    request key
 //      x+1:    http response key if request was via http server
-//      x+2:    unixtime request was made
-//      x+3:    integer type of request that was made
+//      x+2:    integer type of request that was made
 
 //  DataServerRequests Types
 //      1   goo.gl for info URL
@@ -51,9 +50,11 @@
 //      DEFAULT_MAX_PER_PURCHASE    50
 //      ASSET_SERVER_TIMEOUT        15.0
 //      ASSET_SERVER_TIMEOUT_CHECK  5.0
+//      REQUEST_TIMEOUT             30.0
+//      LOW_MEMORY                  4096
 
 //  DEFAULT_MAX_PER_PURCHASE: We have to build a list in memory of the items to
-//      be given in a folder. To prevent out of memory errors and exceedlingly
+//      be given in a folder. To prevent out of memory errors and exceedingly
 //      long-running scripts (e.g.  price is L$1 and gave it L$10,000), a max
 //      is enforced. The owner can choose a value below this, but not above
 //      this.  Because of an interesting quirk of the Grey Goo Fence,
@@ -98,8 +99,8 @@ string BaseUrl; // Requested and hopefully received
 string ShortenedInfoUrl; // Hand this out instead of the full URL
 string ShortenedAdminUrl; // Hand this out instead of the full URL
 key Owner; // More memory efficient to only update when it could be changed
-string ScriptName; // More memory efficent to only update when it could be changed
-integer HasPermission; // More memory efficent to only update when it could be changed
+string ScriptName; // More memory efficient to only update when it could be changed
+integer HasPermission; // More memory efficient to only update when it could be changed
 list DataServerRequests; // List of the requests we have pending
 integer TotalPrice; // Updated when Payouts is updated, sum
 integer TotalBought; // Updated when Bought is updated
@@ -138,15 +139,20 @@ RequestUrl() {
     ShortenedAdminUrl = "";
 
     llRequestURL();
+
+    Update();
 }
 
 integer ItemUsable( integer itemIndex ) {
+    string inventoryName = llList2String( Items , itemIndex );
+    integer limit = llList2Integer( Limit , itemIndex );
+
     // If inventory exists
-    if( INVENTORY_NONE != llGetInventoryType( llList2String( Items , itemIndex ) ) ) {
+    if( INVENTORY_NONE != llGetInventoryType( inventoryName ) ) {
         // And is transferable
-        if( PERM_TRANSFER & llGetInventoryPermMask( llList2String( Items , itemIndex ) , MASK_OWNER ) ) {
+        if( PERM_TRANSFER & llGetInventoryPermMask( inventoryName , MASK_OWNER ) ) {
             // And isn't sold out
-            if( -1 == llList2Integer( Limit , itemIndex ) || llList2Integer( Bought , itemIndex ) < llList2Integer( Limit , itemIndex ) ) {
+            if( -1 == limit || llList2Integer( Bought , itemIndex ) < limit ) {
                 // Then it can be used
                 return TRUE;
             }
@@ -220,7 +226,10 @@ Update() {
             Ready = FALSE;
         }
 
-        // TODO: Low memory check
+        if( llGetFreeMemory() < 4096 /*LOW_MEMORY*/ ) {
+            // If we're in imminent danger of running out of memory
+            Ready = FALSE;
+        }
     }
 
     // Default values of these variables are to not show pay buttons.
@@ -268,6 +277,10 @@ Update() {
         } else {
             Hover( "" );
         }
+    } else if( !Configured ) {
+        Hover( "Configuration needed, please touch this object" );
+    } else if( llGetFreeMemory() < 4096 /*LOW_MEMORY*/ ) {
+        Hover( "Script memory is low, please export configuration and reset script" );
     } else if( TotalPrice && !HasPermission ) {
         Hover( "Need debit permission, please touch this object" );
         llRequestPermissions( Owner , PERMISSION_DEBIT );
@@ -298,15 +311,17 @@ Shorten( string url , integer typeId ) {
                 HTTP_METHOD , "POST"
                 , HTTP_MIMETYPE , "application/json"
                 , HTTP_BODY_MAXLENGTH , 16384
-                , HTTP_VERIFY_CERT , TRUE
                 , HTTP_VERBOSE_THROTTLE , FALSE
             ]
             , llJsonSetValue( "{}" , [ "longUrl" ] , url )
         )
         , NULL_KEY
-        , llGetUnixTime()
         , typeId
     ];
+
+    // Reset cleanup timer
+    llSetTimerEvent( 0.0 );
+    llSetTimerEvent( 30.0 /*REQUEST_TIMEOUT*/ );
 }
 
 Play( key buyerId , integer lindensReceived ) {
@@ -390,7 +405,7 @@ Play( key buyerId , integer lindensReceived ) {
         }
     }
 
-    // Fix verbage, just because it bothers me
+    // Fix verbiage, just because it bothers me
     string itemPlural = " items ";
     string hasHave = "have ";
     if( 1 == totalItems ) {
@@ -404,7 +419,7 @@ Play( key buyerId , integer lindensReceived ) {
     if( "" == objectName || "Object" == objectName ) {
         objectName = RootObjectName();
     }
-    string folderSuffix = ( " (Easy Gacha: " + (string)totalItems + itemPlural + llGetDate() + ")" );
+    string folderSuffix = ( " (" + ScriptName + ": " + (string)totalItems + itemPlural + llGetDate() + ")" );
     if( llStringLength( objectName ) + llStringLength( folderSuffix ) > 63 /*MAX_FOLDER_NAME_LENGTH*/ ) {
         // 4 == 3 for ellipses + 1 because this is end index, not count
         objectName = ( llGetSubString( objectName , 0 , 63 /*MAX_FOLDER_NAME_LENGTH*/ - llStringLength( folderSuffix ) - 4 ) + "..." );
@@ -469,7 +484,7 @@ Play( key buyerId , integer lindensReceived ) {
 
 default {
     state_entry() {
-        Update();
+llOwnerSay( (string)llGetFreeMemory() );
         RequestUrl();
     }
 
@@ -478,7 +493,6 @@ default {
     }
 
     on_rez( integer rezParam ) {
-        Update();
         RequestUrl();
     }
 
@@ -489,14 +503,14 @@ default {
     changed( integer changeMask ) {
         // If they change the inventory and remove something that was
         // configured, we'll count that as alright and just recalculate the
-        // probabilities
-        // if( CHANGED_INVENTORY & changeMask )
+        // probabilities ( CHANGED_INVENTORY & changeMask )
 
-        if( ( CHANGED_OWNER | CHANGED_REGION_START | CHANGED_REGION | CHANGED_TELEPORT ) & changeMask ) {
-            RequestUrl();
+        // 1920 == ( CHANGED_OWNER | CHANGED_REGION_START | CHANGED_REGION | CHANGED_TELEPORT )
+        if( 1920 & changeMask ) {
+            RequestUrl(); // This will perform an Update
+        } else {
+            Update();
         }
-
-        Update();
     }
 
     money( key buyerId , integer lindensReceived ) {
@@ -507,27 +521,6 @@ default {
         llSetPayPrice( PAY_HIDE , [ PAY_HIDE , PAY_HIDE , PAY_HIDE , PAY_HIDE ] );
 
         Play( buyerId , lindensReceived );
-    }
-
-    timer() {
-        llSetTimerEvent( 0.0 ); // reset
-
-        // For each pending request
-        integer requestIndex;
-        for( requestIndex = 0 ; requestIndex < llGetListLength( DataServerRequests ) ; requestIndex += 4 ) {
-            // If it has expired
-            if( llList2Integer( DataServerRequests , requestIndex + 2 ) + 15.0 /*ASSET_SERVER_TIMEOUT*/ < llGetUnixTime() ) {
-                if( NULL_KEY != llList2Key( DataServerRequests , requestIndex + 1 ) ) {
-                    llHTTPResponse( llList2Key( DataServerRequests , requestIndex + 1 ) , 200 , "null" );
-                }
-
-                DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 3 );
-            }
-        }
-
-        if( llGetListLength( DataServerRequests ) ) {
-            llSetTimerEvent( 5.0 /*ASSET_SERVER_TIMEOUT_CHECK*/ );
-        }
     }
 
     http_request( key requestId , string httpMethod , string requestBody ) {
@@ -737,6 +730,7 @@ default {
                     ] ) + [
                         ScriptName
                         , llGetFreeMemory()
+                        , llGetUsedMemory()
                         , HasPermission
                         , llGetInventoryNumber( INVENTORY_ALL )
                         , llGetListLength( Items )
@@ -800,13 +794,15 @@ default {
             if( "lookup" == subject ) {
                 subject = llList2String( requestBodyParts , 0 );
                 llSetContentType( requestId , responseContentType );
-                llSetTimerEvent( 5.0 /*ASSET_SERVER_TIMEOUT_CHECK*/ );
+
+                // Reset cleanup timer
+                llSetTimerEvent( 0.0 );
+                llSetTimerEvent( 30.0 /*REQUEST_TIMEOUT*/ );
 
                 if( "username" == subject ) {
                     DataServerRequests += [
                         llRequestUsername( llList2Key( requestBodyParts , 1 ) )
                         , requestId
-                        , llGetUnixTime()
                         , 3
                     ];
                 }
@@ -815,7 +811,6 @@ default {
                     DataServerRequests += [
                         llRequestDisplayName( llList2Key( requestBodyParts , 1 ) )
                         , requestId
-                        , llGetUnixTime()
                         , 4
                     ];
                 }
@@ -824,7 +819,6 @@ default {
                     DataServerRequests += [
                         llGetNumberOfNotecardLines( llList2String( requestBodyParts , 1 ) )
                         , requestId
-                        , llGetUnixTime()
                         , 5
                     ];
                 }
@@ -833,7 +827,6 @@ default {
                     DataServerRequests += [
                         llGetNotecardLine( llList2String( requestBodyParts , 1 ) , llList2Integer( requestBodyParts , 2 ) )
                         , requestId
-                        , llGetUnixTime()
                         , 6
                     ];
                 }
@@ -862,6 +855,10 @@ default {
                 }
             }
 
+            if( "reset" == subject && isAdmin ) {
+                llResetScript();
+            }
+
             if( isAdmin ) {
                 Update();
             }
@@ -871,42 +868,48 @@ default {
         llHTTPResponse( requestId , responseStatus , responseBody );
     }
 
+    timer() {
+        // Don't let timer recur
+        llSetTimerEvent( 0.0 );
+
+        // Lazy request cleanup. HTTP requests will time out after 30 seconds
+        // and automatically fail, so there's no need to do careful list
+        // management here. Just cache them until they should have failed
+        // already.
+        DataServerRequests = [];
+    }
+
     dataserver( key queryId , string data ) {
         integer requestIndex = llListFindList( DataServerRequests , [ queryId ] );
-        if( -1 == requestIndex || 0 != requestIndex % 4 ) {
+        if( -1 == requestIndex ) {
             return;
         }
 
         if( NULL_KEY != llList2Key( DataServerRequests , requestIndex + 1 ) ) {
             llHTTPResponse( llList2Key( DataServerRequests , requestIndex + 1 ) , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
-
-            DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 3 );
         }
-
-        llSetTimerEvent( 0.0 );
     }
 
     http_response( key requestId , integer responseStatus , list metadata , string responseBody ) {
         integer requestIndex = llListFindList( DataServerRequests , [ requestId ] );
-        if( -1 == requestIndex || 0 != requestIndex % 4 ) {
+        if( -1 == requestIndex ) {
             return;
         }
 
         // goo.gl URL shortener parsing
+        integer mode = llList2Integer( DataServerRequests , requestIndex + 2 );
         string shortened = llJsonGetValue( responseBody , [ "id" ] );
         if( JSON_INVALID != shortened && JSON_NULL != shortened ) {
-            if( 1 == llList2Integer( DataServerRequests , requestIndex + 3 ) ) {
+            if( 1 == mode ) {
                 ShortenedInfoUrl = shortened;
             }
-            if( 2 == llList2Integer( DataServerRequests , requestIndex + 3 ) ) {
+            if( 2 == mode ) {
                 ShortenedAdminUrl = shortened;
                 llOwnerSay( ScriptName + ": Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
             }
-        } else if( 2 == llList2Integer( DataServerRequests , requestIndex + 3 ) ) {
+        } else if( 2 == mode ) {
             llOwnerSay( ScriptName + ": Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
         }
-
-        DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 3 );
     }
 
     touch_end( integer detected ) {
@@ -922,7 +925,6 @@ default {
                     // If URL not set but URLs available, request one
                     llOwnerSay( ScriptName + ": Retrying to get a new URL now... please wait" );
                     RequestUrl();
-                    Update();
                 } else {
                     llDialog( Owner , "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." , [ ] , -1 ); // FORCED_DELAY 1.0 seconds
                 }
