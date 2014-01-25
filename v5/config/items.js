@@ -72,6 +72,8 @@ define( [
             , 'batchDelete': '#batch-delete'
             , 'batchDeleteConfirmation': '#batch-delete-confirmation'
             , 'batchDeleteConfirmed': '#batch-delete-confirm'
+            , 'totalBoughtContainer': '#total-bought-container'
+            , 'totalBought': '#total-bought'
         }
 
         , modelEvents: {
@@ -87,6 +89,7 @@ define( [
             , 'change:totalItemsTrans': 'updateDisplay'
             , 'change:countUnlimited': 'updateDisplay'
             , 'change:countLimited': 'updateDisplay'
+            , 'change:totalBought': 'updateDisplay'
         }
 
         , events: {
@@ -148,6 +151,7 @@ define( [
             this.ui.totalUnlimitedRarity.text( this.model.get( 'lowestLimitedRarity' ) + this.model.get( 'unlimitedRarity' ) );
             this.ui.countUnlimited.text( this.model.get( 'countUnlimited' ) );
             this.ui.countLimited.text( this.model.get( 'countLimited' ) );
+            this.ui.totalBought.text( this.model.get( 'totalBought' ) );
             fade( this.ui.totalUnlimitedRarityContainer , ( this.model.get( 'totalRarity' ) !== this.model.get( 'unlimitedRarity' ) ) );
             fade( this.ui.countUnlimitedContainer , Boolean( this.model.get( 'countUnlimited' ) ) );
             fade( this.ui.countLimitedContainer , Boolean( this.model.get( 'countLimited' ) ) );

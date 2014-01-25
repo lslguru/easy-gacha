@@ -71,6 +71,7 @@
             <th data-column-contents="permissions" data-toggle="tooltip" data-tooltip-placement="auto" title="The permissions of each inventory object" class="nowrap-this-element"><i class="fa fa-check-square-o"></i> Permissions</th>
             <th data-column-contents="rarity" data-toggle="tooltip" data-tooltip-placement="auto" title="This is the weight you have given to this item. The percentage shown is the probability RIGHT NOW. If any inventory is no-copy or runs out of available supply, the percentages will change." class="nowrap-this-element"><i class="fa fa-random"></i> Rarity</th>
             <th data-column-contents="limit" data-toggle="tooltip" data-tooltip-placement="auto" title="This is how many of the item you want to be available. No-copy items must be limited to a quantity of ONE. Copyable items default to unlimited supply." class="nowrap-this-element"><i class="fa fa-signal"></i> Quantity</th>
+            <th data-column-contents="bought" data-toggle="tooltip" data-tooltip-placement="left" title="This is how many of the item have been bought since the last time the configuration was changed." class="nowrap-this-element"><i class="fa fa-arrows-alt"></i> Given</th>
             <th data-column-contents="action" data-toggle="tooltip" data-tooltip-placement="left" title="These are actions you can take with this row." class="nowrap-this-element"><i class="fa fa-cogs"></i> Actions</th>
         </tr>
     </thead>
@@ -91,8 +92,11 @@
                 <span id="total-rarity"></span><span id="total-unlimited-rarity-container" class="fade hide"><i class="fa fa-arrows-h"></i><span id="total-unlimited-rarity"></span></span> = 100%
             </th>
             <th data-column-contents="limit" data-toggle="tooltip" data-tooltip-placement="left" title="This is the total number of items">
-                <div id="count-unlimited-container" class="fade hide"><span id="count-unlimited"></span> with an unlimited supply</div>
-                <div id="count-limited-container" class="fade hide"><span id="count-limited"></span> with a limited supply</div>
+                <div id="count-unlimited-container" class="fade hide"><span id="count-unlimited"></span> unlimited</div>
+                <div id="count-limited-container" class="fade hide"><span id="count-limited"></span> limited</div>
+            </th>
+            <th data-column-contents="bought" data-toggle="tooltip" data-tooltip-placement="left" title="This is the total number of items bought since the last time the configuration was changed.">
+                <span id="total-bought"></span> Given
             </th>
             <th data-column-contents="action"></th>
         </tr>
