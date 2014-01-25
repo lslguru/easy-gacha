@@ -31,6 +31,7 @@ define( [
             , objectDesc: null
             , scriptName: null
             , freeMemory: null
+            , usedMemory: null
             , debitPermission: null
             , inventoryCount: null
             , itemCount: null
@@ -85,6 +86,7 @@ define( [
 
             parsed.scriptName = data[i++];
             parsed.freeMemory = parseInt( data[i++] , 10 );
+            parsed.usedMemory = parseInt( data[i++] , 10 );
             parsed.debitPermission = Boolean( parseInt( data[i++] , 10 ) );
             parsed.inventoryCount = parseInt( data[i++] , 10 );
             parsed.itemCount = parseInt( data[i++] , 10 );
