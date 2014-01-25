@@ -572,6 +572,11 @@ default {
                 verb = llDeleteSubString( verb , 0 , 37 );
             }
 
+            // Strip trailing slash
+            if( 0 == llSubStringIndex( verb , "/" ) ) {
+                verb = llDeleteSubString( verb , 0 , 0 );
+            }
+
             // Separate the verb and subject on input
             string subject = llGetSubString( verb , llSubStringIndex( verb , "/" ) + 1 , -1 );
             verb = llGetSubString( verb , 0 , llSubStringIndex( verb , "/" ) - 1 );
@@ -617,7 +622,8 @@ default {
                             llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) , // limit
                             llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) , // count bought
                             inventoryName , // name
-                            llGetInventoryType( inventoryName ) // type
+                            llGetInventoryType( inventoryName ) , // type
+                            llGetInventoryCreator( inventoryName ) // creator
                         ]
                     );
                 }
