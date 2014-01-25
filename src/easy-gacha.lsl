@@ -168,6 +168,9 @@ Update() {
     ScriptName = llGetScriptName();
     HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
 
+    // Sum of all numbers, which will safely skip agent keys
+    TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
+
     // Build total rarity and limit
     integer itemIndex;
     TotalLimit = 0;
@@ -484,7 +487,6 @@ Play( key buyerId , integer lindensReceived ) {
 
 default {
     state_entry() {
-llOwnerSay( (string)llGetFreeMemory() );
         RequestUrl();
     }
 
@@ -568,6 +570,7 @@ llOwnerSay( (string)llGetFreeMemory() );
             if( "/" + (string)AdminKey + "/" == llGetSubString( verb , 0 , 37 ) ) {
                 isAdmin = TRUE;
                 verb = llDeleteSubString( verb , 0 , 37 );
+                Configured = FALSE;
             }
 
             // Separate the verb and subject on input
@@ -587,6 +590,7 @@ llOwnerSay( (string)llGetFreeMemory() );
                         Limit += [ llList2Integer( requestBodyParts , 2 ) ];
                         Bought += [ 0 ]; // Placeholder for counter
                         ++CountItems;
+                        requestBodyParts = [ CountItems - 1 ];
                     }
 
                     if( "delete" == verb ) {
@@ -595,6 +599,7 @@ llOwnerSay( (string)llGetFreeMemory() );
                         Limit = [];
                         Bought = [];
                         CountItems = 0;
+                        responseBody = "true";
                     }
                 }
 
@@ -624,11 +629,13 @@ llOwnerSay( (string)llGetFreeMemory() );
                         ];
 
                         CountPayouts += 2;
+                        requestBodyParts = [ ( CountPayouts / 2 ) - 1 ];
                     }
 
                     if( "delete" == verb ) {
                         Payouts = [];
                         CountPayouts = 0;
+                        responseBody = "true";
                     }
                 }
 
@@ -656,7 +663,8 @@ llOwnerSay( (string)llGetFreeMemory() );
                         PayPriceButton3 = llList2Integer( requestBodyParts , 10 );
                         ApiPurchasesEnabled = llList2Integer( requestBodyParts , 11 );
                         ApiItemsGivenEnabled = llList2Integer( requestBodyParts , 12 );
-                        TotalPrice = llList2Integer( requestBodyParts , 13 );
+                        Extra = llList2String( requestBodyParts , 13 );
+                        TotalBought = 0;
                     }
                 }
 
@@ -711,14 +719,6 @@ llOwnerSay( (string)llGetFreeMemory() );
             }
 
             if( "info" == subject ) {
-                if( isAdmin ) {
-                    if( "post" == verb ) {
-                        Configured = llList2Integer( requestBodyParts , 0 );
-                        Extra = llList2String( requestBodyParts , 1 );
-                        TotalBought = 0;
-                    }
-                }
-
                 responseBody = llList2Json(
                     JSON_ARRAY
                     , [
@@ -737,7 +737,6 @@ llOwnerSay( (string)llGetFreeMemory() );
                         , llGetListLength( Payouts ) / 2
                         , llGetRegionName()
                         , llGetPos()
-                        , Configured
                         , TotalPrice
                         , Extra
                         , llGetNumberOfPrims()
@@ -857,6 +856,14 @@ llOwnerSay( (string)llGetFreeMemory() );
 
             if( "reset" == subject && isAdmin ) {
                 llResetScript();
+            }
+
+            if( "configured" == subject && isAdmin ) {
+                if( "post" == verb ) {
+                    Configured = llList2Integer( requestBodyParts , 0 );
+                }
+
+                responseBody = llList2Json( JSON_ARRAY , [ Configured ] );
             }
 
             if( isAdmin ) {
