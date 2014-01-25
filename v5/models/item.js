@@ -26,7 +26,18 @@ define( [
             , bought: 0
             , name: null
             , type: 'INVENTORY_UNKNOWN'
+
+            // UI
             , selectedForBatchOperation: false
+
+            // Calculated
+            , remainingInventory: null
+
+            // Calculated by Gacha
+            , lowRarityPercentage: null
+            , highRarityPercentage: null
+            , boughtPercentage: null
+            , sortRarity: null
 
             // From: models/inv
             , creator: null
@@ -43,6 +54,20 @@ define( [
             this.constructor.__super__.initialize.apply( this , arguments );
             this.on( 'change:ownerPermissions' , this.applyNoCopyLimit , this );
             this.on( 'change:limit' , this.applyEffectiveLimit , this );
+            this.on( 'change:limit change:bought' , this.updateRemainingInventory , this );
+        }
+
+        , updateRemainingInventory: function() {
+            var limit = this.get( 'limit' );
+            var bought = this.get( 'bought' );
+
+            if( -1 === limit ) {
+                this.set( 'remainingInventory' , Number.POSITIVE_INFINITY );
+            } else if( bought > limit ) {
+                this.set( 'remainingInventory' , 0 );
+            } else {
+                this.set( 'remainingInventory' , limit - bought );
+            }
         }
 
         , applyNoCopyLimit: function() {
@@ -104,8 +129,41 @@ define( [
             parsed.bought = parseInt( data[i++] , 10 );
             parsed.name = data[i++];
             parsed.type = CONSTANTS.INVENTORY_NUMBER_TO_TYPE[ parseInt( data[i++] , 10 ) ] || 'INVENTORY_UNKNOWN';
+            parsed.creator = data[i++];
 
             return parsed;
+        }
+
+        , fetch: function( options ) {
+            var success = options.success;
+            var fetchOptions = _.clone( options );
+
+            fetchOptions.success = _.bind( function( model , resp ) {
+                if( CONSTANTS.NULL_KEY == model.get( 'creator' ) ) {
+                    if( success ) {
+                        success.call( this , model , resp , options );
+                    }
+
+                    return;
+                }
+
+                agentsCache.fetch( {
+                    id: model.get( 'creator' )
+                    , context: this
+                    , success: function( agent ) {
+                        this.set( {
+                            creatorUserName: agent.get( 'username' )
+                            , creatorDisplayName: agent.get( 'displayname' )
+                        } );
+
+                        if( success ) {
+                            options.success.call( this , model , resp , options );
+                        }
+                    }
+                } );
+            } , this );
+
+            BaseModel.prototype.fetch.call( this , fetchOptions );
         }
 
         , shouldIncludeInSave: function() {

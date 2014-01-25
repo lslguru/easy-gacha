@@ -257,7 +257,7 @@ define( [
                 , adminOnly: false
                 , progressCallback: _.partial( submodelProgress , 'items' , 'itemCount' )
                 , save: true
-                , name: 'Item Configuration'
+                , name: 'Configured Items'
             }
 
             , invs: {
@@ -267,7 +267,7 @@ define( [
                 , adminOnly: true
                 , progressCallback: _.partial( submodelProgress , 'invs' , 'inventoryCount' )
                 , save: false
-                , name: 'Inventory'
+                , name: 'Available Inventory'
             }
 
             , configured: {
@@ -508,14 +508,12 @@ define( [
                 // Get next submodelName or we're done
                 var submodelName = submodelNames.shift();
                 if( ! submodelName ) {
-                    // Restore original success callback
-                    options.success = success;
-
                     // Automatic changes have now been saved
                     this.set( 'autoModified' , false );
 
                     if( options.fetchAfter ) {
                         // Refresh all data
+                        options.success = success;
                         options.loadAdmin = true;
                         this.fetch( options );
                     } else if( _.isFunction( success ) ) {
@@ -841,10 +839,14 @@ define( [
                 var highRarityPercentage = ( myUnlimitedRarity ? rarity / myUnlimitedRarity * 100 : 0 );
                 var boughtPercentage = ( totalBought ? item.get( 'bought' ) / totalBought * 100 : 0 );
 
+                // Generally sort by configured rarity, then actual seen rarity
+                var sortRarity = ( lowRarityPercentage * 100 ) + boughtPercentage;
+
                 item.set( {
                     lowRarityPercentage: lowRarityPercentage
                     , highRarityPercentage: highRarityPercentage
                     , boughtPercentage: boughtPercentage
+                    , sortRarity: sortRarity
                 } );
             } , this );
         }

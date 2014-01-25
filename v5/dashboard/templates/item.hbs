@@ -1,13 +1,13 @@
 <td class="nowrap-this-element item-name" data-column-contents="name" data-inventory-type="{{type}}" data-toggle="tooltip" data-tooltip-placement="right" title="{{typeName}}{{#if creatorUserName}}&lt;br /&gt;Created by: {{creatorDisplayName}} ({{creatorUserName}}){{/if}}">
     {{name}}
 </td>
-<td data-column-contents="probability" data-raw-value="{{rarity}}" data-toggle="tooltip" data-tooltip-placement="top" title="There is a {{rarityPercentage}}% chance of getting this item. Its weight is {{rarity}}.">
+<td data-column-contents="probability" data-raw-value="{{sortRarity}}" data-toggle="tooltip" data-tooltip-placement="top" title="There is a {{rarityPercentage}}% chance of getting this item. Its weight is {{rarity}}.">
     <span class="sr-only">There is a {{rarityPercentage}}% chance of getting this item. Its weight is {{rarity}}.</span>
     <div class="progress">
         <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{successBarPercentage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{successBarPercentage}}%"></div>
         <div class="progress-bar progress-bar-info disparity-border-{{rarityDisparityTargetSide}}" role="progressbar" aria-valuenow="{{dangerBarPercentage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{dangerBarPercentage}}%"></div>
     </div>
 </td>
-<td class="nowrap-this-element text-{{#if inventoryLeft}}info{{else}}danger{{/if}}" data-column-contents="inventory">
+<td class="nowrap-this-element text-{{#if remainingInventory}}info{{else}}danger{{/if}}" data-column-contents="inventory">
     {{{inventory}}}
 </td>

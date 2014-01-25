@@ -34,27 +34,13 @@ define( [
         }
 
         , templateHelpers: function() {
-            // Source data
-            var rarity = this.model.get( 'rarity' );
-            var bought = this.model.get( 'bought' );
-            var limit = this.model.get( 'limit' );
-            var type = this.model.get( 'type' );
-
-            // Inventory
-            var inventory = limit - bought;
-            var inventoryLeft = true;
-
             // Human formatting
-            if( -1 === limit ) {
+            if( -1 === this.model.get( 'limit' ) ) {
                 // infinity symbol
-                inventory = '&#x221e;';
+                var inventory = '&#x221e;';
             } else {
                 // Add thousands commas
-                inventory = inventory.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-                if( 0 >= limit - bought ) {
-                    inventoryLeft = false;
-                }
+                var inventory = this.model.get( 'remainingInventory' ).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
 
             // Initialize probability numbers
@@ -81,12 +67,11 @@ define( [
 
             return {
                 inventory: inventory
-                , inventoryLeft: inventoryLeft
                 , rarityPercentage: rarityPercentage
                 , boughtPercentage: boughtPercentage
                 , successBarPercentage: successBarPercentage
                 , dangerBarPercentage: dangerBarPercentage
-                , typeName: CONSTANTS.INVENTORY_TYPE_NAME[ type ]
+                , typeName: CONSTANTS.INVENTORY_TYPE_NAME[ this.model.get( 'type' ) ]
                 , rarityDisparityTargetSide: rarityDisparityTargetSide
             };
         }

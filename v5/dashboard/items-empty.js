@@ -15,6 +15,7 @@ define( [
 
     var exports = Marionette.ItemView.extend( {
         template: template
+        , tagName: 'tr'
     } );
 
     return exports;

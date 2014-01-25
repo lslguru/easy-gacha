@@ -285,13 +285,13 @@ define( [
 
         , clickSave: function() {
             if( this.model.get( 'configured' ) ) {
-                this.model.save( {
+                this.model.save( {} , {
                     success: _.bind( function() {
                         this.options.app.router.navigate( 'dashboard' , { trigger: true } );
                     } , this )
                 } );
             } else {
-                this.model.save( { fetchAfter: true } );
+                this.model.save( {} , { fetchAfter: true } );
             }
         }
 

@@ -38,7 +38,8 @@ define( [
 
         , onRender: function() {
             if( !_.isString( this.ui.table ) ) {
-                if( this.ui.table.length ) {
+                // tablesorter dies horribly when there are no data rows
+                if( this.collection.length ) {
                     this.ui.table.tablesorter( {
                         sortList: [[0,0]]
                         , textExtraction: function( node ) {
