@@ -570,12 +570,15 @@ default {
             if( "/" + (string)AdminKey + "/" == llGetSubString( verb , 0 , 37 ) ) {
                 isAdmin = TRUE;
                 verb = llDeleteSubString( verb , 0 , 37 );
-                Configured = FALSE;
             }
 
             // Separate the verb and subject on input
             string subject = llGetSubString( verb , llSubStringIndex( verb , "/" ) + 1 , -1 );
             verb = llGetSubString( verb , 0 , llSubStringIndex( verb , "/" ) - 1 );
+
+            if( isAdmin && "get" != verb ) {
+                Configured = FALSE;
+            }
 
             // Strip trailing slash
             if( -1 != llSubStringIndex( subject , "/" ) ) {
@@ -724,6 +727,7 @@ default {
                     , [
                         isAdmin
                         , Owner
+                        , Ready
                     ] + llGetLinkPrimitiveParams( (!!llGetLinkNumber()) , [
                         PRIM_NAME
                         , PRIM_DESC
