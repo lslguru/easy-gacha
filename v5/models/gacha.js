@@ -107,11 +107,21 @@ define( [
             , ackEmailSlowness: false
 
             // From models/items
+            , totalItems: 0
+            , totalItemsAvailable: 0
             , totalRarity: 0
             , unlimitedRarity: 0
+            , lowestLimitedRarity: 0
             , totalBought: 0
+            , countUnlimited: 0
+            , countLimited: 0
             , totalLimit: 0
             , willHandOutNoCopyObjects: false
+            , anySelectedForBatchOperation: false
+            , allSelectedForBatchOperation: false
+            , totalItemsCopy: 0
+            , totalItemsMod: 0
+            , totalItemsTrans: 0
 
             // Warnings and Dangers
         }
@@ -220,11 +230,9 @@ define( [
 
             /////// Calculated values ///////
 
-            this.get( 'items' ).on( 'add remove reset change:rarity change:limit change:bought' , this.updateItemTotals , this );
+            this.get( 'items' ).on( 'add remove reset change' , this.updateItemAggregates , this );
 
             this.on( 'change:overrideProgress' , this.updateProgress , this );
-
-            this.on( 'change:button_price' , this.recalculateOwnerAmount , this );
 
             this.on( 'change:button_price' , this.updateZeroPriceOkay , this );
 
@@ -236,9 +244,9 @@ define( [
 
             this.on( 'change:email' , this.updateAckEmailSlowness , this );
 
-            this.on( 'change:button_price change:button_default change:button_0 change:button_1 change:button_2 change:button_3' , this.updateBuyButtons , this );
-            this.get( 'items' ).on( 'add remove reset change:rarity change:limit' , this.updateBuyButtons , this );
+            this.on( 'change:button_price change:totalLimit change:willHandOutNoCopyObjects change:button_default change:button_0 change:button_1 change:button_2 change:button_3' , this.updateBuyButtons , this );
 
+            this.on( 'change:button_price' , this.recalculateOwnerAmount , this );
             this.get( 'payouts' ).on( 'add remove reset change:amount' , this.recalculateOwnerAmount , this );
 
             this.on( 'all' , this.updateHasChangesToSave , this );
@@ -246,7 +254,7 @@ define( [
 
             /////// Init ///////
 
-            this.updateItemTotals();
+            this.updateItemAggregates();
         }
 
         , recalculateOwnerAmount: function() {
@@ -393,6 +401,9 @@ define( [
 
         , save: function() {
             console.log( 'TODO: save' );
+            // TODO: fetch updated memory stat between each post
+            // TODO: re-fetch all settings after complete
+            // TODO: set autoModified to false
         }
 
         , toJSON: function() {
@@ -410,7 +421,7 @@ define( [
 
         , fromNotecardJSON: function() {
             var returnValue = BaseSlModel.prototype.fromNotecardJSON.apply( this , arguments );
-            this.dataInitializations();
+            this.dataInitializations( true );
             return returnValue;
         }
 
@@ -433,7 +444,6 @@ define( [
             if( 0 === this.get( 'totalRarity' ) ) {
                 configured = false;
             }
-            // TODO: other items checks
 
             // Check price and buttons
             var button_price = parseInt( this.get( 'button_price' ) , 10 );
@@ -581,43 +591,100 @@ define( [
             }
         }
 
-        , updateItemTotals: function() {
+        , updateItemAggregates: function() {
+            var totalItemsAvailable = 0;
             var totalRarity = 0;
             var unlimitedRarity = 0;
+            var lowestLimitedRarity = 0;
             var totalBought = 0;
+            var countUnlimited = 0;
+            var countLimited = 0;
             var totalLimit = 0;
             var willHandOutNoCopyObjects = false;
+            var anySelectedForBatchOperation = false;
+            var allSelectedForBatchOperation = true;
+            var totalItemsCopy = 0;
+            var totalItemsMod = 0;
+            var totalItemsTrans = 0;
 
             _.each( this.get( 'items' ).models , function( item ) {
+                var copy = Boolean( CONSTANTS.PERM_COPY & item.get( 'ownerPermissions' ) );
+                var mod = Boolean( CONSTANTS.PERM_MODIFY & item.get( 'ownerPermissions' ) );
+                var trans = Boolean( CONSTANTS.PERM_TRANSFER & item.get( 'ownerPermissions' ) );
+
                 totalBought += item.get( 'bought' );
 
-                if( CONSTANTS.PERM_TRANSFER & item.get( 'ownerPermissions' ) ) {
+                if( trans ) {
                     if( 0 !== item.get( 'limit' ) ) {
+                        ++totalItemsAvailable;
                         totalRarity += item.get( 'rarity' );
 
-                        if( !( CONSTANTS.PERM_COPY & item.get( 'ownerPermissions' ) ) && item.get( 'rarity' ) ) {
+                        if( !copy && item.get( 'rarity' ) ) {
                             willHandOutNoCopyObjects = true;
                         }
                     }
 
                     if( -1 === item.get( 'limit' ) ) {
+                        ++countUnlimited;
                         unlimitedRarity += item.get( 'rarity' );
                     } else {
                         totalLimit += item.get( 'limit' );
+
+                        if( 0 !== item.get( 'limit' ) ) {
+                            ++countLimited;
+                        }
+
+                        if( 0 === lowestLimitedRarity || ( item.get( 'rarity' ) && item.get( 'rarity' ) < lowestLimitedRarity ) ) {
+                            lowestLimitedRarity = item.get( 'rarity' );
+                        }
                     }
                 }
+
+                if( item.get( 'selectedForBatchOperation' ) ) {
+                    anySelectedForBatchOperation = true;
+                } else {
+                    allSelectedForBatchOperation = false;
+                }
+
+                totalItemsCopy += copy;
+                totalItemsMod += mod;
+                totalItemsTrans += trans;
             } , this );
 
-            var set = {
-                totalRarity: totalRarity
+            this.set( {
+                totalItems: this.get( 'items' ).length
+                , totalItemsAvailable: totalItemsAvailable
+                , totalRarity: totalRarity
                 , unlimitedRarity: unlimitedRarity
+                , lowestLimitedRarity: lowestLimitedRarity
                 , totalBought: totalBought
+                , countUnlimited: countUnlimited
+                , countLimited: countLimited
                 , totalLimit: totalLimit
                 , willHandOutNoCopyObjects: willHandOutNoCopyObjects
-            };
+                , anySelectedForBatchOperation: anySelectedForBatchOperation
+                , allSelectedForBatchOperation: allSelectedForBatchOperation
+                , totalItemsCopy: totalItemsCopy
+                , totalItemsMod: totalItemsMod
+                , totalItemsTrans: totalItemsTrans
+            } );
 
-            this.set( set );
-            _.extend( this.get( 'items' ) , set );
+            _.each( this.get( 'items' ).models , function( item ) {
+                var rarity = item.get( 'rarity' );
+
+                var myUnlimitedRarity = unlimitedRarity;
+                if( -1 !== item.get( 'limit' ) ) {
+                    myUnlimitedRarity += rarity;
+                }
+
+                var lowRarityPercentage = ( totalRarity ? rarity / totalRarity * 100 : 0 );
+                var highRarityPercentage = ( myUnlimitedRarity ? rarity / myUnlimitedRarity * 100 : 0 );
+
+                item.set( {
+                    lowRarityPercentage: lowRarityPercentage
+                    , highRarityPercentage: highRarityPercentage
+                } );
+            } , this );
         }
 
     } );

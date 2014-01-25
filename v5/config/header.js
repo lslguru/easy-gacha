@@ -9,6 +9,7 @@ define( [
     , 'lib/map-uri'
     , 'lib/is-sl-viewer'
     , 'lib/fade'
+    , 'models/reset'
 
 ] , function(
 
@@ -21,6 +22,7 @@ define( [
     , mapUri
     , isSlViewer
     , fade
+    , Reset
 
 ) {
     'use strict';
@@ -33,6 +35,9 @@ define( [
             , 'dropdowns': '[data-toggle=dropdown]'
             , 'dashboardConfirmation': '#dashboard-confirmation'
             , 'dashboardConfirmed': '#dashboard-confirm'
+            , 'resetButton': '#reset'
+            , 'resetConfirmation': '#reset-confirmation'
+            , 'resetConfirmed': '#reset-confirm'
             , 'reloadButton': '#reload'
             , 'reloadConfirmation': '#reload-confirmation'
             , 'reloadConfirmed': '#reload-confirm'
@@ -41,6 +46,8 @@ define( [
             , 'dashboardButton': '#dashboard'
             , 'firstRunMessage': '#first-run-message'
             , 'firstRunMessageCloseButton': '#first-run-message .close'
+            , 'navLinks': '.nav-links'
+            , 'slViewerOnlyMessage': '.sl-viewer-only'
         }
 
         , events: {
@@ -49,6 +56,8 @@ define( [
             , 'click @ui.reloadButton': 'clickReload'
             , 'click @ui.reloadConfirmed': 'confirmReload'
             , 'click @ui.reloadSaveFirst': 'confirmReloadSaveFirst'
+            , 'click @ui.resetButton': 'clickReset'
+            , 'click @ui.resetConfirmed': 'confirmReset'
             , 'click @ui.saveButton': 'clickSave'
             , 'click @ui.firstRunMessageCloseButton': 'hideAutoModifiedMessage'
         }
@@ -62,6 +71,7 @@ define( [
         , initialize: function() {
             this.constructor.__super__.initialize.apply( this , arguments );
             this.listenTo( this.options.app.vent , 'reloadRequested' , this.clickReload );
+            this.listenTo( this.options.app.vent , 'lslScriptReset' , this.resetOccurred );
         }
 
         , templateHelpers: function() {
@@ -172,6 +182,12 @@ define( [
                 , show: false
             } );
 
+            this.ui.resetConfirmation.toggleClass( 'fade' , !isSlViewer() ).modal( {
+                backdrop: true
+                , keyboard: true
+                , show: false
+            } );
+
             this.updateSaveButton();
             this.toggleAutoModifiedMessage();
         }
@@ -233,6 +249,28 @@ define( [
             }
 
             this.ui.reloadConfirmation.modal( 'show' );
+        }
+
+        , resetOccurred: function() {
+            this.ui.navLinks.remove();
+            this.ui.slViewerOnlyMessage.remove();
+            this.ui.firstRunMessage.remove();
+        }
+
+        , confirmReset: function( jEvent ) {
+            var finish = _.bind( function() {
+                var reset = new Reset();
+                reset.fetch();
+
+                this.options.app.vent.trigger( 'lslScriptReset' );
+            } , this );
+
+            this.ui.resetConfirmation.one( 'hidden.bs.modal' , finish );
+            this.ui.resetConfirmation.modal( 'hide' );
+        }
+
+        , clickReset: function() {
+            this.ui.resetConfirmation.modal( 'show' );
         }
 
         , clickDashboard: function() {

@@ -49,6 +49,7 @@ define( [
             , 'setLimitButton': '.set-limit'
             , 'startProbability': '.start-probability'
             , 'endProbability': '.end-probability'
+            , 'selectForBatchOperation': '[data-column-contents=multi-select] input[type=checkbox]'
         }
 
         , events: {
@@ -59,23 +60,15 @@ define( [
             , 'keyup @ui.limitField': 'setLimit'
             , 'click @ui.deleteButton': 'deleteItem'
             , 'click @ui.importButton': 'importNotecard'
+            , 'change @ui.selectForBatchOperation': 'setSelected'
         }
 
         , modelEvents: {
             'change:rarity': 'updateValues updateDeleteButton'
             , 'change:limit': 'updateValues updateLimit updateDeleteButton'
-        }
-
-        , collectionEvents: {
-            'change:rarity': 'updateValues'
-            , 'change:limit': 'updateValues'
-            , 'add': 'updateValues'
-            , 'remove': 'updateValues'
-            , 'reset': 'updateValues'
-        }
-
-        , initialize: function() {
-            Marionette.bindEntityEvents( this , this.model.collection , Marionette.getOption( this , 'collectionEvents' ) );
+            , 'change:selectedForBatchOperation': 'updateSelected'
+            , 'change:lowRarityPercentage': 'updateValues'
+            , 'change:highRarityPercentage': 'updateValues'
         }
 
         , templateHelpers: function() {
@@ -127,23 +120,13 @@ define( [
                 return;
             }
 
-            var rarity = this.model.get( 'rarity' );
-
-            if( parseFloat( this.ui.rarityField.val() , 10 ) != rarity ) {
-                this.ui.rarityField.val( rarity || 0 );
+            if( parseFloat( this.ui.rarityField.val() , 10 ) != this.model.get( 'rarity' ) ) {
+                this.ui.rarityField.val( this.model.get( 'rarity' ) || 0 );
             }
 
-            var totalRarity = this.model.collection.totalRarity;
-            var unlimitedRarity = this.model.collection.unlimitedRarity;
-            if( -1 !== this.model.get( 'limit' ) ) {
-                unlimitedRarity += rarity;
-            }
-
-            var lowRarityPercentage = ( totalRarity ? Math.round( rarity / totalRarity * 1000 ) / 10 : 0 );
-            var highRarityPercentage = ( unlimitedRarity ? Math.round( rarity / unlimitedRarity * 1000 ) / 10 : 0 );
-            this.ui.rarityLow.text( lowRarityPercentage );
-            this.ui.rarityHigh.text( highRarityPercentage );
-            fade( this.ui.endProbability , ( lowRarityPercentage !== highRarityPercentage ) );
+            this.ui.rarityLow.text( Math.round( this.model.get( 'lowRarityPercentage' ) * 10 ) / 10 );
+            this.ui.rarityHigh.text( Math.round( this.model.get( 'highRarityPercentage' ) * 10 ) / 10 );
+            fade( this.ui.endProbability , ( this.model.get( 'lowRarityPercentage' ) !== this.model.get( 'highRarityPercentage' ) ) );
 
             if( 0 === this.model.get( 'limit' ) ) {
                 fade( this.ui.rarityAvailable , false , function() {
@@ -233,7 +216,7 @@ define( [
 
         , setLimit: function() {
             var limit = this.ui.limitField.val();
-            limit = parseFloat( limit , 10 );
+            limit = parseInt( limit , 10 );
 
             if( _.isNaN( limit ) ) {
                 this.ui.limitField.parent().addClass( 'has-error' );
@@ -241,6 +224,11 @@ define( [
             }
 
             if( 0 > limit ) {
+                this.ui.limitField.parent().addClass( 'has-error' );
+                return;
+            }
+
+            if( this.ui.limitField.val() != limit ) {
                 this.ui.limitField.parent().addClass( 'has-error' );
                 return;
             }
@@ -266,6 +254,14 @@ define( [
         , importNotecard: function() {
             this.options.app.vent.trigger( 'selectTab' , 'import' );
             this.options.app.vent.trigger( 'importNotecard' , this.model.get( 'name' ) );
+        }
+
+        , setSelected: function() {
+            this.model.set( 'selectedForBatchOperation' , Boolean( this.ui.selectForBatchOperation.prop( 'checked' ) ) );
+        }
+
+        , updateSelected: function() {
+            this.ui.selectForBatchOperation.prop( 'checked' , this.model.get( 'selectedForBatchOperation' ) );
         }
 
     } );

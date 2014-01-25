@@ -123,14 +123,14 @@ define( [
                 this.ui.maxBuysLimited.removeClass( 'active' );
                 this.ui.maxBuysLimit.prop( 'disabled' , 'disabled' );
                 this.ui.maxBuysLimit.val( '' );
-                this.ui.maxBuysLimit.parent().removeClass( 'has-error' );
             } else {
                 this.ui.maxBuysUnlimited.removeClass( 'active' );
                 this.ui.maxBuysLimited.addClass( 'active' );
                 this.ui.maxBuysLimit.prop( 'disabled' , '' );
                 this.ui.maxBuysLimit.val( this.model.get( 'maxBuys' ) );
-                this.ui.maxBuysLimit.parent().removeClass( 'has-error' );
             }
+
+            this.ui.maxBuysLimit.parent().removeClass( 'has-error' );
         }
 
         , toggleMaxBuysLimited: function( jEvent ) {
@@ -156,8 +156,6 @@ define( [
             if( _.isNaN( newValue ) ) {
                 this.ui.maxBuysLimit.parent().addClass( 'has-error' );
                 return;
-            } else {
-                this.ui.maxBuysLimit.parent().removeClass( 'has-error' );
             }
 
             // If out of bounds

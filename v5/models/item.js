@@ -35,15 +35,25 @@ define( [
             , groupPermissions: null
             , publicPermissions: null
             , nextPermissions: null
+            , selectedForBatchOperation: false
         }
 
         , initialize: function() {
             this.constructor.__super__.initialize.apply( this , arguments );
             this.on( 'change:ownerPermissions' , this.applyNoCopyLimit , this );
+            this.on( 'change:limit' , this.applyEffectiveLimit , this );
         }
 
         , applyNoCopyLimit: function() {
             if( null !== this.get( 'ownerPermissions' ) && !( CONSTANTS.PERM_COPY & this.get( 'ownerPermissions' ) ) ) {
+                this.set( 'limit' , 1 );
+            }
+        }
+
+        , applyEffectiveLimit: function() {
+            if( !( CONSTANTS.PERM_TRANSFER & this.get( 'ownerPermissions' ) ) ) {
+                this.set( 'limit' , 0 );
+            } else if( !( CONSTANTS.PERM_COPY & this.get( 'ownerPermissions' ) ) ) {
                 this.set( 'limit' , 1 );
             }
         }

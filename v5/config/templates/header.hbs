@@ -8,6 +8,7 @@
             <li role="presentation" class="dropdown-header">This Gacha</li>
             <li role="presentation"><a role="menuitem" tabindex="-1" id="reload" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Discard all changes and reload"><i class="fa fa-refresh"></i> Reload</a></li>
             <li role="presentation"><a role="menuitem" tabindex="-1" id="dashboard" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Discard all changes and go to dashboard"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" id="reset" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Reset script entirely"><span class="text-danger"><i class="fa fa-power-off"></i> Reset</span></a></li>
             <li role="presentation" class="divider"></li>
             <li role="presentation" class="dropdown-header">Easy Gacha</li>
             <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha Kit on SecondLife Marketplace"><i class="fa fa-shopping-cart"></i> Marketplace</a></li>
@@ -33,6 +34,23 @@
         <button class="btn btn-{{overallState}}" data-toggle="dropdown" role="button" id="header-menu-button">
             Menu <span class="caret"></span>
         </button>
+    </div>
+    <div class="modal" id="reset-confirmation" tabindex="-1" role="dialog" aria-labelledby="reset-confirmation-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content alert-danger">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                    <h4 class="modal-title" id="reset-confirmation-label"><i class="fa fa-exclamation-triangle"></i> Reset Script</h4>
+                </div>
+                <div class="modal-body">
+                    WARNING: This will DELETE ALL SETTINGS and completely reset the script! Easy Gacha will then give you a new URL to use. Are you REALLY sure you want to do this?
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="reset-confirm" class="btn btn-danger">Yes, reset this script</button>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="modal" id="reload-confirmation" tabindex="-1" role="dialog" aria-labelledby="reload-confirmation-label" aria-hidden="true">
         <div class="modal-dialog">

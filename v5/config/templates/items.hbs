@@ -2,9 +2,71 @@
     <i class="fa fa-exclamation-triangle"></i> There are no items selected to be given.
 </div>
 
+<div class="btn-group fade hide" id="batch-actions">
+    <button class="btn btn-default" id="batch-rarity"><i class="fa fa-random"></i> Set Rarity</button>
+    <button class="btn btn-default" id="batch-limit"><i class="fa fa-signal"></i> Set Quantity</button>
+    <button class="btn btn-default" id="batch-delete"><i class="fa fa-trash-o"></i> Delete Settings</button>
+</div>
+
+<div class="modal" id="batch-rarity-dialog" tabindex="-1" role="dialog" aria-labelledby="batch-rarity-dialog-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                <h4 class="modal-title" id="batch-rarity-dialog-label"><i class="fa fa-random"></i> Batch Update Rarity</h4>
+            </div>
+            <div class="modal-body">
+                <input class="form-control" type="number" placeholder="Max" data-aria-valuemin="0" id="batch-rarity-value" value="1" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" id="batch-rarity-set">Set Rarity</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="batch-limit-dialog" tabindex="-1" role="dialog" aria-labelledby="batch-limit-dialog-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                <h4 class="modal-title" id="batch-limit-dialog-label"><i class="fa fa-signal"></i> Batch Update Limits</h4>
+            </div>
+            <div class="modal-body">
+                <input class="form-control" type="number" placeholder="Max" data-aria-valuemin="0" id="batch-limit-value" value="1" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" id="batch-limit-limited">Set Limit</button>
+                <button class="btn btn-primary" id="batch-limit-unlimited">Unlimited</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="batch-delete-confirmation" tabindex="-1" role="dialog" aria-labelledby="batch-delete-confirmation-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content alert-danger">
+            <div class="modal-header">
+                <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                <h4 class="modal-title" id="batch-delete-confirmation-label"><i class="fa fa-exclamation-triangle"></i> Delete Settings</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the rarity and limit settings of these rows?
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button id="batch-delete-confirm" class="btn btn-primary">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <table class="table table-striped table-hover table-condensed table-responsive" id="inventory">
     <thead>
         <tr>
+            <th data-column-contents="multi-select" data-toggle="tooltip" data-tooltip-placement="right" title="Select multiple items to change at the same time" class="nowrap-this-element"><input type="checkbox" id="select-all-items" /></th>
             <th data-column-contents="name" data-toggle="tooltip" data-tooltip-placement="right" title="The inventory name and type" class="nowrap-this-element"><i class="fa fa-suitcase"></i> Item Name</th>
             <th data-column-contents="permissions" data-toggle="tooltip" data-tooltip-placement="auto" title="The permissions of each inventory object" class="nowrap-this-element"><i class="fa fa-check-square-o"></i> Permissions</th>
             <th data-column-contents="rarity" data-toggle="tooltip" data-tooltip-placement="auto" title="This is the weight you have given to this item. The percentage shown is the probability RIGHT NOW. If any inventory is no-copy or runs out of available supply, the percentages will change." class="nowrap-this-element"><i class="fa fa-random"></i> Rarity</th>
@@ -13,13 +75,26 @@
         </tr>
     </thead>
     <tbody></tbody>
-    <tfoot class="TODO hide">
+    <tfoot>
         <tr>
-            <th data-column-contents="name" data-toggle="tooltip" data-tooltip-placement="right" title="This is the total number of items">Total Items: <span id="total-items-count"></span></th>
-            <th data-column-contents="permissions"><!-- quantity --></th>
-            <th data-column-contents="rarity" data-toggle="tooltip" data-tooltip-placement="right" title="This is the total of the weights entered above"><span id="total-rarity"></span> = 100%</th>
-            <th data-column-contents="limit"><!-- quantity --></th>
-            <th data-column-contents="action"><!-- actions--></th>
+            <th data-column-contents="multi-select"></th>
+            <th data-column-contents="name" data-toggle="tooltip" data-tooltip-placement="right" title="This is the total number of items">
+                Total Items To Give: <span id="total-items-available-count"></span><br />
+                Total Items: <span id="total-items-count"></span>
+            </th>
+            <th data-column-contents="permissions" data-toggle="tooltip" data-tooltip-placement="right" title="This is the total number of items with each permission">
+                Copy: <span id="total-copy"></span><br />
+                Mod: <span id="total-mod"></span><br />
+                Trans: <span id="total-trans"></span>
+            </th>
+            <th data-column-contents="rarity" data-toggle="tooltip" data-tooltip-placement="top" title="This is the total of the weights entered above. The left number is when all inventory is available. The right number is the lowest limited rarity plus all unlimited items.">
+                <span id="total-rarity"></span><span id="total-unlimited-rarity-container" class="fade hide"><i class="fa fa-arrows-h"></i><span id="total-unlimited-rarity"></span></span> = 100%
+            </th>
+            <th data-column-contents="limit" data-toggle="tooltip" data-tooltip-placement="left" title="This is the total number of items">
+                <div id="count-unlimited-container" class="fade hide"><span id="count-unlimited"></span> with an unlimited supply</div>
+                <div id="count-limited-container" class="fade hide"><span id="count-limited"></span> with a limited supply</div>
+            </th>
+            <th data-column-contents="action"></th>
         </tr>
     </tfoot>
 </table>

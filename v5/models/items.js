@@ -71,6 +71,13 @@ define( [
 
             return json;
         }
+
+        , getChecked: function() {
+            return this.filter( function( item ) {
+                return item.get( 'selectedForBatchOperation' );
+            } );
+        }
+
     } );
 
     return exports;

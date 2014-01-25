@@ -37,6 +37,7 @@ define( [
         template: template
 
         , defaultTab: 'items'
+        , afterScriptResetTab: 'export'
 
         , ui: {
             'items': '[href=#tab-items]'
@@ -138,6 +139,8 @@ define( [
             } , this );
 
             this.ui[ this.defaultTab ].tab( 'show' );
+
+            this.listenTo( this.options.app.vent , 'lslScriptReset' , this.resetOccurred );
         }
 
         , updateTabStatus: function( tabName , newStatus ) {
@@ -152,6 +155,17 @@ define( [
             if( null !== newStatus ) {
                 tabUi.addClass( 'text-' + newStatus );
             }
+        }
+
+        , resetOccurred: function() {
+            _.each( this.subviews , function( subviewConfig , subviewName ) {
+                if( this.afterScriptResetTab === subviewName ) {
+                    this.ui[ subviewName ].tab( 'show' );
+                } else {
+                    this.ui[ subviewName ].remove();
+                    this[ subviewName ].close();
+                }
+            } , this );
         }
     } );
 
