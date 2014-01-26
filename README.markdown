@@ -13,7 +13,7 @@ This is a very easy, configurable implementation of a
 
 # HEY YOU! / Directions / Instructions / Getting Started / Start Here #
 
-Drop the script in an object!
+Drop the script in an object.
 
 You'll see the following things happen:
 
@@ -33,7 +33,7 @@ Click the link, and have fun!
 * Most configuration done automatically
 * Detects and prevents most mistakes
 * Can set rarity per item
-* Supports 30+ items at a time
+* Supports 30+ items configured at a time
 * Multiple-play option (can buy multiple objects at at a time)
 * Can limit number of sales per item
 * Can limit total number of sales for entire Gacha
@@ -75,6 +75,24 @@ Easy Gacha will refund the whole amount given and remind them of the price.
 ## What if there aren't enough items for the amount someone paid? ##
 
 Easy Gacha will refund the excess.
+
+## What if there aren't any items left? ##
+
+Easy Gacha will turn off until more items are available or you reconfigure it.
+
+## What if the script gets low on memory? ##
+
+Easy Gacha will not allow anyone to play, but will give you the ability to
+export your configuration before restarting the script. I haven't actually been
+able to reach this point yet without configuring way too many items, but it
+should be robust enough to handle it.
+
+## What if there are no URLs available? ##
+
+Easy Gacha will still be able to be played if it was already configured, but
+will not be visible to the registry and will not be able to have its
+configuration changed. If the owner touches the object, it will try to get a
+new URL again.
 
 ## Why aren't the permissions more open? ##
 
@@ -128,7 +146,7 @@ folder that says:
 ## Configuration ##
 
 If the script is deleted or reset, any configurations not exported and saved to
-a notecard will be lost.
+a notecard or elsewhere will be lost.
 
 ## URL Resource Limitations ##
 
@@ -142,10 +160,12 @@ and giving their creators a good slap in the face.
 
 ## Agent Identification ##
 
-User/agent identification MUST be provided as UUID because SL has yet to
-implement a way of looking up a UUID from a user-name or legacy-name reliably.
-It might be possible to reverse engineer the key via site-scraping, but that's
-not sustainable/maintainable and plain not worth it. We want llRequestAgentKey!
+User/agent identification MUST be provided as UUID to be certain, because SL
+has yet to implement a way of looking up a UUID from a user-name or legacy-name
+reliably. W-Hat's agent lookup service has been implemented and seems to work
+reliably, but should always be verified because it's not official. To that end,
+W-Hat is used to find the agent key, then the agent key is used to get the
+username and display-name.
 
 --------------------------------------------------------------------------------
 
