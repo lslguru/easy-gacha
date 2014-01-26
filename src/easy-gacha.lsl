@@ -126,7 +126,7 @@ string RootObjectName() {
 Hover( string msg ) {
     if( AllowHover ) {
         if( msg ) {
-            llSetText( RootObjectName() + ": " + ScriptName + ":\n" + msg + "\n|\n|\n|\n|\n|\n_\nV" , <1,0,0> , 1 );
+            llSetText( RootObjectName() + ": " + ScriptName + ":\n" + msg + "\n \n| |\n| |\n| |\n| |\n| |\nV" , <1,0,0> , 1 );
         } else {
             llSetText( "" , ZERO_VECTOR , 1 );
         }
