@@ -98,6 +98,11 @@ define( [
                 insert.prependTo( this );
             } );
         }
+
+        , onClose: function() {
+            this.ui.nameTooltips.tooltip( 'destroy' );
+            this.ui.probabilityTooltips.tooltip( 'destroy' );
+        }
     } );
 
     return exports;

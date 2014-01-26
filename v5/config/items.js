@@ -138,6 +138,10 @@ define( [
             this.updateDisplay();
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , updateDisplay: function() {
             var dangerStatus = false;
 

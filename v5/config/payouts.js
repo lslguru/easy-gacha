@@ -62,6 +62,10 @@ define( [
             } );
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , updateTotals: function() {
             this.ui.countPayouts.text( this.collection.length );
             this.ui.totalPayouts.text( this.collection.reduce( function( memo , model ) {

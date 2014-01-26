@@ -67,6 +67,10 @@ define( [
             this.ui.exportField[0].onmouseup = function() { return false; };
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , updateExportField: function() {
             var jsonString = JSON.stringify( this.model.toNotecardJSON() , null , 1 );
             var jsonLines = jsonString.split( '\n' );

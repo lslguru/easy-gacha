@@ -75,6 +75,10 @@ define( [
             this.updateSelections();
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , updateSelections: function() {
             this.ui.allowHoverOff.toggleClass( 'active' , !this.model.get( 'allowHover' ) );
             this.ui.allowHoverOn.toggleClass( 'active' , this.model.get( 'allowHover' ) );

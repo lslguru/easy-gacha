@@ -55,6 +55,11 @@ define( [
                 } );
             }
         }
+
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+            this.ui.table.data( 'tablesorter' ) && this.ui.table.tablesorter( 'destroy' );
+        }
     } );
 
     return exports;

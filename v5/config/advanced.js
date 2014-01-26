@@ -99,6 +99,10 @@ define( [
             this.updateApiPerItem();
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , updateFolderForSingleItem: function() {
             this.ui.folderForSingleItemOff.toggleClass( 'active' , !this.model.get( 'folderForSingleItem' ) );
             this.ui.folderForSingleItemOn.toggleClass( 'active' , this.model.get( 'folderForSingleItem' ) );

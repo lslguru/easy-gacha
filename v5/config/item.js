@@ -115,6 +115,10 @@ define( [
             }
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , updateValues: function() {
             if( _.isString( this.ui.rarityField ) ) {
                 return;

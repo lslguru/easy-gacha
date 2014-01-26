@@ -116,6 +116,10 @@ define( [
 
             fade( this.ui.needPermissionWarning , ( this.model.get( 'isAdmin' ) && this.model.get( 'price' ) && !this.model.get( 'debitPermission' ) ) );
         }
+
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
     } );
 
     return exports;

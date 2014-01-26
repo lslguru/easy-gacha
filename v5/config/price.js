@@ -112,6 +112,10 @@ define( [
             this.updateDisplay();
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , updateDisplay: function() {
             var warningStatus = false;
             var dangerStatus = false;

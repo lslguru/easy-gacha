@@ -192,6 +192,10 @@ define( [
             this.toggleAutoModifiedMessage();
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , hideAutoModifiedMessage: function() {
             this.model.set( 'ackAutoModified' , true );
         }

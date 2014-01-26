@@ -83,6 +83,10 @@ define( [
             fade( this.ui.progressArea , false );
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , onImportFieldChange: function() {
             this.ui.importField.attr( 'rows' , this.ui.importField.val().split( '\n' ).length );
             this.ui.importButton.attr( 'disabled' , ( this.ui.importField.val().length ? null : 'disabled' ) );

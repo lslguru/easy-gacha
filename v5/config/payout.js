@@ -61,6 +61,10 @@ define( [
             this.updateAmount();
         }
 
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
+        }
+
         , updateAmount: function() {
             this.ui.amount.parent().removeClass( 'has-error' );
 
