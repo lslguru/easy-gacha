@@ -68,11 +68,9 @@
 
         {{#if isRootOrOnlyPrim}}
             <div class="form-group">
-                <label class="col-sm-2 control-label" for="folder-name" data-toggle="tooltip" title="Easy Gacha is in the root prim of this object. To change the folder name, simply set the name of the object.">Folder Name</label>
-                <div class="col-sm-10">
-                    <span data-toggle="tooltip" title="Easy Gacha is in the root prim of this object. To change the folder name, simply set the name of the object.">
-                        <input class="form-control" id="folder-name" type="text" disabled="disabled" />
-                    </span>
+                <label class="col-sm-2 control-label" for="folder-name">Folder Name</label>
+                <div class="col-sm-10" id="folder-name">
+                    When multiple items are given at the same time (multi-play feature), they will be given as a folder. The name of that folder will be based on the name of the <strong>prim</strong> that this script is in. To change the name of the folder, edit the name of the prim.
                 </div>
             </div>
         {{else}}
@@ -99,7 +97,7 @@
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h2 class="panel-title">API</h2>
+        <h2 class="panel-title"><a href="https://en.wikipedia.org/wiki/Application_programming_interface" target="_blank">API (Application Programming Interface)</a> - Tools for other scripters</h2>
     </div>
     <div class="panel-body form-horizontal" role="form">
 

@@ -17,6 +17,8 @@ define( [
 
         model: Agent
 
+        , comparator: 'displayname'
+
         , fetch: function( options ) {
             if( ! options || ! options.id ) {
                 throw 'Forgot to pass id to fetch';
@@ -31,20 +33,31 @@ define( [
             }
 
             if( this.get( options.id ) ) {
+                if( options.objectOwner ) {
+                    this.get( options.id ).set( 'objectOwner' , true );
+                }
+                if( options.scriptCreator ) {
+                    this.get( options.id ).set( 'scriptCreator' , true );
+                }
+
                 // Keep it async, just in case
-                _.defer( options.success , this.get( options.id ) );
+                if( _.isFunction( options.success ) ) {
+                    _.defer( options.success , this.get( options.id ) );
+                }
                 return;
             }
 
             var agent = new Agent( {
                 id: options.id
+                , objectOwner: Boolean( options.objectOwner )
+                , scriptCreator: Boolean( options.scriptCreator )
             } );
 
             var agentFetchOptions = _.clone( options );
             agentFetchOptions.success = _.bind( function() {
                 this.add( agent );
 
-                if( options.success ) {
+                if( _.isFunction( options.success ) ) {
                     options.success( agent );
                 }
             } , this );

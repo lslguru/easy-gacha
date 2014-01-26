@@ -1,0 +1,6 @@
+#lookup-agent ul {
+    position: relative;
+    max-height: 250px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}

@@ -24,13 +24,13 @@
     <div class="panel-body form-horizontal">
 
         <div class="alert alert-warning fade fade-resize hide clearfix" id="email-is-slow-warning">
-            <i class="fa fa-exclamation-triangle"></i> Email is <strong>very slow</strong>, and causes a <strong>20 second</strong> delay after each play (not after each item).
             <button class="btn btn-primary" aria-hidden="true" id="email-is-slow-warning-dismiss">I understand</button>
+            <i class="fa fa-exclamation-triangle"></i> Email is <strong>very slow</strong>, and causes a <strong>20 second</strong> delay <strong>after</strong> each play (not after each item). This will not stop people from playing your Gacha, but does mean that there is a long delay between plays. For example: If two people, John and Jane, want to play the Gacha, and Jane goes first, then John must wait 20 seconds before he may play. This is a limitation enforced by Second Life. Thank your Linden Overlords...
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label" data-toggle="tooltip" title="If a valid email address is entered here, Easy Gacha will send an email with each play (but not for each item). This causes a very long script delay (20 seconds).">Email</label>
-            <div class="col-sm-10" data-toggle="tooltip" title="If a valid email address is entered here, Easy Gacha will send an email with each play (but not for each item). This causes a very long script delay (20 seconds).">
+            <label class="col-sm-2 control-label text-warning" data-toggle="tooltip" title="If an email address is entered, a message will be sent each time someone plays with a list of all of the items they were given.">Email</label>
+            <div class="col-sm-10" data-toggle="tooltip" title="If an email address is entered, a message will be sent each time someone plays with a list of all of the items they were given.">
                 <input type="email" class="form-control" id="email" placeholder="Email address" />
                 <i id="clear-email" class="fa fa-times-circle-o"><span class="sr-only">Clear email address</span></i>
             </div>

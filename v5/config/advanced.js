@@ -30,7 +30,6 @@ define( [
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
-            , 'folderName': '#folder-name'
             , 'folderForSingleItemOff': '#always-folder-off'
             , 'folderForSingleItemOn': '#always-folder-on'
             , 'maxBuysUnlimited': '#max-buys-unlimited'
@@ -49,8 +48,7 @@ define( [
         }
 
         , events: {
-            'change @ui.folderName': 'setFolderName'
-            , 'click @ui.folderForSingleItemOff': 'setFolderForSingleItem'
+            'click @ui.folderForSingleItemOff': 'setFolderForSingleItem'
             , 'click @ui.folderForSingleItemOn': 'setFolderForSingleItem'
             , 'click @ui.maxBuysUnlimited': 'toggleMaxBuysLimited'
             , 'click @ui.maxBuysLimited': 'toggleMaxBuysLimited'
@@ -92,7 +90,6 @@ define( [
                 , placement: tooltipPlacement
             } );
 
-            this.ui.folderName.val( this.model.get( 'primName' ) );
             this.updateFolderForSingleItem();
             this.updateMaxBuys();
             this.updateMaxPerPurchase();
@@ -100,10 +97,6 @@ define( [
             this.updateRootClickAction();
             this.updateApiPerPlay();
             this.updateApiPerItem();
-        }
-
-        , setFolderName: function() {
-            this.model.set( 'setFolderName' , this.ui.folderName.val() );
         }
 
         , updateFolderForSingleItem: function() {

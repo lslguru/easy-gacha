@@ -104,7 +104,8 @@ define( [
             , payPriceButton1: null
             , payPriceButton2: null
             , payPriceButton3: null
-            , setFolderName: null
+            , apiPurchasesEnabled: null
+            , apiItemsGivenEnabled: null
             , rootClickActionNeeded: false
             , ackEmailSlowness: false
 
@@ -154,7 +155,6 @@ define( [
             , 'maxBuys'
             , 'email'
             , 'im'
-            , 'setFolderName'
             , 'payouts'
             , 'items'
             , 'ackEmailSlowness'
@@ -176,24 +176,29 @@ define( [
                     gacha.set( info.get( 'extra' ) );
 
                     // Nice smooth progress bar
-                    var totalCalls = (
-                        1 // info
-                        + 1 // config
-                        + 1 // email
-                        + 1 // im
-                        + 1 + info.get( 'payoutCount' ) // payouts
-                        + 1 + info.get( 'itemCount' ) // items
-                        + 1 + info.get( 'inventoryCount' ) // invs
-                        + 1 // configured
-                    );
-                    gacha.submodels.info.weight = 1 / totalCalls * 100;
-                    gacha.submodels.config.weight = 1 / totalCalls * 100;
-                    gacha.submodels.email.weight = 1 / totalCalls * 100;
-                    gacha.submodels.im.weight = 1 / totalCalls * 100;
-                    gacha.submodels.payouts.weight = ( 1 + info.get( 'payoutCount' ) ) / totalCalls * 100;
-                    gacha.submodels.items.weight = ( 1 + info.get( 'itemCount' ) ) / totalCalls * 100;
-                    gacha.submodels.invs.weight = ( 1 + info.get( 'inventoryCount' ) ) / totalCalls * 100;
-                    gacha.submodels.configured.weight = 1 / totalCalls * 100;
+                    var totalCalls = 1;
+                    _.each( gacha.submodels , function( submodelConfig ) {
+                        if( info.get( 'isAdmin' ) || !submodelConfig.adminOnly ) {
+                            ++totalCalls; // We make at least one call, and if collections one extra call
+
+                            if( 'attribute' === submodelConfig.type && submodelConfig.countAttribute ) {
+                                totalCalls += info.get( submodelConfig.countAttribute );
+                            }
+                        }
+                    } );
+                    _.each( gacha.submodels , function( submodelConfig ) {
+                        var weight = 0;
+
+                        if( info.get( 'isAdmin' ) || !submodelConfig.adminOnly ) {
+                            ++weight; // We make at least one call, and if collections one extra call
+
+                            if( 'attribute' === submodelConfig.type && submodelConfig.countAttribute ) {
+                                weight += info.get( submodelConfig.countAttribute );
+                            }
+                        }
+
+                        submodelConfig.weight = weight / totalCalls * 100;
+                    } );
                 }
                 , save: false
                 , name: 'Object Info'
@@ -245,6 +250,7 @@ define( [
                 , type: 'attribute'
                 , weight: 5
                 , adminOnly: true
+                , countAttribute: 'payoutCount'
                 , progressCallback: _.partial( submodelProgress , 'payouts' , 'payoutCount' )
                 , save: true
                 , name: 'Payouts'
@@ -255,6 +261,7 @@ define( [
                 , type: 'attribute'
                 , weight: 20
                 , adminOnly: false
+                , countAttribute: 'itemCount'
                 , progressCallback: _.partial( submodelProgress , 'items' , 'itemCount' )
                 , save: true
                 , name: 'Configured Items'
@@ -265,6 +272,7 @@ define( [
                 , type: 'attribute'
                 , weight: 45
                 , adminOnly: true
+                , countAttribute: 'inventoryCount'
                 , progressCallback: _.partial( submodelProgress , 'invs' , 'inventoryCount' )
                 , save: false
                 , name: 'Available Inventory'

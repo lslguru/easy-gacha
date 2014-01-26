@@ -141,6 +141,7 @@ define( [
 
                     agentsCache.fetch( {
                         id: model.get( 'ownerKey' )
+                        , objectOwner: true
                         , success: function( agent ) {
                             model.set( {
                                 ownerUserName: agent.get( 'username' )

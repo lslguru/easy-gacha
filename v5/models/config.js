@@ -28,7 +28,6 @@ define( [
             , payPriceButton1: null
             , payPriceButton2: null
             , payPriceButton3: null
-            , setFolderName: null
             , apiPurchasesEnabled: null
             , apiItemsGivenEnabled: null
             , extra: null

@@ -4,7 +4,7 @@
         <div class="btn-group">
             <a class="btn btn-default" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha Kit on SecondLife Marketplace"><i class="fa fa-shopping-cart"></i> Marketplace</a>
             <a class="btn btn-default" target="_blank" href="https://github.com/lslguru/easy-gacha" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha code repository"><i class="fa fa-github"></i> GitHub</a>
-            <a class="btn btn-default" target="_blank" href="https://lslguru.com/easy-gacha-v5/registry.php" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> Registry</a>
+            <a class="btn btn-default" target="_blank" href="https://lslguru.com/easy-gacha-v5/registry.php" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> All Gachas</a>
             {{#if isAdmin}}
                 <a class="btn btn-primary" href="#config" data-toggle="tooltip" data-tooltip-placement="bottom" title="You have permission to modify this Easy Gacha. Click here to configure."><i class="fa fa-pencil-square-o"></i> Configure This Gacha</a>
             {{/if}}
@@ -18,6 +18,9 @@
     </h1>
     <div>
         {{objectDesc}}
+    </div>
+    <div id="ready-needs-permission-alert" class="alert alert-warning fade hide">
+        <i class="fa fa-exclamation-triangle"></i> Easy Gacha is ready to go, but needs your permission to debit money (to be able to give change and refunds). Please use your SecondLife viewer to grant debit permission, then reload this page.
     </div>
 </div>
 <div class="row">

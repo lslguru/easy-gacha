@@ -21,6 +21,8 @@ define( [
             id: null
             , username: null
             , displayname: null
+            , objectOwner: false
+            , scriptCreator: false
         }
 
         , fetch: function( options ) {

@@ -3,18 +3,23 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
-                <h4 class="modal-title" id="lookup-agent-label">Find Someone</h4>
+                <h4 class="modal-title" id="lookup-agent-label">Are these the droids you're looking for?</h4>
             </div>
             <div class="modal-body">
-                <div class="header">Are these the droids you're looking for?</div>
+                <p>Here's a handy list of people that Easy Gacha already knows about. These are either the creator of the object, the creator of inventory, the person who wrote the script, or people who were configured previously.</p>
                 <ul>
                     {{#each agentsCache}}
-                        <li><a href="javascript:;" data-agent-id="{{id}}">{{displayname}} ({{username}})</a></li>
+                        <li>
+                            <a href="javascript:;" data-agent-id="{{id}}" data-toggle="tooltip" title="{{username}}">{{displayname}}</a>
+                            {{#if scriptCreator}}&#160;<span data-toggle="tooltip" title="This is the creator of this script. This would also be a convenient way to give tips ;-)"><i class="fa fa-question-circle"></i></span>{{/if}}
+                            {{#if objectOwner}}&#160;<span data-toggle="tooltip" title="This is the owner of this Easy Gacha. This should be YOU..."><i class="fa fa-question-circle"></i></span>{{/if}}
+                        </li>
                     {{/each}}
                 </ul>
-                <br />
+                <p>Or you may search for a user here:</p>
+                <p>If you enter a username, we will try to find them, but the only way to be certain of finding someone is to enter their UUID. There are several ways you can find a user's UUID. <a href="http://wiki.secondlife.com/wiki/Talk:How_can_I_find_my_avatar's_UUID%3F" target="_blank">Here</a> is a handy article describing some of the ways to find a user's UUID.</p>
                 <div id="lookup-agent-key-input-group" class="input-group">
-                    <input type="text" class="form-control" id="lookup-agent-key" placeholder="Lookup Agent UUID" />
+                    <input type="text" class="form-control" id="lookup-agent-key" placeholder="USER NAME or UUID" />
                     <span class="input-group-btn">
                         <button type="button" id="lookup-agent-button" class="btn btn-primary" data-loading-text="Searching...">Search</button>
                     </span>

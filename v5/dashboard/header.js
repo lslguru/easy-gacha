@@ -7,6 +7,7 @@ define( [
     , 'lib/constants'
     , 'lib/tooltip-placement'
     , 'lib/map-uri'
+    , 'lib/fade'
 
 ] , function(
 
@@ -17,6 +18,7 @@ define( [
     , CONSTANTS
     , tooltipPlacement
     , mapUri
+    , fade
 
 ) {
     'use strict';
@@ -27,6 +29,7 @@ define( [
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
             , 'dropdowns': '[data-toggle=dropdown]'
+            , 'needPermissionWarning': '#ready-needs-permission-alert'
         }
 
         , templateHelpers: function() {
@@ -110,6 +113,8 @@ define( [
             } );
 
             this.ui.dropdowns.dropdown();
+
+            fade( this.ui.needPermissionWarning , ( this.model.get( 'isAdmin' ) && this.model.get( 'price' ) && !this.model.get( 'debitPermission' ) ) );
         }
     } );
 

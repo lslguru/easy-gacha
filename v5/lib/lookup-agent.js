@@ -8,6 +8,8 @@ define( [
     , 'bootstrap'
     , 'lib/is-sl-viewer'
     , 'models/agents-cache'
+    , 'lib/key'
+    , 'lib/tooltip-placement'
 
 ] , function(
 
@@ -19,6 +21,8 @@ define( [
     , bootstrap
     , isSlViewer
     , agentsCache
+    , keylib
+    , tooltipPlacement
 
 ) {
     'use strict';
@@ -27,7 +31,9 @@ define( [
         template: template
 
         , ui: {
-            'lookupAgentDialog': '#lookup-agent'
+            'tooltips': '[data-toggle=tooltip]'
+            , 'tooltipContainer': '.modal-content'
+            , 'lookupAgentDialog': '#lookup-agent'
             , 'lookupAgentKey': '#lookup-agent-key'
             , 'lookupAgentButton': '#lookup-agent-button'
             , 'lookupAgentKeyInputGroup': '#lookup-agent-key-input-group'
@@ -40,7 +46,16 @@ define( [
             , 'click @ui.lookupAgentButton': 'lookupAgent'
         }
 
+        , triedNonKeyLookup: false
+        , triedKeyLookup: false
+
         , onRender: function() {
+            this.ui.tooltips.tooltip( {
+                html: true
+                , container: this.ui.tooltipContainer
+                , placement: tooltipPlacement
+            } );
+
             this.ui.lookupAgentDialog.toggleClass( 'fade' , !isSlViewer() ).modal( {
                 backdrop: true
                 , keyboard: true
@@ -48,6 +63,10 @@ define( [
             } );
 
             this.ui.lookupAgentButton.button();
+        }
+
+        , onClose: function() {
+            this.ui.tooltips.tooltip( 'destroy' );
         }
 
         , onModalHidden: function() {
@@ -66,11 +85,25 @@ define( [
             this.ui.lookupAgentDialog.modal( 'hide' );
         }
 
-        , lookupAgent: function() {
-            if( '' === this.ui.lookupAgentKey.val() ) {
-                return;
-            }
+        , lookupNonKey: function( str ) {
+            // Secondary lookup attempt... we'll try http://w-hat.com/#name2key
+            $.ajax( {
+                url: 'http://w-hat.com/name2key/' + encodeURIComponent( this.ui.lookupAgentKey.val() )
+                , dataType: 'text'
+                , context: this
+                , success: function( data ) {
+                    if( ! this.isClosed ) {
+                        this.ui.lookupAgentKey.val( data );
+                        this.lookupAgent();
+                    }
+                }
+                , error: function() {
+                    this.lookupAgent();
+                }
+            } );
+        }
 
+        , lookupKey: function() {
             agentsCache.fetch( {
                 id: this.ui.lookupAgentKey.val()
                 , context: this
@@ -81,16 +114,42 @@ define( [
                     }
                 }
                 , error: function() {
-                    if( ! this.isClosed ) {
-                        this.ui.lookupAgentKeyInputGroup.addClass( 'has-error' );
-                        this.ui.lookupAgentButton.button( 'reset' );
-                        this.ui.lookupAgentKey.prop( 'disabled' , '' );
-                    }
+                    this.lookupAgent();
                 }
             } );
+        }
+
+        , lookupAgent: function() {
+            if( '' === this.ui.lookupAgentKey.val() ) {
+                return;
+            }
 
             this.ui.lookupAgentButton.button( 'loading' );
             this.ui.lookupAgentKey.prop( 'disabled' , 'disabled' );
+
+            if(
+                ( !this.triedKeyLookup && keylib.isKey( this.ui.lookupAgentKey.val() ) )
+                || ( this.triedNonKeyLookup && !this.triedKeyLookup )
+            ) {
+                this.lookupKey();
+                this.triedKeyLookup = true;
+                return;
+            }
+
+            if( !this.triedNonKeyLookup ) {
+                this.lookupNonKey();
+                this.triedNonKeyLookup = true;
+                return;
+            }
+
+            this.triedKeyLookup = false;
+            this.triedNonKeyLookup = false;
+
+            if( ! this.isClosed ) {
+                this.ui.lookupAgentKeyInputGroup.addClass( 'has-error' );
+                this.ui.lookupAgentButton.button( 'reset' );
+                this.ui.lookupAgentKey.prop( 'disabled' , '' );
+            }
         }
     } );
 

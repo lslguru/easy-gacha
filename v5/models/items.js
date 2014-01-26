@@ -4,6 +4,7 @@ define( [
     , 'models/base-sl-collection'
     , 'models/item'
     , 'lib/constants'
+    , 'models/agents-cache'
 
 ] , function(
 
@@ -11,6 +12,7 @@ define( [
     , BaseCollection
     , Item
     , CONSTANTS
+    , agentsCache
 
 ) {
     'use strict';
@@ -30,6 +32,12 @@ define( [
             invs.each( function( inv ) {
                 // Never add the script
                 if( inv.id === scriptName ) {
+                    // Let the cache know this is the creator of this script
+                    agentsCache.fetch( {
+                        id: inv.get( 'creator' )
+                        , scriptCreator: true
+                    } );
+
                     return;
                 }
 
