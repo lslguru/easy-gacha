@@ -73,11 +73,11 @@ list Limit; // integer, -1 == infinite
 list Bought; // stats counter
 list Payouts; // strided: [ avatar key , lindens ]
 integer MaxPerPurchase = 50 /*DEFAULT_MAX_PER_PURCHASE*/;
-integer PayPrice = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (should be sum of Payouts)
-integer PayPriceButton0 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
-integer PayPriceButton1 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
-integer PayPriceButton2 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
-integer PayPriceButton3 = PAY_HIDE; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
+integer PayPrice; // Price || PAY_HIDE || PAY_DEFAULT (should be sum of Payouts)
+integer PayPriceButton0; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
+integer PayPriceButton1; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
+integer PayPriceButton2; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
+integer PayPriceButton3; // Price || PAY_HIDE || PAY_DEFAULT (multiple of sum of Payouts)
 integer FolderForSingleItem = TRUE;
 integer RootClickAction = -1; // -1 = user not asked, FALSE, TRUE
 integer Group = FALSE; // If group may administer
