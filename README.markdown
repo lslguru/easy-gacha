@@ -94,13 +94,20 @@ will not be visible to the registry and will not be able to have its
 configuration changed. If the owner touches the object, it will try to get a
 new URL again.
 
+## What if I accidentally give someone else the admin link? ##
+
+Then they can administer your Easy Gacha, change its settings, change the
+price, etc. If you didn't mean to share, or want to remove that permission,
+just take your Easy Gacha back into your inventory and drop it in-world again.
+Each time it is rezzed it will create a new URL.
+
 ## Why aren't the permissions more open? ##
 
 Because otherwise I cannot vouch for its safety. If I made the script
 modifiable, someone with ill intent could make it steal money, then give it
 away. It would still list me as the creator, but would be malicious.
 
-The script you have should have been created by:
+The creator of the script should be listed as
 [Zan Lightfoot](secondlife:///app/agent/d393638e-be6e-4f81-a44d-072e344828c4/about)
 
 Also, if I made the objects modifiable and transferable, someone could put
@@ -315,7 +322,6 @@ problem until a higher number, but that's still unacceptable.
 
 # TO DO List #
 
-* Documentation
 * Registry
 * Release
 * Contact those who have already purchased
