@@ -11,17 +11,22 @@ This is a very easy, configurable implementation of a
 
 --------------------------------------------------------------------------------
 
-# Getting Started #
+# HEY YOU! / Directions / Instructions / Getting Started / Start Here #
 
-Drop all of the scripts in an object!
+Drop the script in an object!
 
 You'll see the following things happen:
 
-TODO
+* Hover-text will appear telling you it needs to be configured
+* A configuration URL will be sent directly to only you (the owner)
+
+Click the link, and have fun!
 
 --------------------------------------------------------------------------------
 
 # Features #
+
+## User-Friendly ##
 
 * No need to rename any items
 * Incredibly easy to configure
@@ -29,19 +34,31 @@ TODO
 * Detects and prevents most mistakes
 * Can set rarity per item
 * Supports 30+ items at a time
-* Can limit sales per item
-* Can limit total number of sales
-* Can payout to multiple people with each sale
-* Only asks for debit permission once if possible
-* Ultra low lag (zero when not in use)
-* All data except Gacha registry stored in-world
-* Configuration can be exported and loaded via notecard
-* Multiple-play option (can buy multiple objects at once)
-* Automatic self memory management
+* Multiple-play option (can buy multiple objects at at a time)
+* Can limit number of sales per item
+* Can limit total number of sales for entire Gacha
+* Can payout to multiple people with each play
 * Guaranteed to hand out inventory and refund change correctly
 * Can be restricted to group-only play
-* Gives statistics about actual sales versus configured rarity
 * Can handle no-copy items
+* Can configure payment buttons
+* Can send IM reports when people play
+* Can send Email reports when people play
+* Dashboard can be loaded on a smart-phone (with JavaScript enabled)
+
+## Geeky ##
+
+* Only asks for debit permission once if possible
+* Ultra low lag (zero when not in use)
+* All data stored in-world (except for Gacha registry and single JavaScript file)
+* Configuration can be exported
+* Configuration can be imported by hand or from notecard
+* Automatic self memory management
+* Gives statistics about actual sales versus configured rarity
+* Protects against modifying existing object configurations (safe to use in any object)
+* Has an optional API for writing plugins and addons (doesn't spam object unless requested)
+* Guaranteed to only use one system URL at a time
+* Shortens URLs to make them easy to use
 
 --------------------------------------------------------------------------------
 
@@ -54,6 +71,10 @@ Easy Gacha will give them change.
 ## What happens if someone pays too little? ##
 
 Easy Gacha will refund the whole amount given and remind them of the price.
+
+## What if there aren't enough items for the amount someone paid? ##
+
+Easy Gacha will refund the excess.
 
 ## Why aren't the permissions more open? ##
 
@@ -78,6 +99,15 @@ permissions how you please. The script is transferable because it is no-mod.
 You may contact me and I will probably help out, but I cannot guarantee a quick
 (or any) response. This was a labor of love. There is no official support, and
 Second Life comes... second.  Please read the license.
+
+--------------------------------------------------------------------------------
+
+# Safety Warning #
+
+If the script you have wasn't created by
+[Zan Lightfoot](secondlife:///app/agent/d393638e-be6e-4f81-a44d-072e344828c4/about),
+then I cannot vouch for its safety. Whoever created it may have altered it. You
+have been warned.
 
 --------------------------------------------------------------------------------
 
@@ -119,12 +149,30 @@ not sustainable/maintainable and plain not worth it. We want llRequestAgentKey!
 
 --------------------------------------------------------------------------------
 
-# Safety Warning #
+# API #
 
-If the script you have wasn't created by
-[Zan Lightfoot](secondlife:///app/agent/d393638e-be6e-4f81-a44d-072e344828c4/about),
-then I cannot vouch for its safety. Whoever created it may have altered it. You
-have been warned.
+    llMessageLinked( LINK_SET , 3000168 , (string)totalItems , buyerId );
+
+If this feature is turned on, this script tells the entire object each time a
+purchase is made, indicating the total number of items, but not listing the
+individual items received. Excellent for most-recent board or custom, direct
+thank-yous.
+
+    llMessageLinked( LINK_SET , 3000169 , itemName , buyerId );
+
+If this feature is turned on, this script tells the entire object which items
+were received. COULD OVERFLOW THE QUEUE ON MULTI-PLAY. Useful for playing a
+sound or particle effect when a specific item is bought, or custom reporting.
+Also useful if you want to keep a subscription list based on received items. Be
+mindful of your event queue.
+
+    llMessageLinked( LINK_SET , 3000170 , baseUrl , adminKey );
+
+Only occurs if the owner creates and puts an inventory item with the name
+"EasyGachaAPI SignalOnNewURL" into the same prim as the script. This script
+will then tell the entire object the new URL that was allocated and the
+adminKey in use. Useful if you want to automatically signal your own external
+service to watch the script.
 
 --------------------------------------------------------------------------------
 
@@ -164,49 +212,14 @@ all AJAX calls are technically to the same domain of the original page.
 
 ## Structure ##
 
-    GET secondlifeURL/[?dev=1]#[adminKey/]<page>
+    GET secondlifeURL/[?dev=1]#<page>
         Where the browser is sent
     GET lslguru.github.io/easy-gacha/<version>/easy-gacha.min.js
         Initial library load which takes care of bootstrapping and loading
         everything else
-    POST secondLifeURL/[adminKey/]<verb>/<subject>[/options]
-        Body should always be JSON-encoded array, though it may be a list with
-        only a single item. This overhead is acceptable for gaining simplicitly
-        in parsing.
-
---------------------------------------------------------------------------------
-
-# Config Notecard Format #
-
-Space separated fields
-
-    inv
-        rarity
-        limit
-        bought
-        item
-    payout
-        agent
-        money
-    configs
-        folder_for_single_item (boolean)
-        root_click_action (boolean)
-        group (boolean)
-        allow_whisper (boolean)
-        allow_hovertext (boolean)
-        max_per_purchase (count)
-        max_buys (count)
-        pay_price (lindens)
-        pay_price_button_0 (lindens)
-        pay_price_button_1 (lindens)
-        pay_price_button_2 (lindens)
-        pay_price_button_3 (lindens)
-    email
-        email
-    im
-        agent
-    configured
-        boolean
+    POST secondLifeURL/[adminKey/]<verb>/<subject>
+        Body should always be JSON-encoded array, though it may be an empty
+        list. This overhead is acceptable for gaining simplicitly in parsing.
 
 --------------------------------------------------------------------------------
 
@@ -229,7 +242,7 @@ Space separated fields
 
 --------------------------------------------------------------------------------
 
-# Features to NOT implement #
+# Features NOT implemented #
 
 ## Default rarity ##
 
@@ -240,6 +253,31 @@ Instead, I'm going to make it as easy as possible to configure a batch of items
 at the same time. That way you could drop in 10,000 items (would take a while
 to load...) and configure them ~100 at a time. Memory testing will indicate
 where the limits to number of configured items is.
+
+## Pinging registry ##
+
+Setting up a more complex timer to periodically ping the registry adds lag,
+increases complexity, and reduces available memory. The registry is instead
+programmed to double-check that the Easy Gacha still exists before responding
+to a search.
+
+## Help Icons ##
+
+There would be so many of them scattered all over the screens that it would be
+ridiculous. Just move the mouse around... the hover-tips should provide
+sufficient help.
+
+## Infinite Inventory ##
+
+Yes, this could be done. I even came up with a reasonably fast way to scan the
+inventory. The configuration becomes a nightmare, and is definitely NOT easy
+for people...
+
+## More than 50 items handed out at a time ##
+
+Go ahead, try handing out 100 **unsaved** notecards (placeholders) in a folder.
+See what happens... I sure was surprised! Regular objects don't run into the
+problem until a higher number, but that's still unacceptable.
 
 --------------------------------------------------------------------------------
 
@@ -257,23 +295,7 @@ where the limits to number of configured items is.
 
 # TO DO List #
 
-## Work In Progress ##
-
-* New scripting approach
 * Documentation
+* Registry
 * Release
 * Contact those who have already purchased
-
-### SL Script ###
-
-* Report to registry once every 24 hours and on each significant event
-
-### Configuration Page ###
-
-* If no-copy item is to be handed out
-    * Max per purchase = 1 (and update buy buttons)
-    * Folders turned off
-
-### Registry ###
-
-* Record all reports

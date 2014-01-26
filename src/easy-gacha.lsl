@@ -45,13 +45,14 @@
 
 //  CONSTANTS
 //      VERSION                     5.0
-//      CONFIG_SCRIPT_URL           http:\/\/lslguru.github.io/easy-gacha/v5/easy-gacha.js
+//      CONFIG_SCRIPT_URL           "http:\/\/lslguru.github.io/easy-gacha/v5/easy-gacha.js"
 //      MAX_FOLDER_NAME_LENGTH      63
 //      DEFAULT_MAX_PER_PURCHASE    50
 //      ASSET_SERVER_TIMEOUT        15.0
 //      ASSET_SERVER_TIMEOUT_CHECK  5.0
 //      REQUEST_TIMEOUT             30.0
 //      LOW_MEMORY                  4096
+//      INV_API_NEW_URL             "Easy Gacha API SignalOnNewURL"
 
 //  DEFAULT_MAX_PER_PURCHASE: We have to build a list in memory of the items to
 //      be given in a folder. To prevent out of memory errors and exceedingly
@@ -467,7 +468,7 @@ Play( key buyerId , integer lindensReceived ) {
         llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + llGetUsername(buyerId) + ") just received " + (string)totalItems + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
     }
     if( Email ) {
-        llEmail( Email , "Easy Gacha Played" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
+        llEmail( Email , "Easy Gacha Play Results" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
     }
 
     // API calls
@@ -533,6 +534,12 @@ default {
             BaseUrl = requestBody;
             ShortenedInfoUrl = ( BaseUrl + "/" );
             ShortenedAdminUrl = ( BaseUrl + "/#admin/" + (string)AdminKey );
+
+            if( INVENTORY_NONE != llGetInventoryType( "EasyGachaAPI SignalOnNewURL" /*INV_API_NEW_URL*/ ) ) {
+                if( llGetInventoryCreator( "Easy Gacha API SignalOnNewURL" ) == Owner ) {
+                    llMessageLinked( LINK_SET , 3000170 , BaseUrl , AdminKey );
+                }
+            }
 
             Shorten( ShortenedInfoUrl , 1 );
             Shorten( ShortenedAdminUrl , 2 );
@@ -612,18 +619,30 @@ default {
 
                 if( llList2Integer( requestBodyParts , 0 ) < CountItems ) {
                     string inventoryName = llList2String( Items , llList2Integer( requestBodyParts , 0 ) );
+                    integer inventoryType = llGetInventoryType( inventoryName );
+
+                    list responseBodyParts = [
+                        llList2Integer( requestBodyParts , 0 ) , // index
+                        llList2Float( Rarity , llList2Integer( requestBodyParts , 0 ) ) , // rarity
+                        llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) , // limit
+                        llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) , // count bought
+                        inventoryName , // name
+                        inventoryType // type
+                    ];
+
+                    if( INVENTORY_NONE != inventoryType ) {
+                        responseBodyParts += [
+                            llGetInventoryCreator( inventoryName ) // creator
+                        ];
+                    } else {
+                        responseBodyParts += [
+                            NULL_KEY // creator
+                        ];
+                    }
 
                     responseBody = llList2Json(
                         JSON_ARRAY
-                        , [
-                            llList2Integer( requestBodyParts , 0 ) , // index
-                            llList2Float( Rarity , llList2Integer( requestBodyParts , 0 ) ) , // rarity
-                            llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) , // limit
-                            llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) , // count bought
-                            inventoryName , // name
-                            llGetInventoryType( inventoryName ) , // type
-                            llGetInventoryCreator( inventoryName ) // creator
-                        ]
+                        , responseBodyParts
                     );
                 }
             }
