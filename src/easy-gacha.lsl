@@ -558,26 +558,28 @@ default {
             integer isAdmin = FALSE;
 
             // Get input
-            string verb = llGetHTTPHeader( requestId , "x-path-info" );
+            string subject = llGetHTTPHeader( requestId , "x-path-info" );
             list requestBodyParts = llJson2List( requestBody );
+            integer requestBodyPart0Int = llList2Integer( requestBodyParts , 0 );
+            integer requestBodyPart1Int = llList2Integer( requestBodyParts , 1 );
 
             // Determine if the user is an admin by the presence of the
             // key, and strip it off the front
-            if( "/" + (string)AdminKey + "/" == llGetSubString( verb , 0 , 37 ) ) {
+            if( "/" + (string)AdminKey + "/" == llGetSubString( subject , 0 , 37 ) ) {
                 isAdmin = TRUE;
-                verb = llDeleteSubString( verb , 0 , 37 );
+                subject = llDeleteSubString( subject , 0 , 37 );
             }
 
             // Strip trailing slash
-            if( 0 == llSubStringIndex( verb , "/" ) ) {
-                verb = llDeleteSubString( verb , 0 , 0 );
+            if( 0 == llSubStringIndex( subject , "/" ) ) {
+                subject = llDeleteSubString( subject , 0 , 0 );
             }
 
             // Separate the verb and subject on input
-            string subject = llGetSubString( verb , llSubStringIndex( verb , "/" ) + 1 , -1 );
-            verb = llGetSubString( verb , 0 , llSubStringIndex( verb , "/" ) - 1 );
+            integer verb = llListFindList( [ "get" , "post" , "delete" ] , [ llGetSubString( subject , 0 , llSubStringIndex( subject , "/" ) - 1 ) ] );
+            subject = llGetSubString( subject , llSubStringIndex( subject , "/" ) + 1 , -1 );
 
-            if( isAdmin && "get" != verb ) {
+            if( isAdmin && 0 != verb ) {
                 Configured = FALSE;
             }
 
@@ -588,7 +590,7 @@ default {
 
             if( "item" == subject ) {
                 if( isAdmin ) {
-                    if( "post" == verb ) {
+                    if( 1 == verb ) {
                         Items += [ llList2String( requestBodyParts , 0 ) ];
                         Rarity += [ llList2Float( requestBodyParts , 1 ) ];
                         Limit += [ llList2Integer( requestBodyParts , 2 ) ];
@@ -597,7 +599,7 @@ default {
                         requestBodyParts = [ CountItems - 1 ];
                     }
 
-                    if( "delete" == verb ) {
+                    if( 2 == verb ) {
                         Items = [];
                         Rarity = [];
                         Limit = [];
@@ -607,15 +609,15 @@ default {
                     }
                 }
 
-                if( llList2Integer( requestBodyParts , 0 ) < CountItems ) {
-                    string inventoryName = llList2String( Items , llList2Integer( requestBodyParts , 0 ) );
+                if( requestBodyPart0Int < CountItems ) {
+                    string inventoryName = llList2String( Items , requestBodyPart0Int );
                     integer inventoryType = llGetInventoryType( inventoryName );
 
                     list responseBodyParts = [
-                        llList2Integer( requestBodyParts , 0 ) , // index
-                        llList2Float( Rarity , llList2Integer( requestBodyParts , 0 ) ) , // rarity
-                        llList2Integer( Limit , llList2Integer( requestBodyParts , 0 ) ) , // limit
-                        llList2Integer( Bought , llList2Integer( requestBodyParts , 0 ) ) , // count bought
+                        requestBodyPart0Int , // index
+                        llList2Float( Rarity , requestBodyPart0Int ) , // rarity
+                        llList2Integer( Limit , requestBodyPart0Int ) , // limit
+                        llList2Integer( Bought , requestBodyPart0Int ) , // count bought
                         inventoryName , // name
                         inventoryType // type
                     ];
@@ -639,36 +641,36 @@ default {
 
             if( "payout" == subject ) {
                 if( isAdmin ) {
-                    if( "post" == verb ) {
+                    if( 1 == verb ) {
                         Payouts += [
                             llList2Key( requestBodyParts , 0 )
-                            , llList2Integer( requestBodyParts , 1 )
+                            , requestBodyPart1Int
                         ];
 
                         CountPayouts += 2;
                         requestBodyParts = [ ( CountPayouts / 2 ) - 1 ];
                     }
 
-                    if( "delete" == verb ) {
+                    if( 2 == verb ) {
                         Payouts = [];
                         CountPayouts = 0;
                         responseBody = "true";
                     }
                 }
 
-                if( llList2Integer( requestBodyParts , 0 ) < CountPayouts / 2 ) {
+                if( requestBodyPart0Int < CountPayouts / 2 ) {
                     responseBody = llList2Json(
                         JSON_ARRAY
-                        , llList2List( Payouts , ( llList2Integer( requestBodyParts , 0 ) * 2 ) , ( llList2Integer( requestBodyParts , 0 ) * 2 ) + 1 )
+                        , llList2List( Payouts , ( requestBodyPart0Int * 2 ) , ( requestBodyPart0Int * 2 ) + 1 )
                     );
                 }
             }
 
             if( "configs" == subject ) {
                 if( isAdmin ) {
-                    if( "post" == verb ) {
-                        FolderForSingleItem = llList2Integer( requestBodyParts , 0 );
-                        RootClickAction = llList2Integer( requestBodyParts , 1 );
+                    if( 1 == verb ) {
+                        FolderForSingleItem = requestBodyPart0Int;
+                        RootClickAction = requestBodyPart1Int;
                         Group = llList2Integer( requestBodyParts , 2 );
                         AllowHover = llList2Integer( requestBodyParts , 3 );
                         MaxPerPurchase  = llList2Integer( requestBodyParts , 4 );
@@ -707,7 +709,7 @@ default {
 
             if( "email" == subject ) {
                 if( isAdmin ) {
-                    if( "post" == verb ) {
+                    if( 1 == verb ) {
                         Email = llList2String( requestBodyParts , 0 );
                     }
 
@@ -722,7 +724,7 @@ default {
 
             if( "im" == subject ) {
                 if( isAdmin ) {
-                    if( "post" == verb ) {
+                    if( 1 == verb ) {
                         Im = llList2Key( requestBodyParts , 0 );
                     }
 
@@ -771,7 +773,7 @@ default {
             if( "prim" == subject ) {
                 responseBody = llList2Json(
                     JSON_ARRAY
-                    , llGetLinkPrimitiveParams( llList2Integer( requestBodyParts , 0 ) , [
+                    , llGetLinkPrimitiveParams( requestBodyPart0Int , [
                         PRIM_NAME
                         , PRIM_DESC
                         , PRIM_TYPE
@@ -797,13 +799,13 @@ default {
             if( "face" == subject ) {
                 responseBody = llList2Json(
                     JSON_ARRAY
-                    , llGetLinkPrimitiveParams( llList2Integer( requestBodyParts , 0 ) , [
-                        PRIM_TEXTURE , llList2Integer( requestBodyParts , 1 )
-                        , PRIM_COLOR , llList2Integer( requestBodyParts , 1 )
-                        , PRIM_BUMP_SHINY , llList2Integer( requestBodyParts , 1 )
-                        , PRIM_FULLBRIGHT , llList2Integer( requestBodyParts , 1 )
-                        , PRIM_TEXGEN , llList2Integer( requestBodyParts , 1 )
-                        , PRIM_GLOW , llList2Integer( requestBodyParts , 1 )
+                    , llGetLinkPrimitiveParams( requestBodyPart0Int , [
+                        PRIM_TEXTURE , requestBodyPart1Int
+                        , PRIM_COLOR , requestBodyPart1Int
+                        , PRIM_BUMP_SHINY , requestBodyPart1Int
+                        , PRIM_FULLBRIGHT , requestBodyPart1Int
+                        , PRIM_TEXGEN , requestBodyPart1Int
+                        , PRIM_GLOW , requestBodyPart1Int
                     ] )
                 );
             }
@@ -852,13 +854,13 @@ default {
             }
 
             if( "inv" == subject && isAdmin ) {
-                if( llList2Integer( requestBodyParts , 0 ) < llGetInventoryNumber( INVENTORY_ALL ) ) {
-                    string inventoryName = llGetInventoryName( INVENTORY_ALL , llList2Integer( requestBodyParts , 0 ) );
+                if( requestBodyPart0Int < llGetInventoryNumber( INVENTORY_ALL ) ) {
+                    string inventoryName = llGetInventoryName( INVENTORY_ALL , requestBodyPart0Int );
 
                     responseBody = llList2Json(
                         JSON_ARRAY
                         , [
-                            llList2Integer( requestBodyParts , 0 ) , // index
+                            requestBodyPart0Int , // index
                             inventoryName , // name
                             llGetInventoryType( inventoryName ) , // type
                             llGetInventoryCreator( inventoryName ) , // creator
@@ -877,8 +879,8 @@ default {
             }
 
             if( "configured" == subject && isAdmin ) {
-                if( "post" == verb ) {
-                    Configured = llList2Integer( requestBodyParts , 0 );
+                if( 1 == verb ) {
+                    Configured = requestBodyPart0Int;
 
                     if( Configured && TotalPrice && !HasPermission ) {
                         llRequestPermissions( Owner , PERMISSION_DEBIT );
