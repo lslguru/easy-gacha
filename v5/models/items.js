@@ -5,6 +5,7 @@ define( [
     , 'models/item'
     , 'lib/constants'
     , 'models/agents-cache'
+    , 'lib/sort'
 
 ] , function(
 
@@ -13,13 +14,17 @@ define( [
     , Item
     , CONSTANTS
     , agentsCache
+    , sortLib
 
 ) {
     'use strict';
 
     var exports = BaseCollection.extend( {
         model: Item
-        , comparator: 'name'
+
+        , comparator: function( a , b ) {
+            return sortLib.naturalCompare( a.get( 'name' ) , b.get( 'name' ) );
+        }
 
         , initialize: function() {
             this.constructor.__super__.initialize.apply( this , arguments );

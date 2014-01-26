@@ -46,11 +46,11 @@ define( [
             var success = options.success;
             var fetchOptions = _.clone( options );
 
-            if( success ) {
-                success = _.bind( success , this );
+            if( _.isFunction( success ) && fetchOptions.context ) {
+                success = _.bind( success , fetchOptions.context );
             }
 
-            fetchOptions.success = function( model , resp ) {
+            fetchOptions.success = _.bind( function( model , resp ) {
                 if( CONSTANTS.NULL_KEY === model.get( 'im' ) ) {
                     if( success ) {
                         success( model , resp , options );
@@ -61,8 +61,7 @@ define( [
 
                 agentsCache.fetch( {
                     id: model.get( 'im' )
-                    , context: this
-                    , success: function( agent ) {
+                    , success: _.bind( function( agent ) {
                         this.set( {
                             imUserName: agent.get( 'username' )
                             , imDisplayName: agent.get( 'displayname' )
@@ -71,9 +70,9 @@ define( [
                         if( success ) {
                             success( model , resp , options );
                         }
-                    }
+                    } , this )
                 } );
-            };
+            } , this );
 
             this.constructor.__super__.fetch.call( this , fetchOptions );
         }

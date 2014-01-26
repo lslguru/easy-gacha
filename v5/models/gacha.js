@@ -222,6 +222,7 @@ define( [
                         , suggestedButtonOrder: gacha.get( 'suggestedButtonOrder' )
                         , ignoreButtonsOutOfOrder: gacha.get( 'ignoreButtonsOutOfOrder' )
                         , ackNoCopyItemsMeansSingleItemPlay: gacha.get( 'ackNoCopyItemsMeansSingleItemPlay' )
+                        , ackEmailSlowness: gacha.get( 'ackEmailSlowness' )
                     } );
                 }
                 , name: 'Configuration'

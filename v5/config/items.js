@@ -74,6 +74,9 @@ define( [
             , 'batchDeleteConfirmed': '#batch-delete-confirm'
             , 'totalBoughtContainer': '#total-bought-container'
             , 'totalBought': '#total-bought'
+            , 'entireBoughtColumn': '[data-column-contents=bought]'
+            , 'entireActionColumn': '[data-column-contents=action]'
+            , 'actionButtonGroups': '[data-column-contents=action] .btn-group'
         }
 
         , modelEvents: {
@@ -155,6 +158,16 @@ define( [
             fade( this.ui.totalUnlimitedRarityContainer , ( this.model.get( 'totalRarity' ) !== this.model.get( 'unlimitedRarity' ) ) );
             fade( this.ui.countUnlimitedContainer , Boolean( this.model.get( 'countUnlimited' ) ) );
             fade( this.ui.countLimitedContainer , Boolean( this.model.get( 'countLimited' ) ) );
+
+            // Hide empty columns
+            fade( this.$( this.ui.entireBoughtColumn.selector ) , Boolean( this.model.get( 'totalBought' ) ) );
+            var hasActions = false;
+            this.$( this.ui.actionButtonGroups.selector ).each( function( index , el ) {
+                if( el.children.length ) {
+                    hasActions = true;
+                }
+            } );
+            fade( this.$( this.ui.entireActionColumn.selector ) , hasActions );
 
             // Update checkbox stuff
             fade( this.ui.batchActionsContainer , this.model.get( 'anySelectedForBatchOperation' ) );
