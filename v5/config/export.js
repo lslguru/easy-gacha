@@ -87,7 +87,6 @@ define( [
             this.ui.lineTooLong.text( longLines );
             fade( this.ui.lineTooLongWarning , longLines.length );
 
-            this.ui.exportField.attr( 'rows' , jsonLines.length );
             this.ui.exportField.focus();
         }
 
