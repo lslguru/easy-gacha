@@ -286,7 +286,6 @@ Update() {
         Hover( "Script memory is low, please export configuration and reset script" );
     } else if( TotalPrice && !HasPermission ) {
         Hover( "Need debit permission, please touch this object" );
-        llRequestPermissions( Owner , PERMISSION_DEBIT );
     } else if( Group && llSameGroup( NULL_KEY ) ) {
         Hover( "Please set a group for this object" );
     } else if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
@@ -871,6 +870,10 @@ default {
             if( "configured" == subject && isAdmin ) {
                 if( "post" == verb ) {
                     Configured = llList2Integer( requestBodyParts , 0 );
+
+                    if( Configured && TotalPrice && !HasPermission ) {
+                        llRequestPermissions( Owner , PERMISSION_DEBIT );
+                    }
                 }
 
                 responseBody = llList2Json( JSON_ARRAY , [ Configured ] );
@@ -949,8 +952,8 @@ default {
                 // If the owner accidentally ignored the permissions request
                 // (not denied) and touches the object again, then re-ask for
                 // permission
-                if( TotalPrice && !HasPermission ) {
-                    Update(); // Will request permission from owner
+                if( Configured && TotalPrice && !HasPermission ) {
+                    llRequestPermissions( Owner , PERMISSION_DEBIT );
                 }
             } else {
                 nonOwnerTouched = TRUE;
