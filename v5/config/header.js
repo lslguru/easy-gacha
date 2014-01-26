@@ -201,7 +201,6 @@ define( [
         }
 
         , toggleAutoModifiedMessage: function() {
-            // TODO: Switch close button on element to use fade so it can be re-shown
             fade( this.ui.firstRunMessage , this.model.get( 'autoModified' ) && !this.model.get( 'ackAutoModified' ) );
         }
 

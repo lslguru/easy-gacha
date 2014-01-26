@@ -48,7 +48,6 @@ define( [
             , agentsCache: agentsCache
             , hasChangesToSave: false
             , autoModified: null
-            , ackAutoModified: false
 
             // From models/info
             , isAdmin: null
@@ -87,6 +86,7 @@ define( [
             , button_1: null
             , button_2: null
             , button_3: null
+            , ackAutoModified: false
             , zeroPriceOkay: false
             , suggestedButtonOrder: null
             , ignoreButtonsOutOfOrder: false
@@ -144,6 +144,7 @@ define( [
             , 'button_1'
             , 'button_2'
             , 'button_3'
+            , 'ackAutoModified'
             , 'zeroPriceOkay'
             , 'ignoreButtonsOutOfOrder'
             , 'ackNoCopyItemsMeansSingleItemPlay'
@@ -218,6 +219,7 @@ define( [
                         , button_1: gacha.get( 'button_1' )
                         , button_2: gacha.get( 'button_2' )
                         , button_3: gacha.get( 'button_3' )
+                        , ackAutoModified: gacha.get( 'ackAutoModified' )
                         , zeroPriceOkay: gacha.get( 'zeroPriceOkay' )
                         , suggestedButtonOrder: gacha.get( 'suggestedButtonOrder' )
                         , ignoreButtonsOutOfOrder: gacha.get( 'ignoreButtonsOutOfOrder' )
