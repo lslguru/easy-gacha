@@ -111,6 +111,8 @@ float TotalEffectiveRarity; // Updated when Rarity or Limit are updated
 integer CountItems; // Updated when Items is updated
 integer CountPayouts; // Updated when Payouts is updated - total elements, not stride elements
 
+integer itemIndex;
+
 ////////////////////////////////////////////////////////////////////////////
 // Application
 ////////////////////////////////////////////////////////////////////////////
@@ -144,7 +146,7 @@ RequestUrl() {
     Update();
 }
 
-integer ItemUsable( integer itemIndex ) {
+integer ItemUsable() {
     string inventoryName = llList2String( Items , itemIndex );
     integer limit = llList2Integer( Limit , itemIndex );
 
@@ -173,14 +175,13 @@ Update() {
     TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
 
     // Build total rarity and limit
-    integer itemIndex;
     TotalLimit = 0;
     TotalEffectiveRarity = 0.0;
     HasNoCopyItemsForSale = FALSE;
     for( itemIndex = 0 ; itemIndex < CountItems ; ++itemIndex ) {
         // If the item is usable, meaning exists and has rarity and is
         // transferable, etc...
-        if( ItemUsable( itemIndex ) ) {
+        if( ItemUsable() ) {
             // Add to total rarity
             TotalEffectiveRarity += llList2Float( Rarity , itemIndex );
 
@@ -374,7 +375,6 @@ Play( key buyerId , integer lindensReceived ) {
     // guaranteed to happen
     list itemsToSend = []; // We have to pass a list to llGiveInventoryList... in for a penny, in for a pound!
     float random;
-    integer itemIndex;
     while( llGetListLength( itemsToSend ) < totalItems ) {
         // Indicate our progress
         Hover( "Please wait, getting random item " + (string)llGetListLength( itemsToSend ) + " of " + (string)totalItems + " for: " + displayName );
@@ -385,7 +385,7 @@ Play( key buyerId , integer lindensReceived ) {
         // Find the item's index
         for( itemIndex = 0 ; itemIndex < CountItems && random > 0.0 ; ++itemIndex ) {
             // Only items which are usable are considered
-            if( ItemUsable( itemIndex ) ) {
+            if( ItemUsable() ) {
                 // Decrement the random number
                 random -= llList2Float( Rarity , itemIndex );
             }
@@ -402,7 +402,7 @@ Play( key buyerId , integer lindensReceived ) {
         ++TotalBought;
 
         // If it's no longer usable (inventory has run out)
-        if( ! ItemUsable( itemIndex ) ) {
+        if( ! ItemUsable() ) {
             // Reduce rarity total
             TotalEffectiveRarity -= llList2Float( Rarity , itemIndex );
         }
