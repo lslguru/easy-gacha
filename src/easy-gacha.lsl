@@ -198,43 +198,33 @@ Update() {
         }
     }
 
-    // Default to false
-    Ready = FALSE;
+    // Conditions which make it go offline. If any of these fail, fall
+    // back to false
+    if(
+        // First most basic one, if we're not configured, we cannot be
+        // ready
+        ( !Configured )
 
-    // If UI thinks we're ready
-    if( Configured ) {
-        // Default to true
+        // If we're collecting any amount of money, we need to get
+        // debit permission to be able to give change
+        || ( TotalPrice && !HasPermission )
+
+        // This can occur even if all items are unlimited in quantity
+        || ( -1 != MaxBuys && TotalBought >= MaxBuys )
+
+        // If no items are effective, they've either run out of
+        // inventory, don't exist, or are not transferable...
+        || ( 0.0 == TotalEffectiveRarity )
+
+        // If we're in group-only mode but no group was set...
+        || ( Group && llSameGroup( NULL_KEY ) )
+
+        // If we're in imminent danger of running out of memory
+        || ( llGetFreeMemory() < 4096 /*LOW_MEMORY*/ )
+    ) {
+        Ready = FALSE;
+    } else {
         Ready = TRUE;
-
-        // Conditions which make it go offline. If any of these fail, fall
-        // back to false
-
-        if( TotalPrice && !HasPermission ) {
-            // If we're collecting any amount of money, we need to get
-            // debit permission to be able to give change
-            Ready = FALSE;
-        }
-
-        if( -1 != MaxBuys && TotalBought >= MaxBuys ) {
-            // This can occur even if all items are unlimited in quantity
-            Ready = FALSE;
-        }
-
-        if( 0.0 == TotalEffectiveRarity ) {
-            // If no items are effective, they've either run out of
-            // inventory, don't exist, or are not transferable...
-            Ready = FALSE;
-        }
-
-        if( Group && llSameGroup( NULL_KEY ) ) {
-            // If we're in group-only mode but no group was set...
-            Ready = FALSE;
-        }
-
-        if( llGetFreeMemory() < 4096 /*LOW_MEMORY*/ ) {
-            // If we're in imminent danger of running out of memory
-            Ready = FALSE;
-        }
     }
 
     // Default values of these variables are to not show pay buttons.
