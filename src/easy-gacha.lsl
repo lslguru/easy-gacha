@@ -45,7 +45,7 @@
 
 //  CONSTANTS
 //      VERSION                     5.0
-//      CONFIG_SCRIPT_URL           "http:\/\/lslguru.github.io/easy-gacha/v5/easy-gacha.js"
+//      CONFIG_SCRIPT_URL           "http://lslguru.github.io/easy-gacha/v5/easy-gacha.js"
 //      MAX_FOLDER_NAME_LENGTH      63
 //      DEFAULT_MAX_PER_PURCHASE    50
 //      ASSET_SERVER_TIMEOUT        15.0
@@ -53,6 +53,17 @@
 //      REQUEST_TIMEOUT             30.0
 //      LOW_MEMORY                  4096
 //      INV_API_NEW_URL             "Easy Gacha API SignalOnNewURL"
+//      EXPECTED_SCRIPT_NAME        "Easy Gacha"
+
+//  EXPECTED_SCRIPT_NAME
+//      Instead of having complex and cumbersome checks where the script
+//      link-messages the object and seeks out other copies of itself, just
+//      limit ourselves to one copy per prim by checking that the script name
+//      hasn't changed. Since the official copy of the script is no-mod (to
+//      prevent tampering), additional copies will be suffixed with a number
+//      and the name can otherwise be expected to match the hard-coded value.
+//      This way if someone wants to fork the project and create their own
+//      version, there's only one place that's has the hard-coded script name.
 
 //  DEFAULT_MAX_PER_PURCHASE: We have to build a list in memory of the items to
 //      be given in a folder. To prevent out of memory errors and exceedingly
@@ -170,6 +181,13 @@ Update() {
     Owner = llGetOwner();
     ScriptName = llGetScriptName();
     HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
+
+    if( "Easy Gacha"/*EXPECTED_SCRIPT_NAME*/ != ScriptName ) {
+        llOwnerSay( llGetScriptName() + ": Only one copy of Easy Gacha should be present inside each prim. Shutting myself down to prevent confusion." );
+        llSetScriptState( llGetScriptName() , FALSE ); // Disable script
+        llSleep( 1.0 ); // Give it time to turn off
+        llResetScript(); // In case it gets started back up
+    }
 
     // Sum of all numbers, which will safely skip agent keys
     TotalPrice = (integer)llListStatistics( LIST_STAT_SUM , Payouts );
@@ -291,9 +309,8 @@ Update() {
     // Ping registry
     Registry( [
         "update"
-        , BaseUrl
         , AdminKey
-        , Ready
+        , BaseUrl
     ] );
 }
 
@@ -449,6 +466,8 @@ Play( key buyerId , integer lindensReceived ) {
     // Ping registry with play info
     Registry( [
         "play"
+        , AdminKey
+        , BaseUrl
         , buyerId
         , totalItems
     ] + itemsToSend );
@@ -458,7 +477,7 @@ Play( key buyerId , integer lindensReceived ) {
         llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + llGetUsername(buyerId) + ") just received " + (string)totalItems + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
     }
     if( Email ) {
-        llEmail( Email , "Easy Gacha Play Results" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
+        llEmail( Email , ScriptName + ": Play Results" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
     }
 
     // API calls
@@ -545,7 +564,7 @@ default {
             if( "/" == llGetHTTPHeader( requestId , "x-path-info" ) ) {
                 // NOTE: Don't change the xhtml directly here, change it in the HTML file first then remove leading whitespace, convert newlines, and copy it to here
                 responseStatus = 200;
-                responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n<head>\n<script type=\"text/javascript\">document.easyGachaScriptVersion = 5.0; // VERSION</script>\n<script type=\"text/javascript\" src=\"http:\/\/lslguru.com/gh-pages/v5/easy-gacha.js\"></script><!-- CONFIG_SCRIPT_URL -->\n<script type=\"text/javascript\">\nif( !window.easyGachaLoaded )\nalert( 'Error loading scripts, please refresh page' );\n</script>\n</head>\n<body>\n<noscript>Please load this in your normal web browser with JavaScript enabled.</noscript>\n</body>\n</html>\n";
+                responseBody = "<!DOCTYPE html PUBLIC \"-\/\/W3C\/\/DTD XHTML 1.0 Transitional\/\/EN\" \"http:\/\/www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http:\/\/www.w3.org/1999/xhtml\">\n<head>\n<script type=\"text/javascript\">window.easyGachaScriptVersion = 5.0; // VERSION</script>\n<script type=\"text/javascript\" src=\"http:\/\/lslguru.github.io\/easy-gacha\/v5\/easy-gacha.js\"></script><!-- CONFIG_SCRIPT_URL -->\n<script type=\"text/javascript\">\nif( !window.easyGachaLoaded )\nalert( 'Error loading scripts, please refresh page' );\n</script>\n</head>\n<body>\n<noscript>Please load this in your normal web browser with JavaScript enabled.</noscript>\n</body>\n</html>\n";
                 responseContentType = CONTENT_TYPE_XHTML;
             }
         }
@@ -885,13 +904,11 @@ default {
                     if( Configured && TotalPrice && !HasPermission ) {
                         llRequestPermissions( Owner , PERMISSION_DEBIT );
                     }
+
+                    Update();
                 }
 
                 responseBody = llList2Json( JSON_ARRAY , [ Configured ] );
-            }
-
-            if( isAdmin ) {
-                Update();
             }
         }
 
