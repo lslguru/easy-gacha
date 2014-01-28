@@ -615,7 +615,7 @@ default {
                         Limit += [ llList2Integer( requestBodyParts , 2 ) ];
                         Bought += [ 0 ]; // Placeholder for counter
                         ++CountItems;
-                        requestBodyParts = [ CountItems - 1 ];
+                        requestBodyPart0Int = CountItems - 1;
                     }
 
                     if( 2 == verb ) {
@@ -667,7 +667,7 @@ default {
                         ];
 
                         CountPayouts += 2;
-                        requestBodyParts = [ ( CountPayouts / 2 ) - 1 ];
+                        requestBodyPart0Int = ( CountPayouts / 2 ) - 1;
                     }
 
                     if( 2 == verb ) {
