@@ -121,7 +121,9 @@ define( [
                     } );
                 }
                 subviewConfig.instance = new subviewConfig.view( opts );
-                this.listenTo( subviewConfig.instance , 'updateTabStatus' , _.partial( this.updateTabStatus , subviewName ) );
+
+                // Listen for warning/danger
+                this.listenTo( this.model , 'change:hasWarning_' + subviewName + ' change:hasDanger_' + subviewName , this.updateTabStatuses );
 
                 // Region
                 this[ subviewName ].show( subviewConfig.instance );
@@ -143,18 +145,15 @@ define( [
             this.listenTo( this.options.app.vent , 'lslScriptReset' , this.resetOccurred );
         }
 
-        , updateTabStatus: function( tabName , newStatus ) {
-            var tabUi = this.ui[ tabName ];
+        , updateTabStatuses: function() {
+            _.each( this.subviews , function( subviewConfig , subviewName ) {
+                var hasWarning = this.model.get( 'hasWarning_' + subviewName );
+                var hasDanger = this.model.get( 'hasDanger_' + subviewName );
+                var tabUiColorize = this.ui[ subviewName ].find( '.colorize' );
 
-            _.each( ( tabUi.attr( 'class' ) || '' ).split( /\s+/ ) , function( className ) {
-                if( /^text-/.test( className ) ) {
-                    tabUi.removeClass( className );
-                }
+                tabUiColorize.toggleClass( 'text-danger' , Boolean( hasDanger ) );
+                tabUiColorize.toggleClass( 'text-warning' , Boolean( !hasDanger && hasWarning ) );
             } , this );
-
-            if( null !== newStatus ) {
-                tabUi.addClass( 'text-' + newStatus );
-            }
         }
 
         , resetOccurred: function() {

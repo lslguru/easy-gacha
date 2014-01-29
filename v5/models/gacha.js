@@ -13,6 +13,7 @@ define( [
     , 'models/agents-cache'
     , 'models/base-sl-model'
     , 'lib/constants'
+    , 'backbone'
 
 ] , function(
 
@@ -29,6 +30,7 @@ define( [
     , agentsCache
     , BaseSlModel
     , CONSTANTS
+    , Backbone
 
 ) {
     'use strict';
@@ -48,6 +50,8 @@ define( [
             , agentsCache: agentsCache
             , hasChangesToSave: false
             , autoModified: null
+            , uiVersion: 5
+            , scriptVersion: null
 
             // From models/info
             , isAdmin: null
@@ -91,6 +95,7 @@ define( [
             , suggestedButtonOrder: null
             , ignoreButtonsOutOfOrder: false
             , ackNoCopyItemsMeansSingleItemPlay: false
+            , ackEmailSlowness: false
 
             // From models/config
             , folderForSingleItem: null
@@ -107,7 +112,6 @@ define( [
             , apiPurchasesEnabled: null
             , apiItemsGivenEnabled: null
             , rootClickActionNeeded: false
-            , ackEmailSlowness: false
 
             // From models/email
             , email: null
@@ -134,11 +138,33 @@ define( [
             , totalItemsMod: 0
             , totalItemsTrans: 0
 
-            // Warnings and Dangers
+            // Warnings and Dangers:
+            // {hasWarning|hasDanger}_{viewName}_{valueName} = {true|false}
+            , hasDanger: false
+            , hasDanger_advanced_maxBuysLimit: false
+            , hasDanger_advanced_maxPerPurchase: false
+            , hasDanger_advanced_rootClickActionNeeded: false
+            , hasDanger_comms_email: false
+            , hasDanger_items_totalRarity: false
+            , hasDanger_payout_amount: false
+            , hasDanger_price_0: false
+            , hasDanger_price_1: false
+            , hasDanger_price_2: false
+            , hasDanger_price_3: false
+            , hasDanger_price_confirmZeroPrice: false
+            , hasDanger_price_default: false
+            , hasDanger_price_hasPaymentOptions: false
+            , hasDanger_price_price: false
+            , hasWarning: false
+            , hasWarning_comms_emailSlowness: false
+            , hasWarning_price_buttonOrder: false
+            , hasWarning_price_noCopyObjects: false
         }
 
         , includeInNotecard: [
-            'button_price'
+            'uiVersion'
+            , 'scriptVersion'
+            , 'button_price'
             , 'button_default'
             , 'button_0'
             , 'button_1'
@@ -293,6 +319,13 @@ define( [
         }
 
         , initialize: function() {
+            /////// Context ///////
+
+            // These happen very often due to wide-open bindings
+            this.updateHasChangesToSave = _.debounce( this.updateHasChangesToSave , 1 );
+            this.updateConfigured = _.debounce( this.updateConfigured , 1 );
+            this.updateWarningDanger = _.debounce( this.updateWarningDanger , 1 );
+
             /////// Sub-Models ///////
 
             this.submodels = {};
@@ -341,6 +374,7 @@ define( [
 
             this.on( 'all' , this.updateHasChangesToSave , this );
             this.on( 'all' , this.updateConfigured , this );
+            this.on( 'all' , this.updateWarningDanger , this );
 
             /////// Init ///////
 
@@ -860,6 +894,43 @@ define( [
                     , sortRarity: sortRarity
                 } );
             } , this );
+        }
+
+        , getWarningDangerSet: function( testObj ) {
+            // Three-parts: hasWarning/hasDanger, section, item
+            var regex = /^has(Warning|Danger)_[^_]+_/;
+
+            var set = {};
+            var mergeIntoSet = function( value , key ) {
+                key = key.split( '_' );
+                set[ key[ 0 ] ] = set[ key[ 0 ] ] || value;
+
+                key.pop();
+                key = key.join( '_' );
+                set[ key ] = set[ key ] || value;
+            };
+
+            if( testObj instanceof Backbone.Collection ) {
+                testObj.each( function( model ) {
+                    _.each( this.getWarningDangerSet( model ) , mergeIntoSet );
+                } , this );
+            }
+
+            if( testObj instanceof Backbone.Model ) {
+                _.each( testObj.attributes , function( value , key ) {
+                    if( regex.test( key ) ) {
+                        mergeIntoSet( value , key );
+                    } else {
+                        _.each( this.getWarningDangerSet( value ) , mergeIntoSet );
+                    }
+                } , this );
+            }
+
+            return set;
+        }
+
+        , updateWarningDanger: function() {
+            this.set( this.getWarningDangerSet( this ) );
         }
 
     } );

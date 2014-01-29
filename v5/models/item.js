@@ -48,6 +48,11 @@ define( [
             , groupPermissions: null
             , publicPermissions: null
             , nextPermissions: null
+
+            // Warnings and Dangers:
+            // {hasWarning|hasDanger}_{viewName}_{valueName} = {true|false}
+            , hasDanger_item_rarity: false
+            , hasDanger_item_limit: false
         }
 
         , initialize: function() {

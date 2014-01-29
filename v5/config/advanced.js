@@ -115,6 +115,9 @@ define( [
         }
 
         , updateMaxBuys: function() {
+            this.ui.maxBuysLimit.parent().removeClass( 'has-error' );
+            this.model.set( 'hasDanger_advanced_maxBuysLimit' , false );
+
             if( -1 == this.model.get( 'maxBuys' ) ) {
                 this.ui.maxBuysUnlimited.addClass( 'active' );
                 this.ui.maxBuysLimited.removeClass( 'active' );
@@ -126,14 +129,12 @@ define( [
                 this.ui.maxBuysLimit.prop( 'disabled' , '' );
                 this.ui.maxBuysLimit.val( this.model.get( 'maxBuys' ) );
             }
-
-            this.ui.maxBuysLimit.parent().removeClass( 'has-error' );
         }
 
         , toggleMaxBuysLimited: function( jEvent ) {
             var target = $( jEvent.currentTarget );
             if( target.data( 'limited' ) ) {
-                this.model.set( 'maxBuys' , 0 );
+                this.model.set( 'maxBuys' , 1 );
             } else {
                 this.model.set( 'maxBuys' , -1 );
             }
@@ -152,21 +153,32 @@ define( [
             // Make sure it's a number
             if( _.isNaN( newValue ) ) {
                 this.ui.maxBuysLimit.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_advanced_maxBuysLimit' , true );
                 return;
             }
 
             // If out of bounds
-            if( newValue < 0 ) {
+            if( newValue < 1 ) {
                 this.ui.maxBuysLimit.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_advanced_maxBuysLimit' , true );
+                return;
+            }
+
+            // If parsed doesn't match entered
+            if( newValue != this.ui.maxBuysLimit.val() ) {
+                this.ui.maxBuysLimit.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_advanced_maxBuysLimit' , true );
                 return;
             }
 
             this.model.set( 'maxBuys' , newValue );
+            this.updateMaxBuys(); // Model may not fire change even if value is the same
         }
 
         , updateMaxPerPurchase: function() {
             this.ui.maxPerPurchase.val( this.model.get( 'maxPerPurchase' ) );
             this.ui.maxPerPurchase.parent().removeClass( 'has-error' );
+            this.model.set( 'hasDanger_advanced_maxPerPurchase' , false );
         }
 
         , setMaxPerPurchase: function( jEvent ) {
@@ -176,18 +188,26 @@ define( [
             // Make sure it's a number
             if( _.isNaN( newValue ) ) {
                 this.ui.maxPerPurchase.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_advanced_maxPerPurchase' , true );
                 return;
-            } else {
-                this.ui.maxPerPurchase.parent().removeClass( 'has-error' );
             }
 
             // If out of bounds
             if( newValue < 1 || newValue > CONSTANTS.MAX_PER_PURCHASE ) {
                 this.ui.maxPerPurchase.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_advanced_maxPerPurchase' , true );
+                return;
+            }
+
+            // If value doesn't equal parsed value
+            if( newValue != this.ui.maxPerPurchase.val() ) {
+                this.ui.maxPerPurchase.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_advanced_maxPerPurchase' , true );
                 return;
             }
 
             this.model.set( 'maxPerPurchase' , newValue );
+            this.updateMaxPerPurchase();
         }
 
         , updateGroup: function() {
@@ -211,11 +231,7 @@ define( [
             this.ui.rootClickOn.toggleClass( 'active' , ( 1 === this.model.get( 'rootClickAction' ) ) );
 
             fade( this.ui.rootClickWarning , this.model.get( 'rootClickActionNeeded' ) );
-            this.trigger( 'updateTabStatus' , (
-                this.model.get( 'rootClickActionNeeded' )
-                ? 'danger'
-                : null
-            ) );
+            this.model.set( 'hasDanger_advanced_rootClickActionNeeded' , this.model.get( 'rootClickActionNeeded' ) );
         }
 
         , updateApiPerPlay: function() {

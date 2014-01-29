@@ -67,6 +67,7 @@ define( [
 
         , updateAmount: function() {
             this.ui.amount.parent().removeClass( 'has-error' );
+            this.model.set( 'hasDanger_payout_amount' , false );
 
             if( this.ui.amount.val() != this.model.get( 'amount' ) ) {
                 this.ui.amount.val( this.model.get( 'amount' ) );
@@ -74,6 +75,7 @@ define( [
 
             if( 0 > this.model.get( 'amount' ) ) {
                 this.ui.amount.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_payout_amount' , true );
             }
         }
 
@@ -87,11 +89,19 @@ define( [
 
             if( _.isNaN( val ) ) {
                 this.ui.amount.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_payout_amount' , true );
                 return;
             }
 
             if( 0 > val ) {
                 this.ui.amount.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_payout_amount' , true );
+                return;
+            }
+
+            if( val != target.val() ) {
+                this.ui.amount.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_payout_amount' , true );
                 return;
             }
 

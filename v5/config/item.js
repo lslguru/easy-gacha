@@ -159,15 +159,18 @@ define( [
 
             if( _.isNaN( rarity ) ) {
                 this.ui.rarityField.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_item_rarity' , true );
                 return;
             }
 
             if( 0 > rarity ) {
                 this.ui.rarityField.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_item_rarity' , true );
                 return;
             }
 
             this.ui.rarityField.parent().removeClass( 'has-error' );
+            this.model.set( 'hasDanger_item_rarity' , false );
             this.model.set( 'rarity' , rarity );
         }
 
@@ -224,20 +227,24 @@ define( [
 
             if( _.isNaN( limit ) ) {
                 this.ui.limitField.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_item_limit' , true );
                 return;
             }
 
             if( 0 > limit ) {
                 this.ui.limitField.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_item_limit' , true );
                 return;
             }
 
             if( this.ui.limitField.val() != limit ) {
                 this.ui.limitField.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_item_limit' , true );
                 return;
             }
 
             this.ui.limitField.parent().removeClass( 'has-error' );
+            this.model.set( 'hasDanger_item_limit' , false );
             this.model.set( 'limit' , limit );
         }
 

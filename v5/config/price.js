@@ -117,9 +117,6 @@ define( [
         }
 
         , updateDisplay: function() {
-            var warningStatus = false;
-            var dangerStatus = false;
-
             var button_price = this.model.get( 'button_price' );
 
             if( '' === this.ui.button_price.val() || button_price != this.ui.button_price.val() ) {
@@ -135,12 +132,9 @@ define( [
                 button_price_has_error = true;
             }
 
-            if( button_price_has_error ) {
-                dangerStatus = true;
-                button_price = 0;
-            }
-
+            button_price = ( button_price_has_error ? 0 : button_price );
             this.ui.button_price.parent().toggleClass( 'has-error' , button_price_has_error );
+            this.model.set( 'hasDanger_price_price' , button_price_has_error );
 
             // Placeholder
             var hasPaymentOptions = false;
@@ -169,9 +163,7 @@ define( [
                     }
 
                     button_el.parent().toggleClass( 'has-error' , hasError );
-                    if( hasError ) {
-                        dangerStatus = true;
-                    }
+                    this.model.set( 'hasDanger_price_' + button , hasError );
 
                     if( 0 < button_val ) {
                         hasPaymentOptions = true;
@@ -190,9 +182,7 @@ define( [
                 } , this );
 
                 // Show no-payments warning
-                if( !hasPaymentOptions ) {
-                    dangerStatus = true;
-                }
+                this.model.set( 'hasDanger_price_hasPaymentOptions' , !hasPaymentOptions );
 
                 // Set the example-area owner name to the actual owner of this object
                 this.ui.payPreviewName.text( this.model.get( 'ownerDisplayName' ) + ' (' + this.model.get( 'ownerUserName' ) + ')' );
@@ -207,37 +197,29 @@ define( [
             // Show the zero-price message if needed
             if( 0 === this.model.get( 'button_price' ) && !this.model.get( 'zeroPriceOkay' ) ) {
                 fade( this.ui.payPriceZeroWarning , true );
-                dangerStatus = true;
+                this.model.set( 'hasDanger_price_confirmZeroPrice' , true );
             } else {
                 fade( this.ui.payPriceZeroWarning , false );
+                this.model.set( 'hasDanger_price_confirmZeroPrice' , false );
             }
 
             // Show or hide the button-out-of-order message
             if( 0 !== this.model.get( 'button_price' ) && null !== this.model.get( 'suggestedButtonOrder' ) && !this.model.get( 'ignoreButtonsOutOfOrder' ) ) {
                 fade( this.ui.buttonOrderWarning , true );
-                warningStatus = true;
+                this.model.set( 'hasWarning_price_buttonOrder' , true );
             } else {
                 fade( this.ui.buttonOrderWarning , false );
+                this.model.set( 'hasWarning_price_buttonOrder' , false );
             }
 
             // Show or hide the limited play message
             if( 0 !== this.model.get( 'button_price' ) && this.model.get( 'willHandOutNoCopyObjects' ) && !this.model.get( 'ackNoCopyItemsMeansSingleItemPlay' ) ) {
                 fade( this.ui.oneItemModeWarning , true );
-                warningStatus = true;
+                this.model.set( 'hasWarning_price_noCopyObjects' , true );
             } else {
                 fade( this.ui.oneItemModeWarning , false );
+                this.model.set( 'hasWarning_price_noCopyObjects' , false );
             }
-
-            // Update tab
-            this.trigger( 'updateTabStatus' , (
-                dangerStatus
-                ? 'danger'
-                : (
-                    warningStatus
-                    ? 'warning'
-                    : null
-                )
-            ) );
         }
 
         , clearPayPriceWarning: function() {

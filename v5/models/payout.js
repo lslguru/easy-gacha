@@ -51,6 +51,10 @@ define( [
             , amount: null
             , userName: null
             , displayName: null
+
+            // Warnings and Dangers:
+            // {hasWarning|hasDanger}_{viewName}_{valueName} = {true|false}
+            , hasDanger_payout_amount: false
         }
 
         , parse: function( data ) {

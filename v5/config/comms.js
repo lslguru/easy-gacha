@@ -104,18 +104,15 @@ define( [
 
             this.ui.email.parent().removeClass( 'has-error' );
             this.ui.email.val( this.model.get( 'email' ) );
+            this.model.set( 'hasDanger_comms_email' , false );
 
-            var warningNeeded = (
+            var emailSlowWarning = (
                 '' !== this.model.get( 'email' )
                 && !this.model.get( 'ackEmailSlowness' )
             );
 
-            fade( this.ui.emailIsSlowWarning , warningNeeded );
-            this.trigger( 'updateTabStatus' , (
-                warningNeeded
-                ? 'warning'
-                : null
-            ) );
+            fade( this.ui.emailIsSlowWarning , emailSlowWarning );
+            this.model.set( 'hasWarning_comms_emailSlowness' , emailSlowWarning );
         }
 
         , clearEmail: function() {
@@ -132,8 +129,10 @@ define( [
         , updateEmail: function() {
             if( '' !== this.ui.email.val() && ! validateEmailAddress( this.ui.email.val() ) ) {
                 this.ui.email.parent().addClass( 'has-error' );
+                this.model.set( 'hasDanger_comms_email' , true );
             } else {
                 this.ui.email.parent().removeClass( 'has-error' );
+                this.model.set( 'hasDanger_comms_email' , false );
                 this.model.set( 'email' , this.ui.email.val() );
             }
         }

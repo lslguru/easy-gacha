@@ -143,10 +143,8 @@ define( [
         }
 
         , updateDisplay: function() {
-            var dangerStatus = false;
-
             fade( this.ui.noItemsWarning , !Boolean( this.model.get( 'totalRarity' ) ) );
-            dangerStatus = dangerStatus || !Boolean( this.model.get( 'totalRarity' ) );
+            this.model.set( 'hasDanger_items_totalRarity' , !Boolean( this.model.get( 'totalRarity' ) ) );
 
             // Update totals
             this.ui.totalItemsCount.text( this.model.get( 'totalItems' ) );
@@ -176,13 +174,6 @@ define( [
             // Update checkbox stuff
             fade( this.ui.batchActionsContainer , this.model.get( 'anySelectedForBatchOperation' ) );
             this.ui.selectAllCheckbox.prop( 'checked' , this.model.get( 'allSelectedForBatchOperation' ) );
-
-            // Update tab
-            this.trigger( 'updateTabStatus' , (
-                dangerStatus
-                ? 'danger'
-                : null
-            ) );
         }
 
         , toggleAllSelections: function() {

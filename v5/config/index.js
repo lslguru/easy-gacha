@@ -81,7 +81,10 @@ define( [
         , onRender: function() {
             this.options.lookupAgentDialog = this.lookupAgentDialog;
 
-            this.model = new Gacha();
+            this.model = new Gacha( {
+                scriptVersion: window.easyGachaScriptVersion
+            } );
+
             this.options.model = this.model;
             this.options.gacha = this.model;
             window.gacha = this.model;
