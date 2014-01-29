@@ -4,6 +4,7 @@ define( [
     , 'jquery'
     , 'marionette'
     , 'hbs!config/templates/import'
+    , 'hbs!config/templates/import-alert'
     , 'css!config/styles/import'
     , 'bootstrap'
     , 'lib/constants'
@@ -18,6 +19,7 @@ define( [
     , $
     , Marionette
     , template
+    , alertTemplate
     , headerStyles
     , bootstrap
     , CONSTANTS
@@ -133,12 +135,10 @@ define( [
                 fade( this.ui.progressArea , false );
                 fade( this.ui.inputArea , true );
 
-                this.ui.progressResultAlert.html(
-                    '<div class="alert alert-' + alertType + ' alert-dismissable" xmlns="http://www.w3.org/1999/xhtml">'
-                        + '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&#215;</button>'
-                        + message
-                    + '</div>'
-                );
+                this.ui.progressResultAlert.html( alertTemplate( {
+                    alertType: alertType
+                    , message: message
+                } ) );
             } , this );
 
             var notecard = new Notecard( {

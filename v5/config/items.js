@@ -143,8 +143,9 @@ define( [
         }
 
         , updateDisplay: function() {
-            fade( this.ui.noItemsWarning , !Boolean( this.model.get( 'totalRarity' ) ) );
-            this.model.set( 'hasDanger_items_totalRarity' , !Boolean( this.model.get( 'totalRarity' ) ) );
+            fade( this.ui.noItemsWarning , Boolean( this.model.get( 'totalItems' ) && !Boolean( this.model.get( 'totalRarity' ) ) ) );
+            this.model.set( 'hasDanger_items_totalRarity' , Boolean( this.model.get( 'totalItems' ) && !Boolean( this.model.get( 'totalRarity' ) ) ) );
+            this.model.set( 'hasDanger_items_noItems' , !Boolean( this.model.get( 'totalItems' ) ) );
 
             // Update totals
             this.ui.totalItemsCount.text( this.model.get( 'totalItems' ) );

@@ -181,15 +181,13 @@ define( [
 
                 } , this );
 
-                // Show no-payments warning
-                this.model.set( 'hasDanger_price_hasPaymentOptions' , !hasPaymentOptions );
-
                 // Set the example-area owner name to the actual owner of this object
                 this.ui.payPreviewName.text( this.model.get( 'ownerDisplayName' ) + ' (' + this.model.get( 'ownerUserName' ) + ')' );
             }
 
             // If there are payment options
             fade( this.ui.noPaymentsWarning , ( 0 !== button_price && !hasPaymentOptions ) );
+            this.model.set( 'hasDanger_price_hasPaymentOptions' , ( 0 !== button_price && !hasPaymentOptions ) );
 
             // If it should be hidden
             fade( this.ui.priceButtonsContainer , ( 0 !== button_price ) );

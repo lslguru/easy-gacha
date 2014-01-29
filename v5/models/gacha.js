@@ -145,6 +145,7 @@ define( [
             , hasDanger_advanced_maxPerPurchase: false
             , hasDanger_advanced_rootClickActionNeeded: false
             , hasDanger_comms_email: false
+            , hasDanger_items_noItems: false
             , hasDanger_items_totalRarity: false
             , hasDanger_payout_amount: false
             , hasDanger_price_0: false
@@ -688,7 +689,7 @@ define( [
 
             // TODO: payouts
 
-            // If they haven't acknowledge the warning
+            // If they haven't acknowledged the warning
             if( '' !== this.get( 'email' ) && !this.get( 'ackEmailSlowness' ) ) {
                 configured = false;
             }

@@ -46,18 +46,18 @@ define( [
             // Initialize probability numbers
             var rarityPercentage = this.model.get( 'lowRarityPercentage' );
             var boughtPercentage = this.model.get( 'boughtPercentage' );
-            var successBarPercentage = 0;
-            var dangerBarPercentage = 0;
+            var matchedBarPercentage = 0;
+            var differenceBarPercentage = 0;
             var rarityDisparityTargetSide = '';
 
             // Calculate green and red bars
             if( boughtPercentage < rarityPercentage ) {
-                successBarPercentage = boughtPercentage;
-                dangerBarPercentage = ( rarityPercentage - boughtPercentage );
+                matchedBarPercentage = boughtPercentage;
+                differenceBarPercentage = ( rarityPercentage - boughtPercentage );
                 rarityDisparityTargetSide = 'right';
             } else {
-                successBarPercentage = rarityPercentage;
-                dangerBarPercentage = ( boughtPercentage - rarityPercentage );
+                matchedBarPercentage = rarityPercentage;
+                differenceBarPercentage = ( boughtPercentage - rarityPercentage );
                 rarityDisparityTargetSide = 'left';
             }
 
@@ -69,8 +69,8 @@ define( [
                 inventory: inventory
                 , rarityPercentage: rarityPercentage
                 , boughtPercentage: boughtPercentage
-                , successBarPercentage: successBarPercentage
-                , dangerBarPercentage: dangerBarPercentage
+                , matchedBarPercentage: matchedBarPercentage
+                , differenceBarPercentage: differenceBarPercentage
                 , typeName: CONSTANTS.INVENTORY_TYPE_NAME[ this.model.get( 'type' ) ]
                 , rarityDisparityTargetSide: rarityDisparityTargetSide
             };
