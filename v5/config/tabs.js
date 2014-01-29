@@ -143,6 +143,8 @@ define( [
             this.ui[ this.defaultTab ].tab( 'show' );
 
             this.listenTo( this.options.app.vent , 'lslScriptReset' , this.resetOccurred );
+
+            this.updateTabStatuses();
         }
 
         , updateTabStatuses: function() {

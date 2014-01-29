@@ -2,3 +2,7 @@
 #page-config #total-unlimited-rarity-container {
     white-space: nowrap;
 }
+
+#page-config #ack-too-many-items {
+    float: right;
+}

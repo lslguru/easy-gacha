@@ -96,6 +96,7 @@ define( [
             , ignoreButtonsOutOfOrder: false
             , ackNoCopyItemsMeansSingleItemPlay: false
             , ackEmailSlowness: false
+            , ackManyItemsOkay: false
 
             // From models/config
             , folderForSingleItem: null
@@ -145,7 +146,7 @@ define( [
             , hasDanger_advanced_maxPerPurchase: false
             , hasDanger_advanced_rootClickActionNeeded: false
             , hasDanger_comms_email: false
-            , hasDanger_items_noItems: false
+            , hasDanger_items_noInv: false
             , hasDanger_items_totalRarity: false
             , hasDanger_payout_amount: false
             , hasDanger_price_0: false
@@ -186,6 +187,7 @@ define( [
             , 'payouts'
             , 'items'
             , 'ackEmailSlowness'
+            , 'ackManyItemsOkay'
             , 'apiPurchasesEnabled'
             , 'apiItemsGivenEnabled'
         ]
@@ -252,6 +254,7 @@ define( [
                         , ignoreButtonsOutOfOrder: gacha.get( 'ignoreButtonsOutOfOrder' )
                         , ackNoCopyItemsMeansSingleItemPlay: gacha.get( 'ackNoCopyItemsMeansSingleItemPlay' )
                         , ackEmailSlowness: gacha.get( 'ackEmailSlowness' )
+                        , ackManyItemsOkay: gacha.get( 'ackManyItemsOkay' )
                     } );
                 }
                 , name: 'Configuration'
@@ -324,7 +327,6 @@ define( [
 
             // These happen very often due to wide-open bindings
             this.updateHasChangesToSave = _.debounce( this.updateHasChangesToSave , 1 );
-            this.updateConfigured = _.debounce( this.updateConfigured , 1 );
             this.updateWarningDanger = _.debounce( this.updateWarningDanger , 1 );
 
             /////// Sub-Models ///////
@@ -374,7 +376,6 @@ define( [
             this.get( 'payouts' ).on( 'add remove reset change:amount' , this.recalculateOwnerAmount , this );
 
             this.on( 'all' , this.updateHasChangesToSave , this );
-            this.on( 'all' , this.updateConfigured , this );
             this.on( 'all' , this.updateWarningDanger , this );
 
             /////// Init ///////
@@ -645,63 +646,6 @@ define( [
             }
         }
 
-        , updateConfigured: function() {
-            var configured = true;
-
-            // If no items available
-            if( 0 === this.get( 'totalRarity' ) ) {
-                configured = false;
-            }
-
-            // Check price and buttons
-            var button_price = parseInt( this.get( 'button_price' ) , 10 );
-            if( _.isNaN( button_price ) ) {
-                configured = false;
-            } else if( 0 > button_price ) {
-                configured = false;
-            } else if( 0 === button_price && !this.get( 'zeroPriceOkay' ) ) {
-                configured = false;
-            } else if( 0 !== button_price ) {
-                var hasPaymentOptions = false;
-
-                _.each( [ 'default' , '0' , '1' , '2' , '3' ] , function( button ) {
-                    var button_val = parseInt( this.get( 'button_' + button ) , 10 );
-
-                    if( _.isNaN( button_val ) ) {
-                        configured = false;
-                    } else if( 0 > button_val ) {
-                        configured = false;
-                    } else if( CONSTANTS.MAX_PER_PURCHASE < button_val ) {
-                        configured = false;
-                    } else if( this.get( 'maxPerPurchase' ) < button_val ) {
-                        configured = false;
-                    }
-
-                    if( 0 < button_val ) {
-                        hasPaymentOptions = true;
-                    }
-                } , this );
-
-                if( !hasPaymentOptions ) {
-                    configured = false;
-                }
-            }
-
-            // TODO: payouts
-
-            // If they haven't acknowledged the warning
-            if( '' !== this.get( 'email' ) && !this.get( 'ackEmailSlowness' ) ) {
-                configured = false;
-            }
-
-            // Whether or not we're in the root prim and have made up our minds
-            if( this.get( 'rootClickActionNeeded' ) ) {
-                configured = false;
-            }
-
-            this.set( 'configured' , configured );
-        }
-
         , updateRootClickActionNeeded: function() {
             this.set( 'rootClickActionNeeded' , (
                 CONSTANTS.LINK_ROOT === this.get( 'scriptLinkNumber' )
@@ -935,6 +879,7 @@ define( [
 
         , updateWarningDanger: function() {
             this.set( this.getWarningDangerSet( this ) );
+            this.set( 'configured' , Boolean( !this.get( 'hasWarning' ) && !this.get( 'hasDanger' ) ) );
         }
 
     } );

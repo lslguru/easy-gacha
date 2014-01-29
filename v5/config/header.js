@@ -51,6 +51,7 @@ define( [
             , 'saveButtonMessageDangerChanges': '#save .danger-changes'
             , 'saveButtonMessageNoChanges': '#save .no-changes'
             , 'saveButtonMessageSaveChanges': '#save .save-changes'
+            , 'saveButtonMessageSuccessChanges': '#save .success-changes'
             , 'saveStatresetConfirmation': '#statreset-confirmation'
             , 'saveStatresetConfirm': '#statreset-confirm'
         }
@@ -72,6 +73,7 @@ define( [
             'change:hasChangesToSave': 'updateSaveButton'
             , 'change:hasWarning': 'updateSaveButton'
             , 'change:hasDanger': 'updateSaveButton'
+            , 'change:configured': 'updateSaveButton'
             , 'change:autoModified': 'toggleAutoModifiedMessage'
             , 'change:ackAutoModified': 'toggleAutoModifiedMessage'
         }
@@ -334,37 +336,34 @@ define( [
             this.ui.saveButton.removeClass( 'btn-danger' );
             this.ui.saveButton.removeClass( 'btn-warning' );
             this.ui.saveButton.removeClass( 'btn-primary' );
+            this.ui.saveButton.removeClass( 'btn-success' );
             this.ui.saveButton.removeClass( 'btn-default' );
             if( this.model.get( 'hasDanger' ) ) {
                 this.ui.saveButton.addClass( 'btn-danger' );
             } else if( this.model.get( 'hasWarning' ) ) {
                 this.ui.saveButton.addClass( 'btn-warning' );
-            } else if( this.model.get( 'hasChangesToSave' ) ) {
-                this.ui.saveButton.addClass( 'btn-primary' );
-            } else {
+            } else if( !this.model.get( 'hasChangesToSave' ) ) {
                 this.ui.saveButton.addClass( 'btn-default' );
+            } else if( this.model.get( 'configured' ) ) {
+                this.ui.saveButton.addClass( 'btn-success' );
+            } else {
+                this.ui.saveButton.addClass( 'btn-primary' );
             }
 
             this.ui.saveButton.prop( 'disabled' , Boolean( !this.model.get( 'hasChangesToSave' ) || this.model.get( 'hasDanger' ) ) );
 
+            fade( this.ui.saveButtonMessageDangerChanges , false );
+            fade( this.ui.saveButtonMessageNoChanges , false );
+            fade( this.ui.saveButtonMessageSaveChanges , false );
+            fade( this.ui.saveButtonMessageSuccessChanges , false );
             if( this.model.get( 'hasDanger' ) ) {
-                fade( this.ui.saveButtonMessageNoChanges , false , function() {
-                    fade( this.ui.saveButtonMessageSaveChanges , false , function() {
-                        fade( this.ui.saveButtonMessageDangerChanges , true );
-                    } , this );
-                } , this );
+                fade( this.ui.saveButtonMessageDangerChanges , true );
+            } else if( this.model.get( 'hasChangesToSave' ) && this.model.get( 'configured' ) ) {
+                fade( this.ui.saveButtonMessageSuccessChanges , true );
             } else if( this.model.get( 'hasChangesToSave' ) ) {
-                fade( this.ui.saveButtonMessageDangerChanges , false , function() {
-                    fade( this.ui.saveButtonMessageNoChanges , false , function() {
-                        fade( this.ui.saveButtonMessageSaveChanges , true );
-                    } , this );
-                } , this );
+                fade( this.ui.saveButtonMessageSaveChanges , true );
             } else {
-                fade( this.ui.saveButtonMessageDangerChanges , false , function() {
-                    fade( this.ui.saveButtonMessageSaveChanges , false , function() {
-                        fade( this.ui.saveButtonMessageNoChanges , true );
-                    } , this );
-                } , this );
+                fade( this.ui.saveButtonMessageNoChanges , true );
             }
         }
     } );

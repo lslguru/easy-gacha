@@ -46,6 +46,8 @@ define( [
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
             , 'noItemsWarning': '#no-items-selected-warning'
+            , 'tooManyItemsWarning': '#too-many-items-selected-warning'
+            , 'ackTooManyItemsButton': '#ack-too-many-items'
             , 'totalItemsCount': '#total-items-count'
             , 'totalItemsAvailableCount': '#total-items-available-count'
             , 'totalRarity': '#total-rarity'
@@ -93,6 +95,7 @@ define( [
             , 'change:countUnlimited': 'updateDisplay'
             , 'change:countLimited': 'updateDisplay'
             , 'change:totalBought': 'updateDisplay'
+            , 'change:ackManyItemsOkay': 'updateDisplay'
         }
 
         , events: {
@@ -108,6 +111,7 @@ define( [
             , 'click @ui.batchRaritySet': 'batchRaritySet'
             , 'keyup @ui.batchRarityField': 'batchRarityValidate'
             , 'change @ui.batchRarityField': 'batchRarityValidate'
+            , 'click @ui.ackTooManyItemsButton': 'ackTooManyItems'
         }
 
         , onRender: function() {
@@ -143,9 +147,15 @@ define( [
         }
 
         , updateDisplay: function() {
-            fade( this.ui.noItemsWarning , Boolean( this.model.get( 'totalItems' ) && !Boolean( this.model.get( 'totalRarity' ) ) ) );
-            this.model.set( 'hasDanger_items_totalRarity' , Boolean( this.model.get( 'totalItems' ) && !Boolean( this.model.get( 'totalRarity' ) ) ) );
-            this.model.set( 'hasDanger_items_noItems' , !Boolean( this.model.get( 'totalItems' ) ) );
+            this.model.set( 'hasDanger_items_noInv' , !Boolean( this.model.get( 'totalItems' ) ) );
+
+            var noItemsWarning = Boolean( this.model.get( 'totalItems' ) && !Boolean( this.model.get( 'totalRarity' ) ) );
+            fade( this.ui.noItemsWarning , noItemsWarning );
+            this.model.set( 'hasDanger_items_totalRarity' , noItemsWarning );
+
+            var tooManyItemsWarning = Boolean( this.model.get( 'totalItemsAvailable' ) > CONSTANTS.WARN_TOO_MANY_ITEMS && !this.model.get( 'ackManyItemsOkay' ) );
+            fade( this.ui.tooManyItemsWarning , tooManyItemsWarning );
+            this.model.set( 'hasDanger_items_tooMany' , tooManyItemsWarning );
 
             // Update totals
             this.ui.totalItemsCount.text( this.model.get( 'totalItems' ) );
@@ -175,6 +185,10 @@ define( [
             // Update checkbox stuff
             fade( this.ui.batchActionsContainer , this.model.get( 'anySelectedForBatchOperation' ) );
             this.ui.selectAllCheckbox.prop( 'checked' , this.model.get( 'allSelectedForBatchOperation' ) );
+        }
+
+        , ackTooManyItems: function() {
+            this.model.set( 'ackManyItemsOkay' , true );
         }
 
         , toggleAllSelections: function() {
