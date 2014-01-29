@@ -158,7 +158,7 @@ define( [
             }
 
             // If out of bounds
-            if( newValue < 1 ) {
+            if( newValue < 0 ) {
                 this.ui.maxBuysLimit.parent().addClass( 'has-error' );
                 this.model.set( 'hasDanger_advanced_maxBuysLimit' , true );
                 return;

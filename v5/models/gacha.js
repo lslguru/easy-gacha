@@ -820,8 +820,11 @@ define( [
 
                 if( trans || ( 0 !== item.get( 'limit' ) && 0 !== item.get( 'rarity' ) ) ) {
                     if( 0 !== item.get( 'limit' ) ) {
-                        ++totalItemsAvailable;
                         totalRarity += item.get( 'rarity' );
+
+                        if( 0 !== item.get( 'rarity' ) ) {
+                            ++totalItemsAvailable;
+                        }
 
                         if( !copy && item.get( 'rarity' ) ) {
                             willHandOutNoCopyObjects = true;

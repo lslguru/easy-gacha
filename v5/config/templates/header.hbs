@@ -1,8 +1,12 @@
+<div id="help-bubble-for-tooltips" data-toggle="tooltip" title="Many things here have extra information. If you need help, first try hovering your mouse over the thing that interests you.">
+    <i class="fa fa-question-circle"></i>
+</div>
 <div id="header" class="page-header clearfix">
     <div class="btn-group dropdown nav-links">
-        <button id="save" class="btn btn-primary" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and reload">
-            <span class="if-enabled"><i class="fa fa-floppy-o"></i> Save Changes</span>
-            <span class="if-disabled"><i class="fa fa-check-circle"></i> No Changes to Save</span>
+        <button id="save" class="btn">
+            <span class="danger-changes fade hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="Please correct the items in red first" disabled="disabled"><i class="fa fa-exclamation-triangle"></i> Cannot Save</span>
+            <span class="save-changes fade hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and reload"><i class="fa fa-floppy-o"></i> Save Changes</span>
+            <span class="no-changes fade hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="There are currently no changes. Therefore no save is necessary." disabled="disabled"><i class="fa fa-check-circle"></i> No Changes to Save</span>
         </button>
         <ul class="dropdown-menu" role="menu" aria-labelledby="header-menu-button">
             <li role="presentation" class="dropdown-header">This Gacha</li>
@@ -35,9 +39,6 @@
             Menu <span class="caret"></span>
         </button>
     </div>
-    <div class="nav-links" data-toggle="tooltip" data-tooltip-placement="left" title="Many things here have extra information. If you need help, first try hovering your mouse over the thing that interests you.">
-        <i class="fa fa-question-circle"></i>
-    </div>
     <div class="modal" id="reset-confirmation" tabindex="-1" role="dialog" aria-labelledby="reset-confirmation-label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content alert-danger">
@@ -69,6 +70,23 @@
                     <button class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <button id="reload-save-first" class="btn btn-default">Save and Reload</button>
                     <button id="reload-confirm" class="btn btn-primary">Reload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="statreset-confirmation" tabindex="-1" role="dialog" aria-labelledby="statreset-confirmation-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content alert-warning">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                    <h4 class="modal-title" id="statreset-confirmation-label"><i class="fa fa-exclamation-triangle"></i> Purchase Statistics Reset</h4>
+                </div>
+                <div class="modal-body">
+                    Saving changes will reset all purchased item counts. This also affects the remaining quantity of items.
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="statreset-confirm" class="btn btn-default">Save</button>
                 </div>
             </div>
         </div>

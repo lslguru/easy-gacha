@@ -3,11 +3,14 @@
     margin-left: 1em;
 }
 
-#page-config button.disabled .if-enabled {
-    display: none;
+#page-config #save {
+    margin-right: -1px; /* To compensate for hidden dropdown elements to the right of the button */
 }
-#page-config button:not(.disabled) .if-disabled {
-    display: none;
+
+#page-config #help-bubble-for-tooltips {
+    position: absolute;
+    right: 0.5em;
+    top: 0.5em;
 }
 
 #page-config #header .alert.sl-viewer-only .fa-info-circle {

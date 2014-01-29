@@ -42,12 +42,17 @@ define( [
             , 'reloadConfirmation': '#reload-confirmation'
             , 'reloadConfirmed': '#reload-confirm'
             , 'reloadSaveFirst': '#reload-save-first'
-            , 'saveButton': '#save'
             , 'dashboardButton': '#dashboard'
             , 'firstRunMessage': '#first-run-message'
             , 'firstRunMessageCloseButton': '#first-run-message .close'
             , 'navLinks': '.nav-links'
             , 'slViewerOnlyMessage': '.sl-viewer-only'
+            , 'saveButton': '#save'
+            , 'saveButtonMessageDangerChanges': '#save .danger-changes'
+            , 'saveButtonMessageNoChanges': '#save .no-changes'
+            , 'saveButtonMessageSaveChanges': '#save .save-changes'
+            , 'saveStatresetConfirmation': '#statreset-confirmation'
+            , 'saveStatresetConfirm': '#statreset-confirm'
         }
 
         , events: {
@@ -59,11 +64,14 @@ define( [
             , 'click @ui.resetButton': 'clickReset'
             , 'click @ui.resetConfirmed': 'confirmReset'
             , 'click @ui.saveButton': 'clickSave'
+            , 'click @ui.saveStatresetConfirm': 'confirmSave'
             , 'click @ui.firstRunMessageCloseButton': 'hideAutoModifiedMessage'
         }
 
         , modelEvents: {
             'change:hasChangesToSave': 'updateSaveButton'
+            , 'change:hasWarning': 'updateSaveButton'
+            , 'change:hasDanger': 'updateSaveButton'
             , 'change:autoModified': 'toggleAutoModifiedMessage'
             , 'change:ackAutoModified': 'toggleAutoModifiedMessage'
         }
@@ -171,6 +179,12 @@ define( [
             this.ui.dropdowns.dropdown();
 
             this.ui.dashboardConfirmation.toggleClass( 'fade' , !isSlViewer() ).modal( {
+                backdrop: true
+                , keyboard: true
+                , show: false
+            } );
+
+            this.ui.saveStatresetConfirmation.toggleClass( 'fade' , !isSlViewer() ).modal( {
                 backdrop: true
                 , keyboard: true
                 , show: false
@@ -286,27 +300,72 @@ define( [
             this.ui.dashboardConfirmation.modal( 'show' );
         }
 
-        , clickSave: function() {
-            if( this.model.get( 'configured' ) ) {
-                this.model.save( {} , {
-                    success: _.bind( function() {
-                        this.options.app.router.navigate( 'dashboard' , { trigger: true } );
-                    } , this )
-                } );
+        , confirmSave: function( jEvent ) {
+            var finish = _.bind( function() {
+                if( this.model.get( 'configured' ) ) {
+                    this.model.save( {} , {
+                        success: _.bind( function() {
+                            this.options.app.router.navigate( 'dashboard' , { trigger: true } );
+                        } , this )
+                    } );
+                } else {
+                    this.model.save( {} , { fetchAfter: true } );
+                }
+            } , this );
+
+            if( jEvent ) {
+                this.ui.saveStatresetConfirmation.one( 'hidden.bs.modal' , finish );
+                this.ui.saveStatresetConfirmation.modal( 'hide' );
             } else {
-                this.model.save( {} , { fetchAfter: true } );
+                finish();
             }
         }
 
+        , clickSave: function() {
+            if( ! this.model.get( 'totalBought' ) ) {
+                this.confirmSave();
+                return;
+            }
+
+            this.ui.saveStatresetConfirmation.modal( 'show' );
+        }
+
         , updateSaveButton: function() {
-            var enable = this.model.get( 'hasChangesToSave' );
+            this.ui.saveButton.removeClass( 'btn-danger' );
+            this.ui.saveButton.removeClass( 'btn-warning' );
+            this.ui.saveButton.removeClass( 'btn-primary' );
+            this.ui.saveButton.removeClass( 'btn-default' );
+            if( this.model.get( 'hasDanger' ) ) {
+                this.ui.saveButton.addClass( 'btn-danger' );
+            } else if( this.model.get( 'hasWarning' ) ) {
+                this.ui.saveButton.addClass( 'btn-warning' );
+            } else if( this.model.get( 'hasChangesToSave' ) ) {
+                this.ui.saveButton.addClass( 'btn-primary' );
+            } else {
+                this.ui.saveButton.addClass( 'btn-default' );
+            }
 
-            // TODO: If there are warnings change save button to btn-warning
-            // TODO: If there are errors, change save button to btn-danger and disable
-            // TODO: Update button message appropriately
+            this.ui.saveButton.prop( 'disabled' , Boolean( !this.model.get( 'hasChangesToSave' ) || this.model.get( 'hasDanger' ) ) );
 
-            this.ui.saveButton.toggleClass( 'disabled' , !enable );
-            this.ui.saveButton.prop( 'disabled' , !enable );
+            if( this.model.get( 'hasDanger' ) ) {
+                fade( this.ui.saveButtonMessageNoChanges , false , function() {
+                    fade( this.ui.saveButtonMessageSaveChanges , false , function() {
+                        fade( this.ui.saveButtonMessageDangerChanges , true );
+                    } , this );
+                } , this );
+            } else if( this.model.get( 'hasChangesToSave' ) ) {
+                fade( this.ui.saveButtonMessageDangerChanges , false , function() {
+                    fade( this.ui.saveButtonMessageNoChanges , false , function() {
+                        fade( this.ui.saveButtonMessageSaveChanges , true );
+                    } , this );
+                } , this );
+            } else {
+                fade( this.ui.saveButtonMessageDangerChanges , false , function() {
+                    fade( this.ui.saveButtonMessageSaveChanges , false , function() {
+                        fade( this.ui.saveButtonMessageNoChanges , true );
+                    } , this );
+                } , this );
+            }
         }
     } );
 
