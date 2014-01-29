@@ -15,25 +15,25 @@
     * Description: Git Commit ID
     * Anyone: -Copy
     * Group: -Share
-    * Next Owner: -Mod +Copy +Trans
+    * Next Owner: -Mod +Copy -Trans
     * Edit script: Paste correct contents
     * Edit script: Paste header configuration for server
-* Config Notecard
-    * Copy NotecardMaker's Template into object
-    * Name: Easy Gacha Config
-    * Description: Git Commit ID
-    * Anyone: -Copy
-    * Group: -Share
-    * Next Owner: +Mod +Copy +Trans
-    * Edit card: Paste correct contents
 * Readme Notecard
     * Use my own notecard
     * Name: Easy Gacha README
     * Description: Git Commit ID
     * Anyone: -Copy
     * Group: -Share
-    * Next Owner: -Mod +Copy +Trans
+    * Next Owner: -Mod +Copy -Trans
     * Edit card: Paste correct contents
+* Script Notecard
+    * Use my own notecard
+    * Name: Easy Gacha Source Code
+    * Description: Git Commit ID
+    * Anyone: -Copy
+    * Group: -Share
+    * Next Owner: -Mod +Copy -Trans
+    * Edit card: Paste easy-gacha.lsl contents
 
 ## Marketplace Listing ##
 
