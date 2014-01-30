@@ -121,6 +121,7 @@ integer HasNoCopyItemsForSale; // If ANY item with no-zero limit and rarity set 
 float TotalEffectiveRarity; // Updated when Rarity or Limit are updated
 integer CountItems; // Updated when Items is updated
 integer CountPayouts; // Updated when Payouts is updated - total elements, not stride elements
+integer LastPlay; // Make sure we don't get overloaded
 
 integer itemIndex;
 
@@ -989,7 +990,12 @@ default {
 
             // If we're up and running and free-to-play, then call play
             if( Ready && !TotalPrice ) {
-                Play( llDetectedKey( detected ) , 0 );
+                if( llGetUnixTime() != LastPlay ) {
+                    Play( llDetectedKey( detected ) , 0 );
+                    LastPlay = llGetUnixTime();
+                } else {
+                    llWhisper( 0 , ScriptName + ": Sorry, " + llGetDisplayName( llDetectedKey( detected ) ) + ", but someone else is currently playing this Gacha. Please wait one second and try again." );
+                }
             }
         }
 
