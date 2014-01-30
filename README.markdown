@@ -281,13 +281,6 @@ at the same time. That way you could drop in 10,000 items (would take a while
 to load...) and configure them ~100 at a time. Memory testing will indicate
 where the limits to number of configured items is.
 
-## Pinging registry ##
-
-Setting up a more complex timer to periodically ping the registry adds lag,
-increases complexity, and reduces available memory. The registry is instead
-programmed to double-check that the Easy Gacha still exists before responding
-to a search.
-
 ## Help Icons ##
 
 There would be so many of them scattered all over the screens that it would be

@@ -307,7 +307,7 @@ Update() {
         Hover( "Configuration needed, please touch this object" );
     }
 
-    // Ping registry
+    // Notify registry
     Registry( [
         "update"
         , AdminKey
@@ -918,14 +918,21 @@ default {
     }
 
     timer() {
-        // Don't let timer recur
-        llSetTimerEvent( 0.0 );
+        llSetTimerEvent( 0.0 ); // Reset timer
+        llSetTimerEvent( 86400.0 ); // One day in seconds == 24 hours * 60 minutes * 60 seconds
 
         // Lazy request cleanup. HTTP requests will time out after 30 seconds
         // and automatically fail, so there's no need to do careful list
         // management here. Just cache them until they should have failed
         // already.
         DataServerRequests = [];
+
+        // And notify the registry that we're still around
+        Registry( [
+            "ping"
+            , AdminKey
+            , BaseUrl
+        ] );
     }
 
     dataserver( key queryId , string data ) {
