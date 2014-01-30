@@ -5,6 +5,7 @@ define( [
     , 'lib/admin-key'
     , 'dashboard/index'
     , 'config/index'
+    , 'registry/index'
 
 ] , function(
 
@@ -13,6 +14,7 @@ define( [
     , adminKeyStore
     , DashboardView
     , ConfigView
+    , RegistryView
 
 ) {
     'use strict';
@@ -22,6 +24,7 @@ define( [
             'admin/:adminKey': 'adminEntryPoint'
             , 'dashboard': 'dashboard'
             , 'config': 'config'
+            , 'registry': 'registry'
             , '*path': 'dashboard'
         }
 
@@ -39,6 +42,12 @@ define( [
         , config: function() {
             this.navigate( 'config' , { replace: true } );
             var view = new ConfigView( this.options );
+            this.options.app.body.show( view );
+        }
+
+        , registry: function() {
+            this.navigate( 'registry' , { replace: true } );
+            var view = new RegistryView( this.options );
             this.options.app.body.show( view );
         }
     } );

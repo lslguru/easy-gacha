@@ -54,6 +54,9 @@ define( [
             , 'saveButtonMessageSuccessChanges': '#save .success-changes'
             , 'saveStatresetConfirmation': '#statreset-confirmation'
             , 'saveStatresetConfirm': '#statreset-confirm'
+            , 'registryButton': '#registry'
+            , 'registryConfirmation': '#registry-confirmation'
+            , 'registryConfirmed': '#registry-confirm'
         }
 
         , events: {
@@ -67,6 +70,8 @@ define( [
             , 'click @ui.saveButton': 'clickSave'
             , 'click @ui.saveStatresetConfirm': 'confirmSave'
             , 'click @ui.firstRunMessageCloseButton': 'hideAutoModifiedMessage'
+            , 'click @ui.registryButton': 'clickRegistry'
+            , 'click @ui.registryConfirmed': 'confirmRegistry'
         }
 
         , modelEvents: {
@@ -186,6 +191,12 @@ define( [
                 , show: false
             } );
 
+            this.ui.registryConfirmation.toggleClass( 'fade' , !isSlViewer() ).modal( {
+                backdrop: true
+                , keyboard: true
+                , show: false
+            } );
+
             this.ui.saveStatresetConfirmation.toggleClass( 'fade' , !isSlViewer() ).modal( {
                 backdrop: true
                 , keyboard: true
@@ -221,7 +232,7 @@ define( [
         }
 
         , confirmReloadSaveFirst: function( jEvent ) {
-            var moveAlong = _.bind( function() {
+            var finish = _.bind( function() {
                 this.model.save( {
                     success: _.bind( function() {
                         this.options.app.router.navigate( 'temp' , { replace: true } );
@@ -230,35 +241,48 @@ define( [
                 } );
             } , this );
 
-            this.ui.reloadConfirmation.one( 'hidden.bs.modal' , moveAlong );
+            this.ui.reloadConfirmation.one( 'hidden.bs.modal' , finish );
             this.ui.reloadConfirmation.modal( 'hide' );
         }
 
         , confirmReload: function( jEvent ) {
-            var moveAlong = _.bind( function() {
+            var finish = _.bind( function() {
                 this.model.fetch( {
                     loadAdmin: true
                 } );
             } , this );
 
             if( jEvent ) {
-                this.ui.reloadConfirmation.one( 'hidden.bs.modal' , moveAlong );
+                this.ui.reloadConfirmation.one( 'hidden.bs.modal' , finish );
                 this.ui.reloadConfirmation.modal( 'hide' );
             } else {
-                moveAlong();
+                finish();
             }
         }
 
         , confirmDashboard: function( jEvent ) {
-            var moveAlong = _.bind( function() {
+            var finish = _.bind( function() {
                 this.options.app.router.navigate( 'dashboard' , { trigger: true } );
             } , this );
 
             if( jEvent ) {
-                this.ui.dashboardConfirmation.one( 'hidden.bs.modal' , moveAlong );
+                this.ui.dashboardConfirmation.one( 'hidden.bs.modal' , finish );
                 this.ui.dashboardConfirmation.modal( 'hide' );
             } else {
-                moveAlong();
+                finish();
+            }
+        }
+
+        , confirmRegistry: function( jEvent ) {
+            var finish = _.bind( function() {
+                this.options.app.router.navigate( 'registry' , { trigger: true } );
+            } , this );
+
+            if( jEvent ) {
+                this.ui.registryConfirmation.one( 'hidden.bs.modal' , finish );
+                this.ui.registryConfirmation.modal( 'hide' );
+            } else {
+                finish();
             }
         }
 
@@ -300,6 +324,15 @@ define( [
             }
 
             this.ui.dashboardConfirmation.modal( 'show' );
+        }
+
+        , clickRegistry: function() {
+            if( ! this.model.get( 'hasChangesToSave' ) ) {
+                this.confirmRegistry();
+                return;
+            }
+
+            this.ui.registryConfirmation.modal( 'show' );
         }
 
         , confirmSave: function( jEvent ) {

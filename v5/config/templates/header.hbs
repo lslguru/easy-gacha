@@ -18,7 +18,8 @@
             <li role="presentation" class="dropdown-header">Easy Gacha</li>
             <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha Kit on SecondLife Marketplace"><i class="fa fa-shopping-cart"></i> Marketplace</a></li>
             <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://github.com/lslguru/easy-gacha#easy-gacha" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha code repository"><i class="fa fa-github"></i> GitHub</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://lslguru.com/easy-gacha-v5/registry.php" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> All Gachas</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" id="registry" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> All Gachas</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://docs.google.com/forms/d/1JGFh7y5JTAIJCtt0ibzCBpmgQKhcAo9FYLYayNbWAwE/viewform" data-toggle="tooltip" data-tooltip-placement="left" title="Give the scriptor of Easy Gacha some feedback"><i class="fa fa-clipboard"></i> Take Survey</a></li>
             <li role="presentation" class="divider"></li>
             <li role="presentation" class="dropdown-header">Status</li>
             <li role="presentation">
@@ -105,6 +106,23 @@
                 <div class="modal-footer">
                     <button class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <button id="dashboard-confirm" class="btn btn-primary">Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="registry-confirmation" tabindex="-1" role="dialog" aria-labelledby="registry-confirmation-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content alert-warning">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                    <h4 class="modal-title" id="registry-confirmation-label"><i class="fa fa-exclamation-triangle"></i> Discard Changes</h4>
+                </div>
+                <div class="modal-body">
+                    You have unsaved changes. Going to the Gacha Registry will discard your changes. Are you sure you want to go to the Gacha Registry?
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="registry-confirm" class="btn btn-primary">All Gachas</button>
                 </div>
             </div>
         </div>

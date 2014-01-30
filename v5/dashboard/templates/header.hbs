@@ -1,14 +1,17 @@
 <div class="page-header clearfix">
-    <div class="nav-links well well-sm">
+    <div class="nav-links dropdown well well-sm">
         <label>Easy Gacha</label>
-        <div class="btn-group">
-            <a class="btn btn-default" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha Kit on SecondLife Marketplace"><i class="fa fa-shopping-cart"></i> Marketplace</a>
-            <a class="btn btn-default" target="_blank" href="https://github.com/lslguru/easy-gacha#easy-gacha" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Easy Gacha code repository"><i class="fa fa-github"></i> GitHub</a>
-            <a class="btn btn-default" target="_blank" href="https://lslguru.com/easy-gacha-v5/registry.php" data-toggle="tooltip" data-tooltip-placement="bottom" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> All Gachas</a>
-            {{#if isAdmin}}
-                <a class="btn btn-primary" href="#config" data-toggle="tooltip" data-tooltip-placement="bottom" title="You have permission to modify this Easy Gacha. Click here to configure."><i class="fa fa-pencil-square-o"></i> Configure This Gacha</a>
-            {{/if}}
-        </div>
+        <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="header-menu-button">
+            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha Kit on SecondLife Marketplace"><i class="fa fa-shopping-cart"></i> Marketplace</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://github.com/lslguru/easy-gacha#easy-gacha" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha code repository"><i class="fa fa-github"></i> GitHub</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="#registry" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> All Gachas</a></li>
+        </ul>
+        {{#if isAdmin}}
+            <a class="btn btn-primary" href="#config" data-toggle="tooltip" data-tooltip-placement="bottom" title="You have permission to modify this Easy Gacha. Click here to configure."><i class="fa fa-pencil-square-o"></i> Configure This Gacha</a>
+        {{/if}}
+        <button class="btn btn-default" data-toggle="dropdown" role="button" id="header-menu-button">
+            More <span class="caret"></span>
+        </button>
     </div>
     <h1>
         <a href="{{mapUrl}}" data-toggle="tooltip" title="Click to see the object's last reported location on the map">{{objectName}}</a>
