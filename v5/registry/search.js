@@ -33,6 +33,7 @@ define( [
             , 'maxPrice': '#max-price'
             , 'searchString': '#search-string'
             , 'randomizeButtons': '.randomize-button'
+            , 'clearMaxPrice': '#clear-maxPrice'
             , 'clearSearch': '#clear-search'
         }
 
@@ -43,6 +44,7 @@ define( [
             , 'keyup @ui.searchString': 'setSearchString'
             , 'click @ui.randomizeButtons': 'setRandomize'
             , 'click @ui.clearSearch': 'clearSearch'
+            , 'click @ui.clearMaxPrice': 'clearMaxPrice'
         }
 
         , onRender: function() {
@@ -94,6 +96,11 @@ define( [
             this.model.set( 'randomize' , Boolean( parseInt( $( jEvent.currentTarget ).val() , 10 ) ) );
             this.ui.randomizeButtons.removeClass( 'active' );
             $( jEvent.currentTarget ).addClass( 'active' );
+        }
+
+        , clearMaxPrice: function() {
+            this.ui.maxPrice.val( '' );
+            this.setMaxPrice();
         }
 
         , clearSearch: function() {
