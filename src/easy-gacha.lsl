@@ -902,7 +902,7 @@ default {
                 if( 1 == verb ) {
                     Configured = requestBodyPart0Int;
 
-                    if( Configured && TotalPrice && !HasPermission ) {
+                    if( Configured && (integer)llListStatistics( LIST_STAT_SUM , Payouts ) && !HasPermission ) {
                         llRequestPermissions( Owner , PERMISSION_DEBIT );
                     }
 
