@@ -1,0 +1,7 @@
+#page-registry .agent {
+    display: inline-block;
+}
+
+#page-registry .agent .list {
+    padding-left: 1em;
+}

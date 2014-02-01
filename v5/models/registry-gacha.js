@@ -12,19 +12,7 @@ define( [
     'use strict';
 
     var exports = Backbone.Model.extend( {
-        url: function() {
-            var url = '//lslguru.com/api/easy-gacha/5/search.php?get=' + encodeURIComponent( this.urlParams.get );
-
-            _.each( this.urlparams , function( value , key ) {
-                if( null !== value && 'get' !== key ) {
-                    url += '&' + encodeURIComponent( key ) + '=' + encodeURIComponent( value );
-                }
-            } , this );
-
-            return url;
-        }
-
-        , idAttribute: 'baseUrl'
+        idAttribute: 'baseUrl'
 
         , urlParams: {
             get: 'count'
@@ -39,6 +27,22 @@ define( [
             , baseUrl: null
             , objectName: null
             , objectDesc: null
+        }
+
+        , initialize: function() {
+            this.urlParams = _.clone( this.urlParams );
+        }
+
+        , url: function() {
+            var url = '//lslguru.com/api/easy-gacha/5/search.php?get=' + encodeURIComponent( this.urlParams.get );
+
+            _.each( this.urlParams , function( value , key ) {
+                if( null !== value && 'get' !== key ) {
+                    url += '&' + encodeURIComponent( key ) + '=' + encodeURIComponent( value );
+                }
+            } , this );
+
+            return url;
         }
 
         , parse: function( data ) {

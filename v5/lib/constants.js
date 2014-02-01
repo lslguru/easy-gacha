@@ -127,4 +127,6 @@ define( [
     , DEFAULT_BUTTON_2_COUNT: 10
     , DEFAULT_BUTTON_3_COUNT: 25
 
+    , SEARCH_DEBOUNCE: 1000
+
 } ; } );
