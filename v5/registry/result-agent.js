@@ -23,7 +23,7 @@ define( [
 
     var exports = Marionette.CompositeView.extend( {
         template: template
-        , className: 'agent col-sm-3'
+        , className: 'agent'
         , itemView: ItemView
         , itemViewContainer: '.list'
 

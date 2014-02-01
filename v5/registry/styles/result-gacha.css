@@ -1,0 +1,5 @@
+#page-registry .gacha-icon ,
+#page-registry .gacha-name {
+    display: table-cell;
+    vertical-align: top;
+}

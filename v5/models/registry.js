@@ -114,11 +114,11 @@ define( [
                 // Mark that this fetch completed
                 this.urlParams.set( 'fetching' , false );
 
-                if( this.get( nextGacha.id ) ) {
-                    // If we already have this one, things may have shifted on
-                    // the server, gachas may have been found to be offline,
-                    // etc. Just quietly skip this one and retry with the next
-                    // one.
+                if( this.get( nextGacha.id ) || null === nextGacha.get( 'baseUrl' ) ) {
+                    // If we already have this one or it's invalid, things may
+                    // have shifted on the server, gachas may have been found
+                    // to be offline, etc. Just quietly skip this one and try
+                    // the next one.
                     this.fetch();
                 } else {
                     // Otherwise add this model as the fetch succeeded in its
