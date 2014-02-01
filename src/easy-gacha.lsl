@@ -933,6 +933,8 @@ default {
             , AdminKey
             , BaseUrl
         ] );
+
+        Update();
     }
 
     dataserver( key queryId , string data ) {
@@ -966,6 +968,9 @@ default {
         } else if( 2 == mode ) {
             llOwnerSay( ScriptName + ": Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
         }
+
+        DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 2 );
+        Update();
     }
 
     touch_end( integer detected ) {
