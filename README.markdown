@@ -13,14 +13,12 @@ This is a very easy, configurable implementation of a
 
 # HEY YOU! / Directions / Instructions / Getting Started / Start Here #
 
-Drop the script in an object.
-
-You'll see the following things happen:
-
-* Hover-text will appear telling you it needs to be configured
-* A configuration URL will be sent directly to only you (the owner)
-
-Click the link, and have fun!
+1. Drop some inventory into a prim.
+2. Drop the "Easy Gacha" script into the same prim.
+3. You'll see the following things happen:
+4. Hover-text will appear telling you it needs to be configured
+5. A configuration URL will be sent directly to only you (the owner)
+6. Click the link, and have fun!
 
 --------------------------------------------------------------------------------
 
