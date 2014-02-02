@@ -233,7 +233,7 @@ define( [
 
         , confirmReloadSaveFirst: function( jEvent ) {
             var finish = _.bind( function() {
-                this.model.save( {
+                this.model.save( {} , {
                     success: _.bind( function() {
                         this.options.app.router.navigate( 'temp' , { replace: true } );
                         this.options.app.router.navigate( 'config' , { trigger: true , replace: true } );
@@ -383,7 +383,8 @@ define( [
                 this.ui.saveButton.addClass( 'btn-primary' );
             }
 
-            this.ui.saveButton.prop( 'disabled' , Boolean( !this.model.get( 'hasChangesToSave' ) || this.model.get( 'hasDanger' ) ) );
+            var canSave = Boolean( this.model.get( 'hasChangesToSave' ) && !this.model.get( 'hasDanger' ) );
+            this.ui.saveButton.prop( 'disabled' , !canSave );
 
             fade( this.ui.saveButtonMessageDangerChanges , false );
             fade( this.ui.saveButtonMessageNoChanges , false );
