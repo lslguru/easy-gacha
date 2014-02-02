@@ -308,11 +308,3 @@ problem until a higher number, but that's still unacceptable.
     $ grunt volo:add:-amd:backbone.wreqr:depends=v5/vendor/backbone:v5/vendor/backbone.wreqr
     $ grunt volo:add:-amd:backbone.babysitter:depends=v5/vendor/backbone:v5/vendor/backbone.babysitter
     $ grunt volo:add:-amd:marionette:exports=Marionette:depends=v5/vendor/underscore,v5/vendor/backbone,v5/vendor/backbone.wreqr,v5/vendor/backbone.babysitter:v5/vendor/marionette
-
---------------------------------------------------------------------------------
-
-# TO DO List #
-
-* Registry
-* Release
-* Contact those who have already purchased
