@@ -57,6 +57,7 @@ define( [
             , 'registryButton': '#registry'
             , 'registryConfirmation': '#registry-confirmation'
             , 'registryConfirmed': '#registry-confirm'
+            , 'redItemsWarning': '#red-items-warning'
         }
 
         , events: {
@@ -386,11 +387,13 @@ define( [
             var canSave = Boolean( this.model.get( 'hasChangesToSave' ) && !this.model.get( 'hasDanger' ) );
             this.ui.saveButton.prop( 'disabled' , !canSave );
 
+            fade( this.ui.redItemsWarning , false );
             fade( this.ui.saveButtonMessageDangerChanges , false );
             fade( this.ui.saveButtonMessageNoChanges , false );
             fade( this.ui.saveButtonMessageSaveChanges , false );
             fade( this.ui.saveButtonMessageSuccessChanges , false );
             if( this.model.get( 'hasDanger' ) ) {
+                fade( this.ui.redItemsWarning , true );
                 fade( this.ui.saveButtonMessageDangerChanges , true );
             } else if( this.model.get( 'hasChangesToSave' ) && this.model.get( 'configured' ) ) {
                 fade( this.ui.saveButtonMessageSuccessChanges , true );

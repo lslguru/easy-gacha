@@ -45,6 +45,8 @@ define( [
             , 'apiPerPlayOn': '#api-signal-play-on'
             , 'apiPerItemOff': '#api-signal-item-off'
             , 'apiPerItemOn': '#api-signal-item-on'
+            , 'showInRegistryOff': '#show-in-registry-off'
+            , 'showInRegistryOn': '#show-in-registry-on'
         }
 
         , events: {
@@ -64,6 +66,8 @@ define( [
             , 'click @ui.apiPerPlayOn': 'setBooleanField'
             , 'click @ui.apiPerItemOff': 'setBooleanField'
             , 'click @ui.apiPerItemOn': 'setBooleanField'
+            , 'click @ui.showInRegistryOff': 'setBooleanField'
+            , 'click @ui.showInRegistryOn': 'setBooleanField'
         }
 
         , modelEvents: {
@@ -75,6 +79,7 @@ define( [
             , 'change:scriptLinkNumber': 'updateRootClickAction'
             , 'change:apiPurchasesEnabled': 'updateApiPerPlay'
             , 'change:apiItemsGivenEnabled': 'updateApiPerItem'
+            , 'change:showInRegistry': 'updateShowInRegistry'
         }
 
         , templateHelpers: function() {
@@ -97,6 +102,7 @@ define( [
             this.updateRootClickAction();
             this.updateApiPerPlay();
             this.updateApiPerItem();
+            this.updateShowInRegistry();
         }
 
         , onClose: function() {
@@ -242,6 +248,11 @@ define( [
         , updateApiPerItem: function() {
             this.ui.apiPerItemOff.toggleClass( 'active' , !this.model.get( 'apiItemsGivenEnabled' ) );
             this.ui.apiPerItemOn.toggleClass( 'active' , this.model.get( 'apiItemsGivenEnabled' ) );
+        }
+
+        , updateShowInRegistry: function() {
+            this.ui.showInRegistryOff.toggleClass( 'active' , !this.model.get( 'showInRegistry' ) );
+            this.ui.showInRegistryOn.toggleClass( 'active' , this.model.get( 'showInRegistry' ) );
         }
 
         , setRootClickAction: function( jEvent ) {

@@ -2,44 +2,49 @@
     <i class="fa fa-question-circle"></i>
 </div>
 <div id="header" class="page-header clearfix">
-    <div class="btn-group dropdown nav-links">
-        <button id="save" class="btn">
-            <span class="danger-changes hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="Please correct the items in red first" disabled="disabled"><i class="fa fa-exclamation-triangle"></i> Cannot Save</span>
-            <span class="save-changes hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and reload"><i class="fa fa-floppy-o"></i> Save Changes</span>
-            <span class="success-changes hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and turn on this Easy Gacha"><i class="fa fa-floppy-o"></i> Save &#38; Start</span>
-            <span class="no-changes hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="There are currently no changes. Therefore no save is necessary." disabled="disabled"><i class="fa fa-check-circle"></i> No Changes to Save</span>
-        </button>
-        <ul class="dropdown-menu" role="menu" aria-labelledby="header-menu-button">
-            <li role="presentation" class="dropdown-header">This Gacha</li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" id="reload" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Discard all changes and reload"><i class="fa fa-refresh"></i> Reload</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" id="dashboard" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Discard all changes and go to dashboard"><i class="fa fa-tachometer"></i> Dashboard</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" id="reset" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Reset script entirely"><span class="text-danger"><i class="fa fa-power-off"></i> Reset</span></a></li>
-            <li role="presentation" class="divider"></li>
-            <li role="presentation" class="dropdown-header">Easy Gacha</li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha Kit on SecondLife Marketplace"><i class="fa fa-shopping-cart"></i> Marketplace</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://github.com/lslguru/easy-gacha#easy-gacha" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha code repository"><i class="fa fa-github"></i> GitHub</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" id="registry" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> All Gachas</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://docs.google.com/forms/d/1JGFh7y5JTAIJCtt0ibzCBpmgQKhcAo9FYLYayNbWAwE/viewform" data-toggle="tooltip" data-tooltip-placement="left" title="Give the scriptor of Easy Gacha some feedback"><i class="fa fa-clipboard"></i> Take Survey</a></li>
-            <li role="presentation" class="divider"></li>
-            <li role="presentation" class="dropdown-header">Status</li>
-            <li role="presentation">
-                <a data-toggle="tooltip" data-tooltip-placement="left" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
-                    <span class="text-{{memoryState}}">
-                        <i class="fa {{memoryIcon}}"></i> Free Memory: {{freeMemory}}
-                    </span>
-                </a>
-            </li>
-            <li role="presentation">
-                <a data-toggle="tooltip" data-tooltip-placement="left" title="This is how much lag the scripts in this OBJECT are generating. Lower numbers are better. If there are scripts other than Easy Gacha, we cannot determine the lag of Easy Gacha specifically.">
-                    <span class="text-{{lagState}}">
-                        <i class="fa {{lagIcon}}"></i> Object Lag: {{scriptTime}}
-                    </span>
-                </a>
-            </li>
-        </ul>
-        <button class="btn btn-{{overallState}}" data-toggle="dropdown" role="button" id="header-menu-button">
-            Menu <span class="caret"></span>
-        </button>
+    <div class="nav-links">
+        <div class="btn-group dropdown">
+            <button id="save" class="btn">
+                <span class="danger-changes hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="Please correct the items in red first" disabled="disabled"><i class="fa fa-exclamation-triangle"></i> Cannot Save</span>
+                <span class="save-changes hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and reload"><i class="fa fa-floppy-o"></i> Save Changes</span>
+                <span class="success-changes hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="Save changes and turn on this Easy Gacha"><i class="fa fa-floppy-o"></i> Save &#38; Start</span>
+                <span class="no-changes hide" data-toggle="tooltip" data-tooltip-placement="bottom" title="There are currently no changes. Therefore no save is necessary." disabled="disabled"><i class="fa fa-check-circle"></i> No Changes to Save</span>
+            </button>
+            <ul class="dropdown-menu" role="menu" aria-labelledby="header-menu-button">
+                <li role="presentation" class="dropdown-header">This Gacha</li>
+                <li role="presentation"><a role="menuitem" tabindex="-1" id="reload" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Discard all changes and reload"><i class="fa fa-refresh"></i> Reload</a></li>
+                <li role="presentation"><a role="menuitem" tabindex="-1" id="dashboard" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Discard all changes and go to dashboard"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+                <li role="presentation"><a role="menuitem" tabindex="-1" id="reset" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Reset script entirely"><span class="text-danger"><i class="fa fa-power-off"></i> Reset</span></a></li>
+                <li role="presentation" class="divider"></li>
+                <li role="presentation" class="dropdown-header">Easy Gacha</li>
+                <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://marketplace.secondlife.com/p/Easy-Gacha-Kit/5391059" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha Kit on SecondLife Marketplace"><i class="fa fa-shopping-cart"></i> Marketplace</a></li>
+                <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://github.com/lslguru/easy-gacha#easy-gacha" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Easy Gacha code repository"><i class="fa fa-github"></i> GitHub</a></li>
+                <li role="presentation"><a role="menuitem" tabindex="-1" id="registry" href="javascript:;" data-toggle="tooltip" data-tooltip-placement="left" title="Go to the Gacha Registry which lists all official Easy Gachas"><i class="fa fa-globe"></i> All Gachas</a></li>
+                <li role="presentation"><a role="menuitem" tabindex="-1" target="_blank" href="https://docs.google.com/forms/d/1JGFh7y5JTAIJCtt0ibzCBpmgQKhcAo9FYLYayNbWAwE/viewform" data-toggle="tooltip" data-tooltip-placement="left" title="Give the scriptor of Easy Gacha some feedback"><i class="fa fa-clipboard"></i> Take Survey</a></li>
+                <li role="presentation" class="divider"></li>
+                <li role="presentation" class="dropdown-header">Status</li>
+                <li role="presentation">
+                    <a data-toggle="tooltip" data-tooltip-placement="left" title="This is how much script memory is left in bytes. Each script gets 65535 bytes. Higher numbers are better.">
+                        <span class="text-{{memoryState}}">
+                            <i class="fa {{memoryIcon}}"></i> Free Memory: {{freeMemory}}
+                        </span>
+                    </a>
+                </li>
+                <li role="presentation">
+                    <a data-toggle="tooltip" data-tooltip-placement="left" title="This is how much lag the scripts in this OBJECT are generating. Lower numbers are better. If there are scripts other than Easy Gacha, we cannot determine the lag of Easy Gacha specifically.">
+                        <span class="text-{{lagState}}">
+                            <i class="fa {{lagIcon}}"></i> Object Lag: {{scriptTime}}
+                        </span>
+                    </a>
+                </li>
+            </ul>
+            <button class="btn btn-{{overallState}}" data-toggle="dropdown" role="button" id="header-menu-button">
+                Menu <span class="caret"></span>
+            </button>
+        </div>
+        <div id="red-items-warning" class="fade hide">
+            Please correct the things in <span class="text-danger">red</span> before saving
+        </div>
     </div>
     <div class="modal" id="reset-confirmation" tabindex="-1" role="dialog" aria-labelledby="reset-confirmation-label" aria-hidden="true">
         <div class="modal-dialog">

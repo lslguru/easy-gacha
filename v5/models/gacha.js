@@ -97,6 +97,7 @@ define( [
             , ackNoCopyItemsMeansSingleItemPlay: false
             , ackEmailSlowness: false
             , ackManyItemsOkay: false
+            , showInRegistry: true
 
             // From models/config
             , folderForSingleItem: null
@@ -188,6 +189,7 @@ define( [
             , 'items'
             , 'ackEmailSlowness'
             , 'ackManyItemsOkay'
+            , 'showInRegistry'
             , 'apiPurchasesEnabled'
             , 'apiItemsGivenEnabled'
         ]
@@ -255,6 +257,7 @@ define( [
                         , ackNoCopyItemsMeansSingleItemPlay: gacha.get( 'ackNoCopyItemsMeansSingleItemPlay' )
                         , ackEmailSlowness: gacha.get( 'ackEmailSlowness' )
                         , ackManyItemsOkay: gacha.get( 'ackManyItemsOkay' )
+                        , showInRegistry: gacha.get( 'showInRegistry' )
                     } );
                 }
                 , name: 'Configuration'
