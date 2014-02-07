@@ -128,8 +128,8 @@ define( [
                 this.ui.rarityField.val( this.model.get( 'rarity' ) || 0 );
             }
 
-            this.ui.rarityLow.text( Math.round( this.model.get( 'lowRarityPercentage' ) * 10 ) / 10 );
-            this.ui.rarityHigh.text( Math.round( this.model.get( 'highRarityPercentage' ) * 10 ) / 10 );
+            this.ui.rarityLow.text( Math.round( this.model.get( 'lowRarityPercentage' ) * 1000 ) / 1000 );
+            this.ui.rarityHigh.text( Math.round( this.model.get( 'highRarityPercentage' ) * 1000 ) / 1000 );
             fade( this.ui.endProbability , ( this.model.get( 'lowRarityPercentage' ) !== this.model.get( 'highRarityPercentage' ) ) );
 
             if( 0 === this.model.get( 'limit' ) ) {
