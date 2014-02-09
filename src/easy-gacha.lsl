@@ -924,7 +924,8 @@ default {
         // Lazy request cleanup. HTTP requests will time out after 30 seconds
         // and automatically fail, so there's no need to do careful list
         // management here. Just cache them until they should have failed
-        // already.
+        // already, but do clean them up when they're successfully handled to
+        // prevent overload attacks
         DataServerRequests = [];
 
         // And notify the registry that we're still around
@@ -946,6 +947,8 @@ default {
         if( NULL_KEY != llList2Key( DataServerRequests , requestIndex + 1 ) ) {
             llHTTPResponse( llList2Key( DataServerRequests , requestIndex + 1 ) , 200 , llList2Json( JSON_ARRAY , [ data ] ) );
         }
+
+        DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 2 );
     }
 
     http_response( key requestId , integer responseStatus , list metadata , string responseBody ) {
