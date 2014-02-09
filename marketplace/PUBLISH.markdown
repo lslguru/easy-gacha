@@ -45,17 +45,18 @@
 
 * Mesh Object Kit
     * Use Rix's original object
-    * Name: Mesh Object Kit
-    * DescriptionDesc: Git Commit ID
+    * Texture: Easy Gacha Logo
+    * Name: Easy Gacha - Mesh Object Kit
+    * Description: Git Commit ID
     * Permissions: Next Owner +Mod +Copy -Trans, Anyone -Copy, Group -Share
+    * Default Action: Open
     * Contents: All original inventory from Rix
 
 * Kit Object
     * Create new cube
     * Texture: Easy Gacha Logo
-    * Name: Easy Gacha Kit
-    * Anyone: -Copy
-    * Group: -Share
+    * Name: Easy Gacha - Kit
+    * Description: Git Commit ID
     * Permissions: Next Owner +Mod +Copy -Trans, Anyone -Copy, Group -Share
     * Default Action: Open
     * Contents
@@ -63,6 +64,7 @@
         * Script "Easy Gacha" (not running)
         * Script Notecard
         * Mesh Object Kit
+v5.0 (f28627cbf43baf39d00bfb088818efcb00fd9b34)
 
 ## Marketplace Listing ##
 
@@ -83,7 +85,7 @@
 * Keywords: easy, gacha, gasha, gashapon, OSS, FOSS, full perm, low lag, no lag
 * Category: Business > Vendor Machines
 * Item price: L$0
-* Prim count: 0
+* Prim count: 2
 * SLurl: {not entered}
 * Video URL: {not entered}
 * Available quantity: Unlimited
@@ -95,9 +97,9 @@
 
 ### Extended Description ###
 
-=== Directions / Instructions / Getting Started ===
+=== DIRECTIONS / INSTRUCTIONS / GETTING STARTED ===
 
-1. Rez the "Easy Gacha - Ready to use" object
+1. Rez the "Easy Gacha" object
 2. Put your Gacha items into the object
 3. Click the link in your chat window
 4. Configure your Easy Gacha using the web page
