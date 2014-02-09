@@ -3,7 +3,8 @@
 ## Repository ##
 
 * Remove warning from README
-* Build README.pdf using "marked" npm package
+* Build an HTML copy of README.markdown using "marked" npm package
+* Build marketplace/README.pdf using print-to-pdf in browser of README.html
 * Commit files
 * Tag commit
 * Restore warning to README

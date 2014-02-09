@@ -1,0 +1,241 @@
+<h1>Easy Gacha</h1>
+<p>This is a very easy, configurable implementation of a
+<a href="http://en.wikipedia.org/wiki/Gashapon">Gashapon</a>-style device.</p>
+<hr>
+<h1>HEY YOU! / Directions / Instructions / Getting Started / Start Here</h1>
+<p>Note: These instructions are for starting with the script. If you&#39;re using the
+&quot;Easy Gacha - Ready to use&quot; object, skip step #2.</p>
+<ol>
+<li>Drop your Gacha items into a prim.</li>
+<li>Drop the &quot;Easy Gacha&quot; script into the same prim.</li>
+<li>You&#39;ll see the following things happen:</li>
+<li>Hover-text will appear telling you it needs to be configured</li>
+<li>A configuration URL will be sent directly to only you (the owner)</li>
+<li>Click the link, and have fun!</li>
+</ol>
+<hr>
+<h1>Features</h1>
+<h2>User-Friendly</h2>
+<ul>
+<li>No need to rename any items</li>
+<li>Incredibly easy to configure</li>
+<li>Most configuration done automatically</li>
+<li>Detects and prevents most mistakes</li>
+<li>Can set rarity per item</li>
+<li>Supports 30+ items configured at a time</li>
+<li>Multiple-play option (can buy multiple objects at at a time)</li>
+<li>Can limit number of sales per item</li>
+<li>Can limit total number of sales for entire Gacha</li>
+<li>Can payout to multiple people with each play</li>
+<li>Guaranteed to hand out inventory and refund change correctly</li>
+<li>Can be restricted to group-only play</li>
+<li>Can handle no-copy items</li>
+<li>Can configure payment buttons</li>
+<li>Can send IM reports when people play</li>
+<li>Can send Email reports when people play</li>
+<li>Dashboard can be loaded on a smart-phone (with JavaScript enabled)</li>
+</ul>
+<h2>Geeky</h2>
+<ul>
+<li>Only asks for debit permission once if possible</li>
+<li>Ultra low lag (zero when not in use)</li>
+<li>All data stored in-world (except for Gacha registry and single JavaScript file)</li>
+<li>Configuration can be exported</li>
+<li>Configuration can be imported by hand or from notecard</li>
+<li>Automatic self memory management</li>
+<li>Gives statistics about actual sales versus configured rarity</li>
+<li>Protects against modifying existing object configurations (safe to use in any object)</li>
+<li>Has an optional API for writing plugins and addons (doesn&#39;t spam object unless requested)</li>
+<li>Guaranteed to only use one system URL at a time</li>
+<li>Shortens URLs to make them easy to use</li>
+</ul>
+<hr>
+<h1>Frequently Asked Questions</h1>
+<h2>Can I remove the sign from the object?</h2>
+<p>Yes! It&#39;s modifiable, so just unlink the prims and delete the sign. If you have
+the skill and feel like doing it, you could even re-texture it.</p>
+<h2>What happens if someone pays too much?</h2>
+<p>Easy Gacha will give them change.</p>
+<h2>What happens if someone pays too little?</h2>
+<p>Easy Gacha will refund the whole amount given and remind them of the price.</p>
+<h2>What if there aren&#39;t enough items for the amount someone paid?</h2>
+<p>Easy Gacha will refund the excess.</p>
+<h2>What if there aren&#39;t any items left?</h2>
+<p>Easy Gacha will turn off until more items are available or you reconfigure it.</p>
+<h2>What if the script gets low on memory?</h2>
+<p>Easy Gacha will not allow anyone to play, but will give you the ability to
+export your configuration before restarting the script. I haven&#39;t actually been
+able to reach this point yet without configuring way too many items, but it
+should be robust enough to handle it.</p>
+<h2>What if there are no URLs available?</h2>
+<p>Easy Gacha will still be able to be played if it was already configured, but
+will not be visible to the registry and will not be able to have its
+configuration changed. If the owner touches the object, it will try to get a
+new URL again.</p>
+<h2>What if I accidentally give someone else the admin link?</h2>
+<p>Then they can administer your Easy Gacha, change its settings, change the
+price, etc. If you didn&#39;t mean to share, or want to remove that permission,
+just take your Easy Gacha back into your inventory and drop it in-world again.
+Each time it is rezzed it will create a new URL.</p>
+<h2>Why aren&#39;t the permissions more open?</h2>
+<p>Because otherwise I cannot vouch for its safety. If I made the script
+modifiable, someone with ill intent could make it steal money, then give it
+away. It would still list me as the creator, but would be malicious.</p>
+<p>The creator of the script should be listed as
+<a href="secondlife:///app/agent/d393638e-be6e-4f81-a44d-072e344828c4/about">Zan Lightfoot</a></p>
+<p>Also, if I made the objects modifiable and transferable, someone could put
+something malicious inside them and they&#39;d still list me as the creator.
+Because the kit is free and the source code is open, there should be no problem
+with each person that wants one ordering a free copy from the marketplace.</p>
+<p>If you want your notecards and your gacha-box to be transferable, simply create
+your own objects and notecards (copy the contents from mine) and set the
+permissions how you please. The script is transferable because it is no-mod.</p>
+<h2>Where do I go for help?</h2>
+<p>You may contact me and I will probably help out, but I cannot guarantee a quick
+(or any) response. This was a labor of love. There is no official support, and
+Second Life comes... second.  Please read the license.</p>
+<hr>
+<h1>Safety Warning</h1>
+<p>If the <strong>script</strong> you have wasn&#39;t created by
+<a href="secondlife:///app/agent/d393638e-be6e-4f81-a44d-072e344828c4/about">Zan Lightfoot</a>,
+then I cannot vouch for its safety. Whoever created it may have altered it. You
+have been warned.</p>
+<hr>
+<h1>Folders</h1>
+<p>The script can give people a folder which is the name of the Easy Gacha object
+followed by the date.</p>
+<p>For example, if you name the object &quot;My Stuff&quot;, then someone might receive a
+folder that says:</p>
+<pre><code>My Stuff (Easy Gacha: 3 items 2013-10-06)</code></pre>
+<hr>
+<h1>The Awesome People (Contributors)</h1>
+<ul>
+<li>Many thanks to <a href="secondlife:///app/agent/1aea661a-741f-4148-a1a4-c2f9ddd047dd/about">Rix Spyker</a> for creating the excellent mesh Easy Gacha model for everyone to use!</li>
+<li>Thanks to <a href="secondlife:///app/agent/5077a3ef-ae62-42cf-8570-3c39e7edb29e/about">beatrix Muircastle</a> for beta testing and giving great feedback!</li>
+<li>Thanks to <a href="secondlife:///app/agent/b31cedeb-8691-4014-9f61-2c28e08b4061/about">Ravina Burnstein</a> for beta testing and giving great feedback!</li>
+<li>Thanks to <a href="secondlife:///app/agent/296120e1-f04a-4f05-8b2e-c2fbad19fdd4/about">Nova Spyker (luna.talon)</a> for putting up with the long hours, being the first adopter, and beta testing!</li>
+</ul>
+<hr>
+<h1>Caveats / Assumptions</h1>
+<h2>Configuration</h2>
+<p>If the script is deleted or reset, any configurations not exported and saved to
+a notecard or elsewhere will be lost.</p>
+<h2>URL Resource Limitations</h2>
+<p>The script requires one available URL on the parcel/sim.  See the <a href="http://wiki.secondlife.com/wiki/LSL_http_server">LSL HTTP
+server</a> for more details.
+Specifically, if it cannot obtain a URL, then it cannot be configured. As long
+as the ownership and inventory haven&#39;t changed, it can be stored and re-rezzed,
+but the URL is required for initial configuration. This can be resolved by
+finding the script(s) which are eating up more than their fair share of URLs
+and giving their creators a good slap in the face.</p>
+<h2>Agent Identification</h2>
+<p>User/agent identification MUST be provided as UUID to be certain, because SL
+has yet to implement a way of looking up a UUID from a user-name or legacy-name
+reliably. W-Hat&#39;s agent lookup service has been implemented and seems to work
+reliably, but should always be verified because it&#39;s not official. To that end,
+W-Hat is used to find the agent key, then the agent key is used to get the
+username and display-name.</p>
+<hr>
+<h1>API</h1>
+<pre><code>llMessageLinked( LINK_SET , 3000168 , (string)totalItems , buyerId );</code></pre>
+<p>If this feature is turned on, this script tells the entire object each time a
+purchase is made, indicating the total number of items, but not listing the
+individual items received. Excellent for most-recent board or custom, direct
+thank-yous.</p>
+<pre><code>llMessageLinked( LINK_SET , 3000169 , itemName , buyerId );</code></pre>
+<p>If this feature is turned on, this script tells the entire object which items
+were received. COULD OVERFLOW THE QUEUE ON MULTI-PLAY. Useful for playing a
+sound or particle effect when a specific item is bought, or custom reporting.
+Also useful if you want to keep a subscription list based on received items. Be
+mindful of your event queue.</p>
+<pre><code>llMessageLinked( LINK_SET , 3000170 , baseUrl , adminKey );</code></pre>
+<p>Only occurs if the owner creates and puts an inventory item with the name
+&quot;EasyGachaAPI SignalOnNewURL&quot; into the same prim as the script. This script
+will then tell the entire object the new URL that was allocated and the
+adminKey in use. Useful if you want to automatically signal your own external
+service to watch the script.</p>
+<hr>
+<h1>Protocol</h1>
+<h2>Overview</h2>
+<p>Use the <a href="http://wiki.secondlife.com/wiki/LSL_http_server">LSL HTTP server</a> to
+simplify configuration and control by putting advanced controls on the hosted
+pages of GitHub, then making browser-to-object calls. This prevents needing any
+parsing engine within the script, and greatly simplifies the &quot;server-client&quot;
+type interactions within the script. It means the only third party server
+needed is the host for the admin/stats interface. It also greatly reduces the
+memory impact of the script, freeing up space for further configuration.</p>
+<h2>CORS</h2>
+<p>Cross-Origin Resource Sharing has a number of security implications within
+browsers, and not all browsers handle it the same way. Thus the following rules
+have been adopted:</p>
+<ul>
+<li>Always request/use a non-SSL URL (nothing here is truly private/important)</li>
+<li>Only use the GET and POST verbs</li>
+<li>No custom headers (sadly that includes CORS, see LSL HTTP Server docs)</li>
+<li>Expect no cookies</li>
+</ul>
+<p>See <a href="http://blogs.msdn.com/b/ieinternals/archive/2010/05/13/xdomainrequest-restrictions-limitations-and-workarounds.aspx">this</a>
+for some more detail on why.</p>
+<p>See <a href="http://wiki.secondlife.com/wiki/LSL_http_server">this</a> for a list of
+supported features in LSL, which sadly doesn&#39;t include setting the CORS headers
+on responses.</p>
+<p>To get around all this, we officially load the initial page via the script, and
+it loads all its libraries, CSS, and images via a single script tag. That way
+all AJAX calls are technically to the same domain of the original page.</p>
+<h2>Structure</h2>
+<pre><code>GET secondlifeURL/[?dev=1]#&lt;page&gt;
+    Where the browser is sent
+GET lslguru.github.io/easy-gacha/&lt;version&gt;/easy-gacha.min.js
+    Initial library load which takes care of bootstrapping and loading
+    everything else
+POST secondLifeURL/[adminKey/]&lt;verb&gt;/&lt;subject&gt;
+    Body should always be JSON-encoded array, though it may be an empty
+    list. This overhead is acceptable for gaining simplicitly in parsing.</code></pre>
+<hr>
+<h1>Reference Links</h1>
+<h2>SecondLife</h2>
+<ul>
+<li><a href="http://wiki.secondlife.com/wiki/Category:LSL_Functions">LSL Functions</a></li>
+<li><a href="http://wiki.secondlife.com/wiki/LSL_http_server">LSL HTTP server</a></li>
+</ul>
+<h2>UI Libraries/Frameworks</h2>
+<ul>
+<li><a href="http://getbootstrap.com/">Bootstrap</a></li>
+<li><a href="https://github.com/marionettejs/backbone.marionette">Marionette</a></li>
+<li><a href="http://backbonejs.org/">Backbone</a></li>
+<li><a href="http://api.jquery.com/">jQuery</a></li>
+<li><a href="http://handlebarsjs.com/">Handlebars</a></li>
+<li><a href="http://momentjs.com/">Moment</a></li>
+<li><a href="http://fontawesome.io/icons/">Font Awesome</a></li>
+</ul>
+<hr>
+<h1>Features NOT implemented</h1>
+<h2>Default rarity</h2>
+<p>Setting a default rarity means we&#39;d have to add to the items list every time a
+non-configured item was chosen. That would definitely run out of memory
+eventually, and would also add an unreasonable level of additional complexity.
+Instead, I&#39;m going to make it as easy as possible to configure a batch of items
+at the same time. That way you could drop in 10,000 items (would take a while
+to load...) and configure them ~100 at a time. Memory testing will indicate
+where the limits to number of configured items is.</p>
+<h2>Help Icons</h2>
+<p>There would be so many of them scattered all over the screens that it would be
+ridiculous. Just move the mouse around... the hover-tips should provide
+sufficient help.</p>
+<h2>Infinite Inventory</h2>
+<p>Yes, this could be done. I even came up with a reasonably fast way to scan the
+inventory. The configuration becomes a nightmare, and is definitely NOT easy
+for people...</p>
+<h2>More than 50 items handed out at a time</h2>
+<p>Go ahead, try handing out 100 <strong>unsaved</strong> notecards (placeholders) in a folder.
+See what happens... I sure was surprised! Regular objects don&#39;t run into the
+problem until a higher number, but that&#39;s still unacceptable.</p>
+<hr>
+<h1>gh-pages volo</h1>
+<pre><code>$ grunt volo:add:-amd:underscore:exports=_:v5/vendor/underscore
+$ grunt volo:add:-amd:jquery:exports=&#39;$&#39;:v5/vendor/jquery
+$ grunt volo:add:-amd:backbone:exports=Backbone:depends=v5/jquery,v5/underscore:v5/vendor/backbone
+$ grunt volo:add:-amd:-noprompt:bootstrap:v5/vendor/bootstrap
+$ grunt volo:add:-amd:backbone.wreqr:depends=v5/vendor/backbone:v5/vendor/backbone.wreqr
+$ grunt volo:add:-amd:backbone.babysitter:depends=v5/vendor/backbone:v5/vendor/backbone.babysitter
+$ grunt volo:add:-amd:marionette:exports=Marionette:depends=v5/vendor/underscore,v5/vendor/backbone,v5/vendor/backbone.wreqr,v5/vendor/backbone.babysitter:v5/vendor/marionette</code></pre>

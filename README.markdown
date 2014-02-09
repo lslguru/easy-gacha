@@ -1,9 +1,3 @@
-# !!! WARNING !!! #
-
-This is a work-in-progress version, and may contain bugs.
-
---------------------------------------------------------------------------------
-
 # Easy Gacha #
 
 This is a very easy, configurable implementation of a
