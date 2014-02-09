@@ -2,9 +2,9 @@
 
 This is a work-in-progress version, and may contain bugs.
 
-Previous version:
-[Version 5.0](http://github.com/lslguru/easy-gacha/tree/v5.0)
-[Version 3.1](http://github.com/lslguru/easy-gacha/tree/v3.1)
+Previous versions:
+* [Version 5.0](http://github.com/lslguru/easy-gacha/tree/v5.0)
+* [Version 3.1](http://github.com/lslguru/easy-gacha/tree/v3.1)
 
 --------------------------------------------------------------------------------
 
