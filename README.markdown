@@ -13,7 +13,10 @@ This is a very easy, configurable implementation of a
 
 # HEY YOU! / Directions / Instructions / Getting Started / Start Here #
 
-1. Drop some inventory into a prim.
+Note: These instructions are for starting with the script. If you're using the
+"Easy Gacha - Ready to use" object, skip step #2.
+
+1. Drop your Gacha items into a prim.
 2. Drop the "Easy Gacha" script into the same prim.
 3. You'll see the following things happen:
 4. Hover-text will appear telling you it needs to be configured
@@ -61,6 +64,11 @@ This is a very easy, configurable implementation of a
 --------------------------------------------------------------------------------
 
 # Frequently Asked Questions #
+
+## Can I remove the sign from the object? ##
+
+Yes! It's modifiable, so just unlink the prims and delete the sign. If you have
+the skill and feel like doing it, you could even re-texture it.
 
 ## What happens if someone pays too much? ##
 
