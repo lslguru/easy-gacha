@@ -127,7 +127,7 @@ Second Life comes... second.  Please read the license.
 
 # Safety Warning #
 
-If the script you have wasn't created by
+If the **script** you have wasn't created by
 [Zan Lightfoot](secondlife:///app/agent/d393638e-be6e-4f81-a44d-072e344828c4/about),
 then I cannot vouch for its safety. Whoever created it may have altered it. You
 have been warned.
@@ -143,6 +143,15 @@ For example, if you name the object "My Stuff", then someone might receive a
 folder that says:
 
     My Stuff (Easy Gacha: 3 items 2013-10-06)
+
+--------------------------------------------------------------------------------
+
+# The Awesome People (Contributors) #
+
+* Many thanks to [Rix Spyker](secondlife:///app/agent/1aea661a-741f-4148-a1a4-c2f9ddd047dd/about) for creating the excellent mesh Easy Gacha model for everyone to use!
+* Thanks to [beatrix Muircastle](secondlife:///app/agent/5077a3ef-ae62-42cf-8570-3c39e7edb29e/about) for beta testing and giving great feedback!
+* Thanks to [Ravina Burnstein](secondlife:///app/agent/b31cedeb-8691-4014-9f61-2c28e08b4061/about) for beta testing and giving great feedback!
+* Thanks to [Nova Spyker (luna.talon)](secondlife:///app/agent/296120e1-f04a-4f05-8b2e-c2fbad19fdd4/about) for putting up with the long hours, being the first adopter, and beta testing!
 
 --------------------------------------------------------------------------------
 
