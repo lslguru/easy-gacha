@@ -22,6 +22,7 @@ define( [
             , username: null
             , displayname: null
             , objectOwner: false
+            , objectCreator: false
             , scriptCreator: false
         }
 

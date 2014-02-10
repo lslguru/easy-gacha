@@ -36,6 +36,9 @@ define( [
                 if( options.objectOwner ) {
                     this.get( options.id ).set( 'objectOwner' , true );
                 }
+                if( options.objectCreator ) {
+                    this.get( options.id ).set( 'objectCreator' , true );
+                }
                 if( options.scriptCreator ) {
                     this.get( options.id ).set( 'scriptCreator' , true );
                 }
@@ -50,6 +53,7 @@ define( [
             var agent = new Agent( {
                 id: options.id
                 , objectOwner: Boolean( options.objectOwner )
+                , objectCreator: Boolean( options.objectCreator )
                 , scriptCreator: Boolean( options.scriptCreator )
             } );
 

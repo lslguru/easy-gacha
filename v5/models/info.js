@@ -161,6 +161,7 @@ define( [
 
                     agentsCache.fetch( {
                         id: model.get( 'creatorKey' )
+                        , objectCreator: true
                         , success: function( agent ) {
                             model.set( {
                                 creatorUserName: agent.get( 'username' )

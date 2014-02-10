@@ -11,7 +11,8 @@
                     {{#each agentsCache}}
                         <li>
                             <a href="javascript:;" data-agent-id="{{id}}" data-toggle="tooltip" title="{{username}}">{{displayname}}</a>
-                            {{#if scriptCreator}}&#160;<span data-toggle="tooltip" title="This is the creator of this script. This would also be a convenient way to give tips ;-)"><i class="fa fa-question-circle"></i></span>{{/if}}
+                            {{#if scriptCreator}}&#160;<span data-toggle="tooltip" title="This is the creator of this script. This could also be a convenient way to give tips ;-)"><i class="fa fa-question-circle"></i></span>{{/if}}
+                            {{#if objectCreator}}&#160;<span data-toggle="tooltip" title="This is the creator of this object. This could also be a convenient way to give tips ;-)"><i class="fa fa-question-circle"></i></span>{{/if}}
                             {{#if objectOwner}}&#160;<span data-toggle="tooltip" title="This is the owner of this Easy Gacha. This should be YOU..."><i class="fa fa-question-circle"></i></span>{{/if}}
                         </li>
                     {{/each}}
