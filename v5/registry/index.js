@@ -31,6 +31,10 @@ define( [
             , 'results': '#results-region'
         }
 
+        , ui: {
+            backToGacha: '#back-to-gacha'
+        }
+
         , onRender: function() {
             this.collection = new Registry();
 
@@ -48,6 +52,8 @@ define( [
                 model: this.collection.urlParams
                 , collection: this.collection
             } ) );
+
+            this.ui.backToGacha.toggle( !Boolean( window.easyGachaRegistry ) );
         }
     } );
 
