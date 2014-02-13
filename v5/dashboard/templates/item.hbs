@@ -1,8 +1,8 @@
 <td class="nowrap-this-element item-name" data-column-contents="name" data-inventory-type="{{type}}" data-toggle="tooltip" data-tooltip-placement="right" title="{{typeName}}{{#if creatorUserName}}&lt;br /&gt;Created by: {{creatorDisplayName}} ({{creatorUserName}}){{/if}}">
     {{name}}
 </td>
-<td data-column-contents="probability" data-raw-value="{{sortRarity}}" data-toggle="tooltip" data-tooltip-placement="top" title="There is a {{rarityPercentage}}% chance of getting this item. Its weight is {{rarity}}.">
-    <span class="sr-only">There is a {{rarityPercentage}}% chance of getting this item. Its weight is {{rarity}}.</span>
+<td data-column-contents="probability" data-raw-value="{{sortRarity}}" data-toggle="tooltip" data-tooltip-placement="top" title="There is a {{rarityPercentage}}% chance of getting this item. Its weight is {{rarity}}. This item has been given {{bought}} times so far, which is {{boughtPercentage}}%">
+    <span class="sr-only">There is a {{rarityPercentage}}% chance of getting this item. Its weight is {{rarity}}. This item has been given {{bought}} times so far, which is {{boughtPercentage}}%</span>
     <div class="progress">
         <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{matchedBarPercentage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{matchedBarPercentage}}%"></div>
         <div class="progress-bar progress-bar-info disparity-border-{{rarityDisparityTargetSide}}" role="progressbar" aria-valuenow="{{differenceBarPercentage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{differenceBarPercentage}}%"></div>
