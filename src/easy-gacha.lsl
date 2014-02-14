@@ -42,6 +42,7 @@
 //      4   display name lookup
 //      5   number of notecard lines
 //      6   notecard line
+//      7   llRequestURL sent
 
 //  CONSTANTS
 //      VERSION                     5.0
@@ -144,16 +145,35 @@ Hover( string msg ) {
 }
 
 RequestUrl() {
+    // If there's already a request out there which hasn't been handled
+    if( -1 != llListFindList( DataServerRequests , [ 7 ] ) ) {
+        return;
+    }
+
+    // Release the previous one if one was successfully captured
     llReleaseURL( BaseUrl );
 
+    // Generate a new admin key. This protects us against previous owner
+    // tampering
     AdminKey = llGenerateKey();
+
+    // Clear stored URLs
     BaseUrl = "";
     ShortenedInfoUrl = "";
     ShortenedAdminUrl = "";
 
-    llRequestURL();
+    // Send the request, and record that we've done so
+    DataServerRequests += [
+        llRequestURL()
+        , NULL_KEY
+        , 7
+    ];
 
-    Update();
+    // Reset cleanup timer
+    llSetTimerEvent( 0.0 );
+    llSetTimerEvent( 30.0 /*REQUEST_TIMEOUT*/ );
+
+    Update(); // To update the hover text
 }
 
 integer ItemUsable() {
@@ -535,27 +555,47 @@ default {
         integer responseStatus = 400;
         string responseBody = "Bad request";
         integer responseContentType = CONTENT_TYPE_TEXT;
+        integer requestDSRIndex = llListFindList( DataServerRequests , [ requestId ] );
 
         if( URL_REQUEST_GRANTED == httpMethod ) {
-            BaseUrl = requestBody;
-            ShortenedInfoUrl = ( BaseUrl + "/" );
-            ShortenedAdminUrl = ( BaseUrl + "/#admin/" + (string)AdminKey );
+            // If we requested this URL
+            if( -1 != requestDSRIndex ) {
+                // Store the new URL
+                BaseUrl = requestBody;
 
-            if( INVENTORY_NONE != llGetInventoryType( "EasyGachaAPI SignalOnNewURL" /*INV_API_NEW_URL*/ ) ) {
-                if( llGetInventoryCreator( "Easy Gacha API SignalOnNewURL" ) == llGetOwner() ) {
-                    llMessageLinked( LINK_SET , 3000170 , BaseUrl , AdminKey );
+                // Pre-generate a valid endpoint URL (which will be shortened as written)
+                ShortenedInfoUrl = ( BaseUrl + "/" );
+                ShortenedAdminUrl = ( BaseUrl + "/#admin/" + (string)AdminKey );
+
+                // API call
+                if( INVENTORY_NONE != llGetInventoryType( "EasyGachaAPI SignalOnNewURL" /*INV_API_NEW_URL*/ ) ) {
+                    if( llGetInventoryCreator( "Easy Gacha API SignalOnNewURL" ) == llGetOwner() ) {
+                        llMessageLinked( LINK_SET , 3000170 , BaseUrl , AdminKey );
+                    }
                 }
+
+                // Remove request from history
+                DataServerRequests = llDeleteSubList( DataServerRequests , requestDSRIndex , requestDSRIndex + 2 );
+
+                // Initiate new calls to shorten both URLs
+                Shorten( ShortenedInfoUrl , 1 );
+                Shorten( ShortenedAdminUrl , 2 );
+
+                // Update hover text etc.
+                Update();
+            } else {
+                // We didn't request this URL, release it immediately so we
+                // don't clutter things up and become a bad resident
+                llReleaseURL( requestBody );
             }
-
-            Shorten( ShortenedInfoUrl , 1 );
-            Shorten( ShortenedAdminUrl , 2 );
-
-            Update();
         }
 
-        if( URL_REQUEST_DENIED == httpMethod ) {
+        if( URL_REQUEST_DENIED == httpMethod && -1 != requestDSRIndex ) {
             // Let the owner know about the failure
             llOwnerSay( llGetScriptName() + ": Unable to get a URL. This Easy Gacha cannot be configured until one becomes available: " + requestBody );
+
+            // And remove the request from the history
+            DataServerRequests = llDeleteSubList( DataServerRequests , requestDSRIndex , requestDSRIndex + 2 );
         }
 
         if( "get" == llToLower( httpMethod ) ) {
