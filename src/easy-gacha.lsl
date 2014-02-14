@@ -110,8 +110,6 @@ key AdminKey; // Used to indicate if person has rights to modify configs
 string BaseUrl; // Requested and hopefully received
 string ShortenedInfoUrl; // Hand this out instead of the full URL
 string ShortenedAdminUrl; // Hand this out instead of the full URL
-key Owner; // More memory efficient to only update when it could be changed
-string ScriptName; // More memory efficient to only update when it could be changed
 integer HasPermission; // More memory efficient to only update when it could be changed
 list DataServerRequests; // List of the requests we have pending
 integer TotalPrice; // Updated when Payouts is updated, sum
@@ -138,7 +136,7 @@ string RootObjectName() {
 Hover( string msg ) {
     if( AllowHover ) {
         if( msg ) {
-            llSetText( RootObjectName() + ": " + ScriptName + ":\n" + msg + "\n_\n| |\n| |\n| |\n| |\n| |\nV" , <1,0,0> , 1 );
+            llSetText( RootObjectName() + ": " + llGetScriptName() + ":\n" + msg + "\n_\n| |\n| |\n| |\n| |\n| |\nV" , <1,0,0> , 1 );
         } else {
             llSetText( "" , ZERO_VECTOR , 1 );
         }
@@ -179,11 +177,9 @@ integer ItemUsable() {
 }
 
 Update() {
-    Owner = llGetOwner();
-    ScriptName = llGetScriptName();
-    HasPermission = ( ( llGetPermissionsKey() == Owner ) && llGetPermissions() & PERMISSION_DEBIT );
+    HasPermission = ( ( llGetPermissionsKey() == llGetOwner() ) && llGetPermissions() & PERMISSION_DEBIT );
 
-    if( "Easy Gacha"/*EXPECTED_SCRIPT_NAME*/ != ScriptName ) {
+    if( "Easy Gacha"/*EXPECTED_SCRIPT_NAME*/ != llGetScriptName() ) {
         llOwnerSay( llGetScriptName() + ": Only one copy of Easy Gacha should be present inside each prim. Shutting myself down to prevent confusion." );
         llSetScriptState( llGetScriptName() , FALSE ); // Disable script
         llSleep( 1.0 ); // Give it time to turn off
@@ -430,7 +426,7 @@ Play( key buyerId , integer lindensReceived ) {
     if( "" == objectName || "Object" == objectName ) {
         objectName = RootObjectName();
     }
-    string folderSuffix = ( " (" + ScriptName + ": " + (string)totalItems + itemPlural + llGetDate() + ")" );
+    string folderSuffix = ( " (" + llGetScriptName() + ": " + (string)totalItems + itemPlural + llGetDate() + ")" );
     if( llStringLength( objectName ) + llStringLength( folderSuffix ) > 63 /*MAX_FOLDER_NAME_LENGTH*/ ) {
         // 4 == 3 for ellipses + 1 because this is end index, not count
         objectName = ( llGetSubString( objectName , 0 , 63 /*MAX_FOLDER_NAME_LENGTH*/ - llStringLength( folderSuffix ) - 4 ) + "..." );
@@ -448,7 +444,7 @@ Play( key buyerId , integer lindensReceived ) {
     integer payoutIndex;
     for( payoutIndex = 0 ; payoutIndex < CountPayouts ; payoutIndex += 2 ) { // Strided list
         // Only if the payment isn't to the owner and is more than L$0
-        if( llList2Key( Payouts , payoutIndex ) != Owner && 0 < llList2Integer( Payouts , payoutIndex + 1 ) ) {
+        if( llList2Key( Payouts , payoutIndex ) != llGetOwner() && 0 < llList2Integer( Payouts , payoutIndex + 1 ) ) {
             llGiveMoney( llList2Key( Payouts , payoutIndex ) , llList2Integer( Payouts , payoutIndex + 1 ) * totalItems );
         }
     }
@@ -462,7 +458,7 @@ Play( key buyerId , integer lindensReceived ) {
     }
 
     // Thank them for their purchase
-    llWhisper( 0 , ScriptName + ": Thank you for your purchase, " + displayName + "! Your " + (string)totalItems + itemPlural + hasHave + "been sent." + change );
+    llWhisper( 0 , llGetScriptName() + ": Thank you for your purchase, " + displayName + "! Your " + (string)totalItems + itemPlural + hasHave + "been sent." + change );
 
     // Ping registry with play info
     Registry( [
@@ -475,10 +471,10 @@ Play( key buyerId , integer lindensReceived ) {
 
     // Reports
     if( Im ) {
-        llInstantMessage( Owner , ScriptName + ": User " + displayName + " (" + llGetUsername(buyerId) + ") just received " + (string)totalItems + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
+        llInstantMessage( llGetOwner() , llGetScriptName() + ": User " + displayName + " (" + llGetUsername(buyerId) + ") just received " + (string)totalItems + " items. " + ShortenedInfoUrl ); // FORCED_DELAY 2.0 seconds
     }
     if( Email ) {
-        llEmail( Email , ScriptName + ": Play Results" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
+        llEmail( Email , llGetScriptName() + ": Play Results" , displayName + " (" + llGetUsername(buyerId) + ") just received the following items:\n\n" + llDumpList2String( itemsToSend , "\n" ) ); // FORCED_DELAY 20.0 seconds
     }
 
     // API calls
@@ -546,7 +542,7 @@ default {
             ShortenedAdminUrl = ( BaseUrl + "/#admin/" + (string)AdminKey );
 
             if( INVENTORY_NONE != llGetInventoryType( "EasyGachaAPI SignalOnNewURL" /*INV_API_NEW_URL*/ ) ) {
-                if( llGetInventoryCreator( "Easy Gacha API SignalOnNewURL" ) == Owner ) {
+                if( llGetInventoryCreator( "Easy Gacha API SignalOnNewURL" ) == llGetOwner() ) {
                     llMessageLinked( LINK_SET , 3000170 , BaseUrl , AdminKey );
                 }
             }
@@ -558,7 +554,8 @@ default {
         }
 
         if( URL_REQUEST_DENIED == httpMethod ) {
-            llOwnerSay( ScriptName + ": Unable to get a URL. This Easy Gacha cannot be configured until one becomes available: " + requestBody );
+            // Let the owner know about the failure
+            llOwnerSay( llGetScriptName() + ": Unable to get a URL. This Easy Gacha cannot be configured until one becomes available: " + requestBody );
         }
 
         if( "get" == llToLower( httpMethod ) ) {
@@ -762,13 +759,13 @@ default {
                     JSON_ARRAY
                     , [
                         isAdmin
-                        , Owner
+                        , llGetOwner()
                         , Ready
                     ] + llGetLinkPrimitiveParams( (!!llGetLinkNumber()) , [
                         PRIM_NAME
                         , PRIM_DESC
                     ] ) + [
-                        ScriptName
+                        llGetScriptName()
                         , llGetFreeMemory()
                         , llGetUsedMemory()
                         , HasPermission
@@ -903,7 +900,7 @@ default {
                     Configured = requestBodyPart0Int;
 
                     if( Configured && (integer)llListStatistics( LIST_STAT_SUM , Payouts ) && !HasPermission ) {
-                        llRequestPermissions( Owner , PERMISSION_DEBIT );
+                        llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
                     }
 
                     Update();
@@ -966,10 +963,10 @@ default {
             }
             if( 2 == mode ) {
                 ShortenedAdminUrl = shortened;
-                llOwnerSay( ScriptName + ": Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
+                llOwnerSay( llGetScriptName() + ": Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
             }
         } else if( 2 == mode ) {
-            llOwnerSay( ScriptName + ": Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
+            llOwnerSay( llGetScriptName() + ": Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
         }
 
         DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 2 );
@@ -982,22 +979,22 @@ default {
         // For each person that touched
         while( 0 <= ( detected -= 1 ) ) {
             // If admin, send IM with link
-            if( llDetectedKey( detected ) == Owner ) {
+            if( llDetectedKey( detected ) == llGetOwner() ) {
                 if( ShortenedAdminUrl ) {
-                    llOwnerSay( ScriptName + ": To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
+                    llOwnerSay( llGetScriptName() + ": To configure and administer this Easy Gacha, please go here: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
                 } else if( "" == BaseUrl && llGetFreeURLs() ) {
                     // If URL not set but URLs available, request one
-                    llOwnerSay( ScriptName + ": Retrying to get a new URL now... please wait" );
+                    llOwnerSay( llGetScriptName() + ": Retrying to get a new URL now... please wait" );
                     RequestUrl();
                 } else {
-                    llDialog( Owner , "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." , [ ] , -1 ); // FORCED_DELAY 1.0 seconds
+                    llDialog( llGetOwner() , "No URLs are available on this parcel/sim, so the configuration screen cannot be shown. Please slap whoever is consuming all the URLs and try again." , [ ] , -1 ); // FORCED_DELAY 1.0 seconds
                 }
 
                 // If the owner accidentally ignored the permissions request
                 // (not denied) and touches the object again, then re-ask for
                 // permission
                 if( Configured && TotalPrice && !HasPermission ) {
-                    llRequestPermissions( Owner , PERMISSION_DEBIT );
+                    llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
                 }
             } else {
                 nonOwnerTouched = TRUE;
@@ -1009,7 +1006,7 @@ default {
                     Play( llDetectedKey( detected ) , 0 );
                     LastPlay = llGetUnixTime();
                 } else {
-                    llWhisper( 0 , ScriptName + ": Sorry, " + llGetDisplayName( llDetectedKey( detected ) ) + ", but someone else is currently playing this Gacha. Please wait one second and try again." );
+                    llWhisper( 0 , llGetScriptName() + ": Sorry, " + llGetDisplayName( llDetectedKey( detected ) ) + ", but someone else is currently playing this Gacha. Please wait one second and try again." );
                 }
             }
         }
@@ -1019,9 +1016,9 @@ default {
         if( nonOwnerTouched || Ready ) {
             // Whisper info link
             if( "" != ShortenedInfoUrl && Ready ) {
-                llWhisper( 0 , ScriptName + ": For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
+                llWhisper( 0 , llGetScriptName() + ": For help, information, and statistics about this Easy Gacha, please go here: " + ShortenedInfoUrl );
             } else {
-                llWhisper( 0 , ScriptName + ": Information about this Easy Gacha is not currently available, please wait a few minutes and try again." );
+                llWhisper( 0 , llGetScriptName() + ": Information about this Easy Gacha is not currently available, please wait a few minutes and try again." );
             }
         }
     }
