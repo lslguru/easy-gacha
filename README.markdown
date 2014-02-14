@@ -1,13 +1,3 @@
-# !!! WARNING !!! #
-
-This is a work-in-progress version, and may contain bugs.
-
-Previous versions:
-* [Version 5.0](http://github.com/lslguru/easy-gacha/tree/v5.0)
-* [Version 3.1](http://github.com/lslguru/easy-gacha/tree/v3.1)
-
---------------------------------------------------------------------------------
-
 # Easy Gacha #
 
 This is a very easy, configurable implementation of a
