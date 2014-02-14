@@ -431,7 +431,7 @@ define( [
             }
 
             // If there's not at least one payout record, add one for the owner
-            if( !this.get( 'payouts' ).length ) {
+            if( !this.get( 'payouts' ).get( this.get( 'ownerKey' ) ) ) {
                 this.get( 'payouts' ).add( {
                     agentKey: this.get( 'ownerKey' )
                     , userName: this.get( 'ownerUserName' )
