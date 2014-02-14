@@ -1003,10 +1003,10 @@ default {
             }
             if( 2 == mode ) {
                 ShortenedAdminUrl = shortened;
-                llOwnerSay( llGetScriptName() + ": Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
+                llOwnerSay( llGetScriptName() + ": Ready to configure. Here is the configuration link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
             }
         } else if( 2 == mode ) {
-            llOwnerSay( llGetScriptName() + ": Goo.gl URL shortener failed. Ready to configure. Here is the configruation link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
+            llOwnerSay( llGetScriptName() + ": Goo.gl URL shortener failed. Ready to configure. Here is the configuration link: " + ShortenedAdminUrl + " DO NOT GIVE THIS LINK TO ANYONE ELSE." );
         }
 
         DataServerRequests = llDeleteSubList( DataServerRequests , requestIndex , requestIndex + 2 );
