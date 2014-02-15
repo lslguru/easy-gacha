@@ -35,6 +35,9 @@ define( [
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
             , 'loading': '#loading'
+            , 'gachaCountInfo': '.gacha-count-info'
+            , 'gachaNumber': '.gacha-number'
+            , 'gachaCount': '.gacha-count'
         }
 
         , modelEvents: {
@@ -43,6 +46,8 @@ define( [
 
         , initialize: function() {
             this.loadMore = _.bind( this.loadMore , this );
+            this.onChangeFetching = _.bind( this.onChangeFetching , this );
+            this.onChangeFetching = _.debounce( this.onChangeFetching , 1 );
 
             Marionette.CompositeView.prototype.initialize.apply( this , arguments );
 
@@ -93,7 +98,15 @@ define( [
         }
 
         , onChangeFetching: function() {
-            fade( this.ui.loading , this.model.get( 'fetching' ) );
+            var fetching = this.model.get( 'fetching' );
+            var loadingCount = ( this.realCollection.indexesFetched && this.realCollection.indexesFetched.length );
+            var countGachas = ( this.realCollection.countModel && this.realCollection.countModel.get( 'count' ) );
+            var hasCount = Boolean( null !== countGachas );
+
+            fade( this.ui.loading , fetching );
+            fade( this.ui.gachaCountInfo , fetching && hasCount );
+            this.ui.gachaNumber.text( loadingCount );
+            this.ui.gachaCount.text( countGachas );
         }
 
         , onClose: function() {

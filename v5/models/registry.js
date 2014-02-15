@@ -83,9 +83,6 @@ define( [
                 options.success = _.bind( option.success , options.context );
             }
 
-            // Mark that we've started fetching
-            this.urlParams.set( 'fetching' , true );
-
             // If we need to mix it up...
             if( this.urlParams.get( 'randomize' ) ) {
                 // Get a random index, and if we've already tried that index,
@@ -103,6 +100,9 @@ define( [
             _.extend( nextGacha.urlParams , this.urlParams.attributes );
             nextGacha.urlParams.get = this.nextIndex;
             this.indexesFetched.push( this.nextIndex );
+
+            // Mark that we've started fetching - signals views to update too
+            this.urlParams.set( 'fetching' , true );
 
             // Fetch the model from the server
             var fetchOptions = _.clone( options );
