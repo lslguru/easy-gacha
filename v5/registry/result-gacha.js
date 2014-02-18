@@ -37,6 +37,12 @@ define( [
                     , this.model.get( 'position' ).y
                     , this.model.get( 'position' ).z
                 )
+
+                , objectDescPrefixed: (
+                    this.model.get( 'objectDesc' )
+                    ? 'Object Description: ' + this.model.get( 'objectDesc' )
+                    : ''
+                )
             };
         }
 
