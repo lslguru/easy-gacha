@@ -6,6 +6,7 @@ define( [
     , 'css!registry/styles/result-gacha'
     , 'lib/tooltip-placement'
     , 'bootstrap'
+    , 'lib/map-uri'
 
 ] , function(
 
@@ -15,6 +16,7 @@ define( [
     , styles
     , tooltipPlacement
     , bootstrap
+    , mapUri
 
 ) {
     'use strict';
@@ -25,6 +27,17 @@ define( [
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
+        }
+
+        , templateHelpers: function() {
+            return {
+                mapUrl: mapUri(
+                    this.model.get( 'regionName' )
+                    , this.model.get( 'position' ).x
+                    , this.model.get( 'position' ).y
+                    , this.model.get( 'position' ).z
+                )
+            };
         }
 
         , onRender: function() {

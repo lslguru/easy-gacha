@@ -3,12 +3,14 @@ define( [
     'underscore'
     , 'backbone'
     , 'lib/constants'
+    , 'lib/vector'
 
 ] , function(
 
     _
     , Backbone
     , CONSTANTS
+    , Vector
 
 ) {
     'use strict';
@@ -29,6 +31,8 @@ define( [
             , baseUrl: null
             , objectName: null
             , objectDesc: null
+            , regionName: null
+            , position: null
         }
 
         , initialize: function() {
@@ -57,6 +61,8 @@ define( [
             if( data.objectDesc && -1 !== CONSTANTS.EMPTY_DESCRIPTIONS.indexOf( data.objectDesc ) ) {
                 data.objectDesc = '';
             }
+
+            data.position = new Vector( data.position );
 
             return data;
         }
