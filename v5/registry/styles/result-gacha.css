@@ -1,4 +1,13 @@
+#page-registry .gacha {
+    display: table-row;
+}
+
 #page-registry .gacha-field {
     display: table-cell;
     vertical-align: top;
+    padding-right: 0.5em;
+}
+
+#page-registry .gacha-field a {
+    white-space: nowrap;
 }
