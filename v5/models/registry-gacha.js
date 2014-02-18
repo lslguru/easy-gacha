@@ -2,11 +2,13 @@ define( [
 
     'underscore'
     , 'backbone'
+    , 'lib/constants'
 
 ] , function(
 
     _
     , Backbone
+    , CONSTANTS
 
 ) {
     'use strict';
@@ -50,6 +52,10 @@ define( [
                 return {
                     count: data
                 };
+            }
+
+            if( data.objectDesc && -1 !== CONSTANTS.EMPTY_DESCRIPTIONS.indexOf( data.objectDesc ) ) {
+                data.objectDesc = '';
             }
 
             return data;

@@ -129,4 +129,10 @@ define( [
 
     , SEARCH_DEBOUNCE: 1000
 
+    , EMPTY_DESCRIPTIONS: [
+        '(No Description)'
+        , 'v5.0 (f28627cbf43baf39d00bfb088818efcb00fd9b34)'
+        , 'v5.1 (b9eecd18b6470774731395410b7d4844455f8b9c)'
+    ]
+
 } ; } );

@@ -73,7 +73,7 @@ define( [
             }
             parsed.objectName = data[i++];
 
-            if( '(No Description)' === data[i] ) {
+            if( data[i] && -1 !== CONSTANTS.EMPTY_DESCRIPTIONS.indexOf( data[i] ) ) {
                 data[i] = '';
             }
             parsed.objectDesc = data[i++];
