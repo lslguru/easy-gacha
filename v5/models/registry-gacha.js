@@ -52,16 +52,24 @@ define( [
         }
 
         , parse: function( data ) {
+            // If a count was requested instead of details
             if( _.isNumber( data ) ) {
                 return {
                     count: data
                 };
             }
 
+            // If this record is no longer valid, exit early
+            if( null === data ) {
+                return null;
+            }
+
+            // People who leave these in should have them treated as empty
             if( data.objectDesc && -1 !== CONSTANTS.EMPTY_DESCRIPTIONS.indexOf( data.objectDesc ) ) {
                 data.objectDesc = '';
             }
 
+            // Convert to native data type
             data.position = new Vector( data.position );
 
             return data;
