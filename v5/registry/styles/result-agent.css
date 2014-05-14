@@ -4,6 +4,12 @@
     width: 420px;
     margin-right: 30px;
     margin-bottom: 30px;
+
+    padding: 5px;
+    border: 1px solid #ccc;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
 }
 
 #page-registry .agent .list {
