@@ -73,6 +73,7 @@ require( {
 
     ga( 'create' , 'UA-29886355-4' , 'auto' , { allowLinker: true } );
     ga( 'require' , 'linker' );
+    ga( 'require' , 'displayfeatures' );
     ga( 'set' , 'anonymizeIp' , false );
 
     if( window && window.performance && window.performance.timing && window.performance.timing.domComplete ) {
