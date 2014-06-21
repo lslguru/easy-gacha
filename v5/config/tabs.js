@@ -13,6 +13,7 @@ define( [
     , 'config/advanced'
     , 'config/export'
     , 'config/import'
+    , 'google-analytics'
 
 ] , function(
 
@@ -29,6 +30,7 @@ define( [
     , AdvancedView
     , ExportView
     , ImportView
+    , ga
 
 ) {
     'use strict';
@@ -96,6 +98,17 @@ define( [
             }
         }
 
+        , initialize: function initialize( options ) {
+            Marionette.Layout.prototype.initialize.apply( this , arguments );
+            this.defaultTab = options && options.defaultTab || this.defaultTab;
+        }
+
+        , setCurrentTab: function( tabName ) {
+            this.options.app.router.navigate( 'config/' + tabName , { replace: true } );
+            ga( 'set' , 'page' , '/config/' + tabName );
+            ga( 'send' , 'pageview' );
+        }
+
         , showTab: function( jEvent ) {
             jEvent.preventDefault();
 
@@ -109,6 +122,8 @@ define( [
                     subviewConfig.instance.onTabShown();
                 } );
             }
+
+            this.setCurrentTab( subviewName );
         }
 
         , onRender: function() {
@@ -138,9 +153,11 @@ define( [
                 }
 
                 this.ui[ tabName ].tab( 'show' );
+                this.setCurrentTab( tabName );
             } , this );
 
             this.ui[ this.defaultTab ].tab( 'show' );
+            this.setCurrentTab( this.defaultTab );
 
             this.listenTo( this.options.app.vent , 'lslScriptReset' , this.resetOccurred );
 

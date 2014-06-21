@@ -7,6 +7,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'bootstrap'
     , 'lib/map-uri'
+    , 'google-analytics'
 
 ] , function(
 
@@ -17,6 +18,7 @@ define( [
     , tooltipPlacement
     , bootstrap
     , mapUri
+    , ga
 
 ) {
     'use strict';
@@ -27,6 +29,12 @@ define( [
 
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
+            , 'loadGachaPageLink': '.load-gacha-page-link'
+        }
+
+        , events: {
+            'mousedown @ui.loadGachaPageLink': 'decorateLink'
+            , 'keydown @ui.loadGachaPageLink': 'decorateLink'
         }
 
         , templateHelpers: function() {
@@ -56,6 +64,17 @@ define( [
 
         , onClose: function() {
             this.ui.tooltips.tooltip( 'destroy' );
+        }
+
+        , decorateLink: function( jEvent ) {
+            var originalHref = jEvent.currentTarget.href;
+            var target = jEvent.currentTarget;
+
+            ga( 'linker:decorate' , target );
+
+            _.delay( function() {
+                target.href = originalHref;
+            } , 100 );
         }
     } );
 

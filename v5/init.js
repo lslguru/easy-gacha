@@ -23,6 +23,7 @@ require( {
         , 'hbs': 'vendor/require-handlebars-plugin/hbs'
         , 'moment': 'vendor/moment/moment'
         , 'tablesorter': 'vendor/tablesorter/jquery.tablesorter'
+        , 'google-analytics': '//www.google-analytics.com/analytics'
     }
 
     , shim: {
@@ -38,6 +39,9 @@ require( {
                 'css!vendor/tablesorter/themes/blue/style'
             ]
         }
+        , 'google-analytics': {
+            exports: 'ga'
+        }
     }
 
 } , [
@@ -45,33 +49,33 @@ require( {
     'backbone'
     , 'marionette'
     , 'lib/router'
-    , 'models/info'
     , 'css!styles/page'
     , 'css!vendor/font-awesome-4.0.3/css/font-awesome'
     , 'jquery'
     , 'lib/is-sl-viewer'
+    , 'google-analytics'
 
 ] , function(
 
     Backbone
     , Marionette
     , AppRouter
-    , Info
     , pageStyles
     , fontawesome // pre-loaded for entire project
     , $
     , isSlViewer
+    , ga
 
 ) {
     'use strict';
 
     document.body.innerHTML = 'Please use a different web browser. I suggest Chrome or FireFox.';
 
-    var app = new Marionette.Application();
+    ga( 'create' , 'UA-29886355-4' , 'auto' , { allowLinker: true } );
+    ga( 'require' , 'linker' );
+    ga( 'set' , 'anonymizeIp' , false );
 
-    app.addInitializer( function( options ) {
-        this.info = new Info();
-    } );
+    var app = new Marionette.Application();
 
     app.addInitializer( function( options ) {
         this.router = new AppRouter( options );

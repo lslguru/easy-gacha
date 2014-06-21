@@ -34,13 +34,6 @@
         document.body.appendChild( el );
     };
 
-    // Use requirejs to load init.js
-    el = document.createElement( 'script' );
-    el.setAttribute( 'type' , 'text/javascript' );
-    el.setAttribute( 'data-main' , mydir + 'init' + ( dev ? '' : '.min' ) + '.js' );
-    el.setAttribute( 'src' , mydir + 'vendor/require' + ( dev ? '' : '.min' ) + '.js' );
-    document.head.appendChild( el );
-
     // A generic catch-all for errors to give us some idea what went wrong in
     // the SecondLife Viewer's Browser. Note: This is ugly, and intolerant of
     // uncaught but harmless errors.
@@ -49,4 +42,11 @@
             '<p>Something went wrong. Please refresh the page and try again.</p>'
         );
     };
+
+    // Use requirejs to load init.js
+    el = document.createElement( 'script' );
+    el.setAttribute( 'type' , 'text/javascript' );
+    el.setAttribute( 'data-main' , mydir + 'init' + ( dev ? '' : '.min' ) + '.js' );
+    el.setAttribute( 'src' , mydir + 'vendor/require' + ( dev ? '' : '.min' ) + '.js' );
+    document.head.appendChild( el );
 })();
