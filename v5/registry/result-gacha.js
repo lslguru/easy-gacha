@@ -30,11 +30,13 @@ define( [
         , ui: {
             'tooltips': '[data-toggle=tooltip]'
             , 'loadGachaPageLink': '.load-gacha-page-link'
+            , 'teleportToGachaLink': '.teleport-to-gacha-link'
         }
 
         , events: {
             'mousedown @ui.loadGachaPageLink': 'decorateLink'
             , 'keydown @ui.loadGachaPageLink': 'decorateLink'
+            , 'click @ui.teleportToGachaLink': 'teleportLink'
         }
 
         , templateHelpers: function() {
@@ -75,6 +77,10 @@ define( [
             _.delay( function() {
                 target.href = originalHref;
             } , 100 );
+        }
+
+        , teleportLink: function() {
+            ga( 'send' , 'event' , 'registry' , 'teleport' );
         }
     } );
 

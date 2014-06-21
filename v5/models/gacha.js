@@ -14,6 +14,7 @@ define( [
     , 'models/base-sl-model'
     , 'lib/constants'
     , 'backbone'
+    , 'google-analytics'
 
 ] , function(
 
@@ -31,6 +32,7 @@ define( [
     , BaseSlModel
     , CONSTANTS
     , Backbone
+    , ga
 
 ) {
     'use strict';
@@ -206,6 +208,11 @@ define( [
                 , adminOnly: false
                 , fetchSuccess: function( gacha , info ) {
                     gacha.set( info.get( 'extra' ) );
+
+                    ga( 'set' , 'dimension1' , info.get( 'isAdmin' ) ? 'true' : 'false' ); // isAdmin
+                    ga( 'set' , 'dimension2' , info.get( 'ownerKey' ) ); // ownerKey
+                    ga( 'set' , 'metric1' , info.get( 'freeMemory' ) ); // freeMemory
+                    ga( 'set' , 'metric2' , info.get( 'scriptTime' ) * 1000000 ); // scriptTimeMicroseconds
 
                     // Nice smooth progress bar
                     var totalCalls = 1;
@@ -463,11 +470,17 @@ define( [
             this.set( 'progressPercentage' , 0 );
             this.updateProgress();
 
+            // Track Timing
+            var gachaStarted = Date.now();
+
             // Method to process one submodel
             var next = _.bind( function() {
                 // Get next submodelName or we're done
                 var submodelName = submodelNames.shift();
                 if( ! submodelName ) {
+                    // Report Timing
+                    ga( 'send' , 'timing' , 'fetch' , 'gacha' , Date.now() - gachaStarted );
+
                     // Cache the finalized fetched data meant for export/import
                     this.fetchedNotecardJSON = this.toNotecardJSON();
 
@@ -503,9 +516,15 @@ define( [
                     return;
                 }
 
+                // Track Timing
+                var requestStarted = Date.now();
+
                 // Override success with next callback
                 var fetchOptions = _.clone( options );
                 fetchOptions.success = _.bind( function() {
+                    // Report Timing
+                    ga( 'send' , 'timing' , 'fetch' , submodelName , Date.now() - requestStarted );
+
                     if( submodelConfig.fetchSuccess ) {
                         submodelConfig.fetchSuccess( this , submodel );
                     }
@@ -553,11 +572,17 @@ define( [
             this.set( 'progressPercentage' , 0 );
             this.updateProgress();
 
+            // Track Timing
+            var gachaStarted = Date.now();
+
             // Method to process one submodel
             var next = _.bind( function() {
                 // Get next submodelName or we're done
                 var submodelName = submodelNames.shift();
                 if( ! submodelName ) {
+                    // Report Timing
+                    ga( 'send' , 'timing' , 'save' , 'gacha' , Date.now() - gachaStarted );
+
                     // Automatic changes have now been saved
                     this.set( 'autoModified' , false );
 
@@ -592,9 +617,15 @@ define( [
                 var submodelConfig = this.submodels[ submodelName ];
                 var submodel = submodelConfig.instance;
 
+                // Track Timing
+                var requestStarted = Date.now();
+
                 // Override success with next callback
                 var saveOptions = _.clone( options );
                 saveOptions.success = _.bind( function() {
+                    // Report Timing
+                    ga( 'send' , 'timing' , 'save' , submodelName , Date.now() - requestStarted );
+
                     submodelConfig.progressPercentage = 100;
                     this.updateProgress();
 

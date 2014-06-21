@@ -8,6 +8,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'lib/map-uri'
     , 'lib/fade'
+    , 'google-analytics'
 
 ] , function(
 
@@ -19,6 +20,7 @@ define( [
     , tooltipPlacement
     , mapUri
     , fade
+    , ga
 
 ) {
     'use strict';
@@ -30,6 +32,21 @@ define( [
             'tooltips': '[data-toggle=tooltip]'
             , 'dropdowns': '[data-toggle=dropdown]'
             , 'needPermissionWarning': '#ready-needs-permission-alert'
+            , 'marketplaceButton': '#marketplace'
+            , 'githubButton': '#github'
+        }
+
+        , events: {
+            'click @ui.marketplaceButton': 'clickMarketplace'
+            , 'click @ui.githubButton': 'clickGithub'
+        }
+
+        , clickMarketplace: function() {
+            ga( 'send' , 'event' , 'dashboard' , 'click' , 'marketplace' );
+        }
+
+        , clickGithub: function() {
+            ga( 'send' , 'event' , 'dashboard' , 'click' , 'github' );
         }
 
         , templateHelpers: function() {

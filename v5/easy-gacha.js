@@ -41,6 +41,13 @@
         document.body.innerHTML = (
             '<p>Something went wrong. Please refresh the page and try again.</p>'
         );
+
+        if( window.ga ) {
+            window.ga( 'send' , 'exception' , {
+                exDescription: msg
+                , exFatal: true
+            } );
+        }
     };
 
     // Use requirejs to load init.js

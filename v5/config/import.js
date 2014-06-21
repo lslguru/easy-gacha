@@ -12,6 +12,7 @@ define( [
     , 'models/notecard'
     , 'lib/is-sl-viewer'
     , 'lib/fade'
+    , 'google-analytics'
 
 ] , function(
 
@@ -27,6 +28,7 @@ define( [
     , Notecard
     , isSlViewer
     , fade
+    , ga
 
 ) {
     'use strict';
@@ -125,6 +127,8 @@ define( [
             this.ui.importSuccessModal.one( 'hidden.bs.modal' , _.bind( function() {
                 this.options.app.vent.trigger( 'selectTab' , 'default' );
             } , this ) );
+
+            ga( 'send' , 'event' , 'config' , 'imported' );
         }
 
         , importNotecard: function( notecardName ) {

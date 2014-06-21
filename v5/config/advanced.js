@@ -9,6 +9,7 @@ define( [
     , 'lib/constants'
     , 'lib/tooltip-placement'
     , 'lib/fade'
+    , 'google-analytics'
 
 ] , function(
 
@@ -21,6 +22,7 @@ define( [
     , CONSTANTS
     , tooltipPlacement
     , fade
+    , ga
 
 ) {
     'use strict';
@@ -118,6 +120,8 @@ define( [
             var target = $( jEvent.currentTarget );
             var newValue = Boolean( parseInt( target.data( 'value' ) , 10 ) );
             this.model.set( 'folderForSingleItem' , newValue );
+
+            ga( 'send' , 'event' , 'config' , 'folderForSingleItem' , newValue ? 'true' : 'false' );
         }
 
         , updateMaxBuys: function() {
@@ -144,6 +148,8 @@ define( [
             } else {
                 this.model.set( 'maxBuys' , -1 );
             }
+
+            ga( 'send' , 'event' , 'config' , 'maxBuys' , this.model.get( 'maxBuys' ) );
         }
 
         , setMaxBuysCount: function( jEvent ) {
@@ -179,6 +185,8 @@ define( [
 
             this.model.set( 'maxBuys' , newValue );
             this.updateMaxBuys(); // Model may not fire change even if value is the same
+
+            ga( 'send' , 'event' , 'config' , 'maxBuys' , newValue );
         }
 
         , updateMaxPerPurchase: function() {
@@ -214,6 +222,8 @@ define( [
 
             this.model.set( 'maxPerPurchase' , newValue );
             this.updateMaxPerPurchase();
+
+            ga( 'send' , 'event' , 'config' , 'maxPerPurchase' , newValue );
         }
 
         , updateGroup: function() {
@@ -230,6 +240,8 @@ define( [
             var target = $( jEvent.currentTarget );
             var newValue = Boolean( parseInt( target.data( 'value' ) , 10 ) );
             this.model.set( 'group' , newValue );
+
+            ga( 'send' , 'event' , 'config' , 'group' , newValue ? 'true' : 'false' );
         }
 
         , updateRootClickAction: function() {
@@ -259,6 +271,8 @@ define( [
             var target = $( jEvent.currentTarget );
             var newValue = parseInt( target.data( 'value' ) , 10 );
             this.model.set( 'rootClickAction' , newValue );
+
+            ga( 'send' , 'event' , 'config' , 'rootClickAction' , newValue ? 'true' : 'false' );
         }
 
         , setBooleanField: function( jEvent ) {
@@ -266,6 +280,8 @@ define( [
             var field = target.data( 'field' );
             var newValue = Boolean( parseInt( target.data( 'value' ) , 10 ) );
             this.model.set( field , newValue );
+
+            ga( 'send' , 'event' , 'config' , field , newValue ? 'true' : 'false' );
         }
 
     } );

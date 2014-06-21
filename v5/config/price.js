@@ -10,6 +10,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'image!images/pay-window.png'
     , 'lib/fade'
+    , 'google-analytics'
 
 ] , function(
 
@@ -23,6 +24,7 @@ define( [
     , tooltipPlacement
     , payWindowImage
     , fade
+    , ga
 
 ) {
     'use strict';
@@ -240,6 +242,8 @@ define( [
                 , button_2: correctOrder[ 2 ]
                 , button_3: correctOrder[ 3 ]
             } );
+
+            ga( 'send' , 'event' , 'config' , 'button_order' );
         }
 
         , setField: function( jEvent ) {
@@ -254,6 +258,8 @@ define( [
             }
 
             this.updateDisplay();
+
+            ga( 'send' , 'event' , 'config' , field , this.model.get( field ) );
         }
 
         , focusOnPayField: function( jEvent ) {

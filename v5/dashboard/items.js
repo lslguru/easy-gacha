@@ -9,6 +9,7 @@ define( [
     , 'tablesorter'
     , 'lib/tooltip-placement'
     , 'bootstrap'
+    , 'google-analytics'
 
 ] , function(
 
@@ -21,6 +22,7 @@ define( [
     , tablesorter
     , tooltipPlacement
     , bootstrap
+    , ga
 
 ) {
     'use strict';
@@ -45,6 +47,24 @@ define( [
                         , textExtraction: function( node ) {
                             return $( node ).data( 'raw-value' ) || $( node ).text();
                         }
+                    } );
+
+                    this.ui.table.bind( 'sortEnd' , function( jEvent ) {
+                        var sortList = jEvent.target.config.sortList;
+                        var readableSortList = [];
+
+                        _.each( sortList , function( pair ) {
+                            var columnIndex = pair[ 0 ];
+                            var headerElement = jEvent.target.config.headerList[ columnIndex ];
+                            var columnContents = $( headerElement ).data( 'column-contents' );
+                            var direction = ( pair[ 1 ] ? 'DESC' : 'ASC' );
+
+                            readableSortList.push( columnContents + ' ' + direction );
+                        } , this );
+
+                        var sortQuery = readableSortList.join( ', ' );
+
+                        ga( 'send' , 'event' , 'dashboard' , 'sort' , sortQuery );
                     } );
                 }
 

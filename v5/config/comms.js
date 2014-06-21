@@ -10,6 +10,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'lib/validate-email-address'
     , 'lib/fade'
+    , 'google-analytics'
 
 ] , function(
 
@@ -23,6 +24,7 @@ define( [
     , tooltipPlacement
     , validateEmailAddress
     , fade
+    , ga
 
 ) {
     'use strict';
@@ -124,6 +126,8 @@ define( [
             var target = $( jEvent.currentTarget );
             var newValue = Boolean( parseInt( target.data( 'value' ) , 10 ) );
             this.model.set( 'allowHover' , newValue );
+
+            ga( 'send' , 'event' , 'config' , 'allowHover' , newValue ? 'true' : 'false' );
         }
 
         , updateEmail: function() {
@@ -135,6 +139,8 @@ define( [
                 this.model.set( 'hasDanger_comms_email' , false );
                 this.model.set( 'email' , this.ui.email.val() );
             }
+
+            ga( 'send' , 'event' , 'config' , 'email' , this.model.get( 'email' ) ? 'set' : 'cleared' );
         }
 
         , selectIm: function( jEvent ) {
@@ -165,6 +171,8 @@ define( [
                     } , this )
                 } );
             }
+
+            ga( 'send' , 'event' , 'config' , 'im' , CONSTANTS.NULL_KEY !== this.model.get( 'im' ) ? 'set' : 'cleared' );
         }
 
         , dismissEmailSlowness: function() {

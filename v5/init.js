@@ -75,6 +75,11 @@ require( {
     ga( 'require' , 'linker' );
     ga( 'set' , 'anonymizeIp' , false );
 
+    if( window && window.performance && window.performance.timing && window.performance.timing.domComplete ) {
+        var time = Date.now() - window.performance.timing.domComplete;
+        ga( 'send' , 'timing' , 'app' , 'initialize' , time );
+    }
+
     var app = new Marionette.Application();
 
     app.addInitializer( function( options ) {
@@ -99,5 +104,12 @@ require( {
 } , function( err ) {
 
     document.body.innerHTML = '<p>ERROR LOADING PAGE: Please reload and try again</p>\n<pre>' + err + '</pre>';
+
+    if( window.ga ) {
+        window.ga( 'send' , 'exception' , {
+            exDescription: err
+            , exFatal: true
+        } );
+    }
 
 } );

@@ -10,6 +10,7 @@ define( [
     , 'lib/is-sl-viewer'
     , 'lib/fade'
     , 'models/reset'
+    , 'google-analytics'
 
 ] , function(
 
@@ -23,6 +24,7 @@ define( [
     , isSlViewer
     , fade
     , Reset
+    , ga
 
 ) {
     'use strict';
@@ -55,6 +57,9 @@ define( [
             , 'saveStatresetConfirmation': '#statreset-confirmation'
             , 'saveStatresetConfirm': '#statreset-confirm'
             , 'registryButton': '#registry'
+            , 'marketplaceButton': '#marketplace'
+            , 'githubButton': '#github'
+            , 'surveyButton': '#survey'
             , 'registryConfirmation': '#registry-confirmation'
             , 'registryConfirmed': '#registry-confirm'
             , 'redItemsWarning': '#red-items-warning'
@@ -72,6 +77,9 @@ define( [
             , 'click @ui.saveStatresetConfirm': 'confirmSave'
             , 'click @ui.firstRunMessageCloseButton': 'hideAutoModifiedMessage'
             , 'click @ui.registryButton': 'clickRegistry'
+            , 'click @ui.marketplaceButton': 'clickMarketplace'
+            , 'click @ui.githubButton': 'clickGithub'
+            , 'click @ui.surveyButton': 'clickSurvey'
             , 'click @ui.registryConfirmed': 'confirmRegistry'
         }
 
@@ -248,6 +256,8 @@ define( [
 
         , confirmReload: function( jEvent ) {
             var finish = _.bind( function() {
+                ga( 'send' , 'event' , 'config' , 'reload' );
+
                 this.model.fetch( {
                     loadAdmin: true
                 } );
@@ -304,6 +314,8 @@ define( [
 
         , confirmReset: function( jEvent ) {
             var finish = _.bind( function() {
+                ga( 'send' , 'event' , 'config' , 'reset' );
+
                 var reset = new Reset();
                 reset.fetch();
 
@@ -334,6 +346,18 @@ define( [
             }
 
             this.ui.registryConfirmation.modal( 'show' );
+        }
+
+        , clickMarketplace: function() {
+            ga( 'send' , 'event' , 'config' , 'click' , 'marketplace' );
+        }
+
+        , clickGithub: function() {
+            ga( 'send' , 'event' , 'config' , 'click' , 'github' );
+        }
+
+        , clickSurvey: function() {
+            ga( 'send' , 'event' , 'config' , 'click' , 'survey' );
         }
 
         , confirmSave: function( jEvent ) {

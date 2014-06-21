@@ -1,14 +1,18 @@
 define( [
 
-    'backbone'
+    'underscore'
+    , 'backbone'
     , 'models/registry-gacha'
     , 'lib/constants'
+    , 'google-analytics'
 
 ] , function(
 
-    Backbone
+    _
+    , Backbone
     , Gacha
     , CONSTANTS
+    , ga
 
 ) {
     'use strict';
@@ -31,6 +35,8 @@ define( [
                 , fetching: false
             } );
 
+            this.searchCriteriaChanged = _.debounce( _.bind( this.searchCriteriaChanged , this ) , 500 );
+
             this.indexesFetched = [];
 
             this.fetchCount = _.debounce( this.fetchCount , CONSTANTS.SEARCH_DEBOUNCE );
@@ -38,6 +44,7 @@ define( [
             this.urlParams.on( 'change:maxPrice' , this.searchCriteriaChanged , this );
             this.urlParams.on( 'change:searchString' , this.searchCriteriaChanged , this );
             this.urlParams.on( 'change:randomize' , this.searchCriteriaChanged , this );
+
             this.searchCriteriaChanged();
         }
 
@@ -47,6 +54,12 @@ define( [
             this.indexesFetched = [];
             this.urlParams.set( 'fetching' , true );
             this.fetchCount();
+
+            ga( 'send' , 'event' , 'registry' , 'search' , {
+                'dimension3': this.urlParams.get( 'maxPrice' )
+                , 'dimension4': this.urlParams.get( 'searchString' )
+                , 'dimension5': this.urlParams.get( 'randomize' )
+            } );
         }
 
         , fetchCount: function() {

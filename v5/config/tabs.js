@@ -105,6 +105,7 @@ define( [
 
         , setCurrentTab: function( tabName ) {
             this.options.app.router.navigate( 'config/' + tabName , { replace: true } );
+
             ga( 'set' , 'page' , '/config/' + tabName );
             ga( 'send' , 'pageview' );
         }
