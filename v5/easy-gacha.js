@@ -50,6 +50,12 @@
         }
     };
 
+    // Directly load Google Analytics to avoid errors in requirejs
+    el = document.createElement( 'script' );
+    el.setAttribute( 'type' , 'text/javascript' );
+    el.setAttribute( 'src' , '//www.google-analytics.com/analytics.js' );
+    document.head.appendChild( el );
+
     // Use requirejs to load init.js
     el = document.createElement( 'script' );
     el.setAttribute( 'type' , 'text/javascript' );

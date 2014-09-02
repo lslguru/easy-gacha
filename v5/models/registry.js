@@ -4,7 +4,7 @@ define( [
     , 'backbone'
     , 'models/registry-gacha'
     , 'lib/constants'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

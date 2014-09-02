@@ -10,7 +10,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'image!images/pay-window.png'
     , 'lib/fade'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

@@ -10,7 +10,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'lib/validate-email-address'
     , 'lib/fade'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

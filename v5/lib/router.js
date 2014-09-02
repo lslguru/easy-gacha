@@ -6,7 +6,7 @@ define( [
     , 'dashboard/index'
     , 'config/index'
     , 'registry/index'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

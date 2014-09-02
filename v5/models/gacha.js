@@ -14,7 +14,7 @@ define( [
     , 'models/base-sl-model'
     , 'lib/constants'
     , 'backbone'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

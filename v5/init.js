@@ -23,7 +23,6 @@ require( {
         , 'hbs': 'vendor/require-handlebars-plugin/hbs'
         , 'moment': 'vendor/moment/moment'
         , 'tablesorter': 'vendor/tablesorter/jquery.tablesorter'
-        , 'google-analytics': '//www.google-analytics.com/analytics'
     }
 
     , shim: {
@@ -39,9 +38,6 @@ require( {
                 'css!vendor/tablesorter/themes/blue/style'
             ]
         }
-        , 'google-analytics': {
-            exports: 'ga'
-        }
     }
 
 } , [
@@ -53,7 +49,7 @@ require( {
     , 'css!vendor/font-awesome-4.0.3/css/font-awesome'
     , 'jquery'
     , 'lib/is-sl-viewer'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

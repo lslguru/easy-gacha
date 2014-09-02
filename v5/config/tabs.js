@@ -13,7 +13,7 @@ define( [
     , 'config/advanced'
     , 'config/export'
     , 'config/import'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

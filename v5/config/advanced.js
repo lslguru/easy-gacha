@@ -9,7 +9,7 @@ define( [
     , 'lib/constants'
     , 'lib/tooltip-placement'
     , 'lib/fade'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

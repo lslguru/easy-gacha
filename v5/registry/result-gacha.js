@@ -7,7 +7,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'bootstrap'
     , 'lib/map-uri'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

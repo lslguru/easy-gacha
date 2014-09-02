@@ -9,7 +9,7 @@ define( [
     , 'tablesorter'
     , 'lib/tooltip-placement'
     , 'bootstrap'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

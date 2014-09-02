@@ -12,7 +12,7 @@ define( [
     , 'models/notecard'
     , 'lib/is-sl-viewer'
     , 'lib/fade'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

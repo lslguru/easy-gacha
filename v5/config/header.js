@@ -10,7 +10,7 @@ define( [
     , 'lib/is-sl-viewer'
     , 'lib/fade'
     , 'models/reset'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 

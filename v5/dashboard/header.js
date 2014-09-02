@@ -8,7 +8,7 @@ define( [
     , 'lib/tooltip-placement'
     , 'lib/map-uri'
     , 'lib/fade'
-    , 'google-analytics'
+    , 'lib/google-analytics'
 
 ] , function(
 
